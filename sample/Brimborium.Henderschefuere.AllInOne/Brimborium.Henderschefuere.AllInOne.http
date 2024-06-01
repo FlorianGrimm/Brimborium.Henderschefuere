@@ -1,0 +1,6 @@
+@Brimborium.Henderschefuere.AllInOne_HostAddress = https://localhost:5001
+
+GET {{Brimborium.Henderschefuere.AllInOne_HostAddress}}/
+Accept: text/html
+
+###

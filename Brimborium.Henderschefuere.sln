@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere", "src\Brimborium.Henderschefuere\Brimborium.Henderschefuere.csproj", "{6925FF4E-70D3-45E0-B784-15AD700BE633}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0BC3BE1B-E525-48BE-ADE9-482EF7A2CFB1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{E264A3ED-005A-4B39-8F32-9718F6F00723}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere.Test", "test\Brimborium.Henderschefuere.Test\Brimborium.Henderschefuere.Test.csproj", "{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{56E64DD9-DE41-4D3F-A565-2D256AAB1093}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere.AllInOne", "sample\Brimborium.Henderschefuere.AllInOne\Brimborium.Henderschefuere.AllInOne.csproj", "{BE55A2BD-4A83-4107-ADD1-8910F043EEA3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{FAA568FA-D6B6-48B5-8463-920B60313F3F}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere.SampleServer", "sample\Brimborium.Henderschefuere.SampleServer\Brimborium.Henderschefuere.SampleServer.csproj", "{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6925FF4E-70D3-45E0-B784-15AD700BE633}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6925FF4E-70D3-45E0-B784-15AD700BE633}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6925FF4E-70D3-45E0-B784-15AD700BE633}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6925FF4E-70D3-45E0-B784-15AD700BE633}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6925FF4E-70D3-45E0-B784-15AD700BE633} = {0BC3BE1B-E525-48BE-ADE9-482EF7A2CFB1}
+		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952} = {E264A3ED-005A-4B39-8F32-9718F6F00723}
+		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
+		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B2CA76EB-7425-490D-87A6-50419A9454E0}
+	EndGlobalSection
+EndGlobal

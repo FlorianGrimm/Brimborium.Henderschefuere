@@ -1,0 +1,6 @@
+@Brimborium.Henderschefuere.EchoServer_HostAddress = http://localhost:5089
+
+GET {{Brimborium.Henderschefuere.EchoServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
