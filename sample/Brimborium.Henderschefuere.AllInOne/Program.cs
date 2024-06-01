@@ -120,7 +120,13 @@ public sealed class ServerAPI : ServerBase {
     public ServerAPI(string appsettingsJsonFile) : base(appsettingsJsonFile) {
     }
 
+    public override void ConfigureBuilder(WebApplicationBuilder builder) {
+        builder.Services.AddControllers()
+                .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
+    }
+
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
-        app.MapGet("/", () => "Hello World!");
+        app.UseWebSockets();
+        app.MapControllers();
     }
 }
