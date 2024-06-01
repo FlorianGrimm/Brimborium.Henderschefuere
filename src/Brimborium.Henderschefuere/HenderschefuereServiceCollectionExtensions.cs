@@ -2,9 +2,17 @@
 
 public static class HenderschefuereServiceCollectionExtensions {
 
-    public static IServiceCollection AddHenderschefuere(this IServiceCollection services
+    public static HenderschefuereBuilder AddHenderschefuere(this IServiceCollection services
         //, Action<SwaggerGenOptions> setupAction = null
         ) {
-        return services;
+        HenderschefuereBuilder? builder = services
+            .LastOrDefault((serviceDescriptor) => typeof(HenderschefuereBuilder).Equals(serviceDescriptor.ServiceType))?
+            .ImplementationInstance as HenderschefuereBuilder;
+        if (builder is null) {
+            builder = new(services);
+            services.AddSingleton<HenderschefuereBuilder>(builder);
+        }
+        services.TryAddSingleton<ProxyConfigManager>();
+        return builder;
     }
 }

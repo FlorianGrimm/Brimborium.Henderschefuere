@@ -96,7 +96,17 @@ public sealed class ServerFrontend : ServerBase {
     public ServerFrontend(string appsettingsJsonFile) : base(appsettingsJsonFile) {
     }
 
+    public override void ConfigureBuilder(WebApplicationBuilder builder) {
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddHenderschefuere()
+            .LoadFromConfigurationDefault(builder.Configuration)
+            /* .LoadFromConfiguration(builder.Configuration.GetSection("Henderschefuere")) */
+            ;
+    }
+
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
+        app.MapHenderschefuere();
         app.MapGet("/", () => "Hello World!");
     }
 }
@@ -108,6 +118,8 @@ public sealed class ServerBackend : ServerBase {
     public override void ConfigureBuilder(WebApplicationBuilder builder) {
         builder.Services.AddControllers()
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
@@ -123,6 +135,8 @@ public sealed class ServerAPI : ServerBase {
     public override void ConfigureBuilder(WebApplicationBuilder builder) {
         builder.Services.AddControllers()
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
