@@ -1,3 +1,5 @@
+using Brimborium.Henderschefuere.Configuration;
+
 namespace Brimborium.Henderschefuere.AllInOne;
 
 public class Program {
@@ -54,7 +56,7 @@ public abstract class ServerBase {
 
     protected ServerBase(string appsettingsJsonFile) {
         var builder = this._Builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddJsonFile(this._AppsettingsJsonFile = appsettingsJsonFile);
+        builder.Configuration.AddJsonFile(this._AppsettingsJsonFile = appsettingsJsonFile, false, true);
         builder.Logging.AddConsole();
     }
 
@@ -101,13 +103,17 @@ public sealed class ServerFrontend : ServerBase {
         builder.Services.AddSwaggerGen();
         builder.Services.AddHenderschefuere()
             .LoadFromConfigurationDefault(builder.Configuration)
-            /* .LoadFromConfiguration(builder.Configuration.GetSection("Henderschefuere")) */
             ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
         app.MapHenderschefuere();
-        app.MapGet("/", () => "Hello World!");
+        app.MapGet("/", (HfConfigurationManager hfConfigurationManager) => {
+            return string.Join(
+                ",",
+                hfConfigurationManager.GetSnapshot().Clusters.Values.Select(cluster => cluster.Id)
+                );
+        });
     }
 }
 
