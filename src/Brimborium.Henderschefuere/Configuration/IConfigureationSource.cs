@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-
-namespace Brimborium.Henderschefuere.Configuration;
+﻿namespace Brimborium.Henderschefuere.Configuration;
 
 public interface IHfConfigurationSource {
     CancellationChangeToken ConfigurationChanged { get; }
@@ -65,7 +63,7 @@ public sealed class HfConfigurationSource : IHfConfigurationSource, IDisposable 
                 value.Id = key;
                 value.Url = child[nameof(value.Url)];
                 value.RemoteTunnelId = child[nameof(value.RemoteTunnelId)];
-                value.Transport = ParseHfTunnelTransport(child[nameof(value.Transport)]);
+                value.Transport = this.ParseHfTunnelTransport(child[nameof(value.Transport)]);
                 value.Authentication = this.BindHfTunnelAuthenticationConfiguration(configuration.GetSection(nameof(value.Authentication)));
                 result.Tunnels[key] = value;
             }
@@ -77,7 +75,7 @@ public sealed class HfConfigurationSource : IHfConfigurationSource, IDisposable 
                 var value = new HfClusterConfiguration();
                 value.Id = key;
                 result.Clusters[key] = value;
-                value.Transport = ParseHfTunnelTransport(child[nameof(value.Transport)]);
+                value.Transport = this.ParseHfTunnelTransport(child[nameof(value.Transport)]);
                 var sectionDestinations = section.GetSection(nameof(value.Destinations));
                 foreach (var childDestination in sectionDestinations.GetChildren()) {
                     var childKey = childDestination.Key;

@@ -34,19 +34,19 @@ namespace Brimborium.Henderschefuere.SampleServer.Controllers
         public async Task<IActionResult> Dump()
         {
             var result = new {
-                Request.Protocol,
-                Request.Method,
-                Request.Scheme,
-                Host = Request.Host.Value,
-                PathBase = Request.PathBase.Value,
-                Path = Request.Path.Value,
-                Query = Request.QueryString.Value,
-                Headers = Request.Headers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()),
+                this.Request.Protocol,
+                this.Request.Method,
+                this.Request.Scheme,
+                Host = this.Request.Host.Value,
+                PathBase = this.Request.PathBase.Value,
+                Path = this.Request.Path.Value,
+                Query = this.Request.QueryString.Value,
+                Headers = this.Request.Headers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()),
                 Time = DateTimeOffset.UtcNow,
-                Body = await new StreamReader(Request.Body).ReadToEndAsync(),
+                Body = await new StreamReader(this.Request.Body).ReadToEndAsync(),
             };
 
-            return Ok(result);
+            return this.Ok(result);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Brimborium.Henderschefuere.SampleServer.Controllers
         [Route("/api/statuscode")]
         public void Status(int statusCode)
         {
-            Response.StatusCode = statusCode;
+            this.Response.StatusCode = statusCode;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Brimborium.Henderschefuere.SampleServer.Controllers
         {
             foreach (var (key, value) in headers)
             {
-                Response.Headers[key] = value;
+                this.Response.Headers[key] = value;
             }
         }
     }

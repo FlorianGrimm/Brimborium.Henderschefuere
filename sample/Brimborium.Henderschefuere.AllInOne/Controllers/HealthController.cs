@@ -21,6 +21,6 @@ public class HealthController : ControllerBase
     {
         _count++;
         // Simulate temporary health degradation.
-        return _count % 10 < 4 ? Ok() : StatusCode(500);
+        return _count % 10 < 4 ? this.Ok() : this.StatusCode(500);
     }
 }

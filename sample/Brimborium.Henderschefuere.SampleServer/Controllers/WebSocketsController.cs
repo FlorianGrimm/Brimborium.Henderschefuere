@@ -24,7 +24,7 @@ namespace Brimborium.Henderschefuere.SampleServer.Controllers
         /// </summary>
         public WebSocketsController(ILogger<WebSocketsController> logger)
         {
-            _logger = logger;
+            this._logger = logger;
         }
 
         /// <summary>
@@ -34,20 +34,20 @@ namespace Brimborium.Henderschefuere.SampleServer.Controllers
         [Route("/api/websockets")]
         public async Task WebSockets()
         {
-            if (!HttpContext.WebSockets.IsWebSocketRequest)
+            if (!this.HttpContext.WebSockets.IsWebSocketRequest)
             {
-                HttpContext.Response.ContentType = "text/html";
-                await HttpContext.Response.SendFileAsync("./wwwroot/index.html");
+                this.HttpContext.Response.ContentType = "text/html";
+                await this.HttpContext.Response.SendFileAsync("./wwwroot/index.html");
                 return;
             }
 
-            using (var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync())
+            using (var webSocket = await this.HttpContext.WebSockets.AcceptWebSocketAsync())
             {
-                _logger.LogInformation("WebSockets established.");
-                await RunPingPongAsync(webSocket, HttpContext.RequestAborted);
+                this._logger.LogInformation("WebSockets established.");
+                await RunPingPongAsync(webSocket, this.HttpContext.RequestAborted);
             }
 
-            _logger.LogInformation("WebSockets finished.");
+            this._logger.LogInformation("WebSockets finished.");
         }
 
         private static async Task RunPingPongAsync(WebSocket webSocket, CancellationToken cancellation)

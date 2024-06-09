@@ -10,12 +10,12 @@ public class Program {
     public static async Task StartServers() {
         CancellationTokenSource cts = new();
         List<ServerBase> listServer = new();
-        listServer.Add(new ServerFrontend("appsettings.server1FE.json"));
-        listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
+        //listServer.Add(new ServerFrontend("appsettings.server1FE.json"));
+        //listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
         listServer.Add(new ServerBackend("appsettings.server3BE.json"));
-        listServer.Add(new ServerBackend("appsettings.server4BE.json"));
-        listServer.Add(new ServerAPI("appsettings.server5API.json"));
-        listServer.Add(new ServerAPI("appsettings.server6API.json"));
+        //listServer.Add(new ServerBackend("appsettings.server4BE.json"));
+        //listServer.Add(new ServerAPI("appsettings.server5API.json"));
+        //listServer.Add(new ServerAPI("appsettings.server6API.json"));
         foreach (var server in listServer) {
             server.Build();
         }
@@ -126,6 +126,10 @@ public sealed class ServerBackend : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddHenderschefuere()
+            .LoadFromConfigurationDefault(builder.Configuration)
+            .EnableTunnel(builder)
+            ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
@@ -143,6 +147,9 @@ public sealed class ServerAPI : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddHenderschefuere()
+            .LoadFromConfigurationDefault(builder.Configuration)
+            ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {

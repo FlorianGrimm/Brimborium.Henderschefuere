@@ -1,4 +1,7 @@
-﻿namespace Microsoft.Extensions.DependencyInjection;
+﻿using Brimborium.Henderschefuere.Model;
+using Brimborium.Henderschefuere.Tunnel;
+
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class HenderschefuereServiceCollectionExtensions {
 
@@ -15,6 +18,8 @@ public static class HenderschefuereServiceCollectionExtensions {
         }
         services.TryAddSingleton<HfConfigurationManager>();
         services.TryAddSingleton<HfEndpointDataSource>();
+        services.TryAddSingleton<ITunnelConnectionListenerFactory, TunnelWebSocketConnectionContext.Factory >();
+        services.TryAddSingleton<ITunnelConnectionListenerFactory, TunnelHttp2ConnectionContext.Factory >();
         return builder;
     }
 }
