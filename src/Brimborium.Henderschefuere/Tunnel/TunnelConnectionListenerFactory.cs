@@ -1,7 +1,7 @@
 ﻿namespace Brimborium.Henderschefuere.Tunnel;
 
-public class TunnelUriEndPoint(Uri uri, HfTunnel tunnel) : UriEndPoint(uri) {
-    public HfTunnel Tunnel { get; } = tunnel;
+public class TunnelUriEndPoint(Uri uri, HfTunnelModel tunnel) : UriEndPoint(uri) {
+    public HfTunnelModel Tunnel { get; } = tunnel;
 }
 
 /// <summary>

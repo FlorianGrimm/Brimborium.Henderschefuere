@@ -20,6 +20,7 @@ public static class HenderschefuereServiceCollectionExtensions {
         services.TryAddSingleton<HfEndpointDataSource>();
         services.TryAddSingleton<ITunnelConnectionListenerFactory, TunnelWebSocketConnectionContext.Factory >();
         services.TryAddSingleton<ITunnelConnectionListenerFactory, TunnelHttp2ConnectionContext.Factory >();
+        services.TryAddSingleton<HfModelManager>();
         return builder;
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace Brimborium.Henderschefuere.Tunnel;
 
-public class WebSocketUriEndPoint(Uri uri, HfTunnel tunnel) : UriEndPoint(uri) {
-    public HfTunnel Tunnel { get; } = tunnel;
+public class WebSocketUriEndPoint(Uri uri, HfTunnelModel tunnel) : UriEndPoint(uri) {
+    public HfTunnelModel Tunnel { get; } = tunnel;
 }
 
 internal sealed class TunnelWebSocketConnectionContext : HttpConnection {

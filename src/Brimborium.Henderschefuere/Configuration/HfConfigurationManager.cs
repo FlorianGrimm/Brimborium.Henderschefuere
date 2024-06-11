@@ -58,16 +58,16 @@ public sealed class HfConfigurationManager {
         var hfConfiguration = this._SourceConfiguration;
         if (hfConfiguration is null) {
             return new HfRootSnapshot(
-                Tunnels: ImmutableDictionary<string, HfTunnel>.Empty,
-                Routes: ImmutableDictionary<string, HfRoute>.Empty,
-                Clusters: ImmutableDictionary<string, HfCluster>.Empty
+                Tunnels: ImmutableDictionary<string, HfTunnelModel>.Empty,
+                Routes: ImmutableDictionary<string, HfRouteModel>.Empty,
+                Clusters: ImmutableDictionary<string, HfClusterModel>.Empty
             );
         }
         HfRootSnapshot rootSnapshot;
         {
-            Dictionary<string, HfTunnel> dictTunnels = new();
-            Dictionary<string, HfRoute> dictRoutes = new();
-            Dictionary<string, HfCluster> dictClusters = new();
+            Dictionary<string, HfTunnelModel> dictTunnels = new();
+            Dictionary<string, HfRouteModel> dictRoutes = new();
+            Dictionary<string, HfClusterModel> dictClusters = new();
 
             {
                 foreach (var configuration in this._ListConfigurations) {
@@ -92,7 +92,7 @@ public sealed class HfConfigurationManager {
                                 Id: routeId,
                                 Path: routeConfig.Match?.Path ?? string.Empty
                                 );
-                            routeSnapshot = new HfRoute(
+                            routeSnapshot = new HfRouteModel(
                                 Id: routeId,
                                 ClusterId: routeConfig.ClusterId ?? string.Empty,
                                 Match: routeMatch
@@ -112,7 +112,7 @@ public sealed class HfConfigurationManager {
                                 && needUpdate(clusterSnapshot.Transport, clusterConfig.Transport)) {
                                 clusterSnapshot = clusterSnapshot with { Transport = clusterConfig.Transport.Value };
                             }
-                            var dictDestinations = new Dictionary<string, HfClusterDestination>(clusterSnapshot.Destinations);
+                            var dictDestinations = new Dictionary<string, HfClusterDestinationModel>(clusterSnapshot.Destinations);
                             foreach (var destinationConfig in clusterConfig.Destinations.Values) {
                                 var destinationId = destinationConfig.Id;
                                 if (string.IsNullOrWhiteSpace(destinationId)) {
@@ -124,7 +124,7 @@ public sealed class HfConfigurationManager {
                                     }
                                     dictDestinations[destinationId] = destinationSnapshot;
                                 } else {
-                                    destinationSnapshot = new HfClusterDestination(
+                                    destinationSnapshot = new HfClusterDestinationModel(
                                         Id: destinationId,
                                         Address: destinationConfig.Address ?? string.Empty
                                         );
@@ -134,19 +134,19 @@ public sealed class HfConfigurationManager {
                             clusterSnapshot = clusterSnapshot with { Destinations = dictDestinations.ToImmutableDictionary() };
                             dictClusters[clusterId] = clusterSnapshot;
                         } else {
-                            var dictDestinations = new Dictionary<string, HfClusterDestination>();
+                            var dictDestinations = new Dictionary<string, HfClusterDestinationModel>();
                             foreach (var destinationConfig in clusterConfig.Destinations.Values) {
                                 var destinationId = destinationConfig.Id;
                                 if (string.IsNullOrWhiteSpace(destinationId)) {
                                     continue;
                                 }
-                                var destinationSnapshot = new HfClusterDestination(
+                                var destinationSnapshot = new HfClusterDestinationModel(
                                     Id: destinationId,
                                     Address: destinationConfig.Address ?? string.Empty
                                     );
                                 dictDestinations.Add(destinationId, destinationSnapshot);
                             }
-                            clusterSnapshot = new HfCluster(
+                            clusterSnapshot = new HfClusterModel(
                                 Id: clusterId,
                                 Transport: clusterConfig.Transport ?? HfTransport.None,
                                 Destinations: dictDestinations.ToImmutableDictionary()
@@ -174,7 +174,7 @@ public sealed class HfConfigurationManager {
                             }
                             dictTunnels[tunnelId] = tunnelSnapshot;
                         } else {
-                            tunnelSnapshot = new HfTunnel(
+                            tunnelSnapshot = new HfTunnelModel(
                                 Id: tunnelId,
                                 Url: tunnelConfig.Url ?? string.Empty,
                                 RemoteTunnelId: tunnelConfig.RemoteTunnelId ?? string.Empty,
@@ -224,11 +224,13 @@ public sealed class HfConfigurationManager {
             return this.LoadConfiguration();
         }
         this._Snapshot ??= new HfRootSnapshot(
-            ImmutableDictionary<string, HfTunnel>.Empty,
-            ImmutableDictionary<string, HfRoute>.Empty,
-            ImmutableDictionary<string, HfCluster>.Empty);
+            ImmutableDictionary<string, HfTunnelModel>.Empty,
+            ImmutableDictionary<string, HfRouteModel>.Empty,
+            ImmutableDictionary<string, HfClusterModel>.Empty);
         return this._Snapshot;
     }
+
+    public IChangeToken GetSnapshotChangeToken() => this._SnapshotChangeToken;
 
     private static bool needUpdate(string? snapshotValue, string? configValue) {
         if (string.IsNullOrWhiteSpace(configValue)) { return false; }

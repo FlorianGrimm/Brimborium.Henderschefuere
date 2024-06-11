@@ -1,6 +1,6 @@
 ﻿namespace Brimborium.Henderschefuere.Tunnel;
 
-public class Http2UriEndPoint(Uri uri, HfTunnel tunnel) : TunnelUriEndPoint(uri, tunnel) { }
+public class Http2UriEndPoint(Uri uri, HfTunnelModel tunnel) : TunnelUriEndPoint(uri, tunnel) { }
 
 internal sealed class TunnelHttp2ConnectionContext
     : ConnectionContext

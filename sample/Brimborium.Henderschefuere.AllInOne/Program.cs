@@ -135,6 +135,7 @@ public sealed class ServerBackend : ServerBase {
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
         app.UseWebSockets();
         app.MapControllers();
+        app.MapHenderschefuere();
     }
 }
 

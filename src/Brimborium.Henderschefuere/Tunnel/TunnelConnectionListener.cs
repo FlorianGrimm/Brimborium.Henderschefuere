@@ -31,11 +31,6 @@ public sealed class TunnelConnectionListener : IConnectionListener {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 try {
-                    //this._Options.Transport switch {
-                    //TransportType.WebSockets => await WebSocketConnectionContext.ConnectAsync(Uri, cancellationToken),
-                    //TransportType.HTTP2 => await HttpClientConnectionContext.ConnectAsync(_httpMessageInvoker, Uri, cancellationToken),
-                    //    _ => throw new NotSupportedException(),
-                    //};
                     ConnectionContext connectionInner = await this._TunnelConnectionListenerFactory.ConnectAsync(this._Endpoint, cancellationToken);
                     if (connectionInner is TunnelTrackLifetimeConnectionContext connection) {
                         // Already a lifetime tracking connection
@@ -46,17 +41,7 @@ public sealed class TunnelConnectionListener : IConnectionListener {
                     // Track this connection lifetime
                     this._Connections.TryAdd(connection, connection);
 
-                    _ = Task.Run(async () => {
-                        // When the connection is disposed, release it
-                        try {
-                            await connection.ExecutionTask;
-                        } finally {
-                            this._Connections.TryRemove(connection, out _);
-
-                            // Allow more connections in
-                            this._ConnectionLock.Release();
-                        }
-                    },
+                    _ = Task.Run(async () => await this.AcceptRunAsync(connection),
                     cancellationToken);
 
                     return connection;
@@ -67,6 +52,22 @@ public sealed class TunnelConnectionListener : IConnectionListener {
             }
         } catch (OperationCanceledException) {
             return null;
+        }
+    }
+
+    private async ValueTask AcceptRunAsync(TunnelTrackLifetimeConnectionContext connection) {
+        // When the connection is disposed, release it
+        try {
+            //try { 
+            await connection.ExecutionTask;
+            //} catch (AggregateException error) {
+            //    error.Handle(error => true);
+            //}
+        } finally {
+            this._Connections.TryRemove(connection, out _);
+
+            // Allow more connections in
+            this._ConnectionLock.Release();
         }
     }
 

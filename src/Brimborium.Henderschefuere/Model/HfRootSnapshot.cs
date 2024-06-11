@@ -1,11 +1,12 @@
 ﻿namespace Brimborium.Henderschefuere.Model;
+
 public sealed record class HfRootSnapshot(
-    ImmutableDictionary<string, HfTunnel> Tunnels,
-    ImmutableDictionary<string, HfRoute> Routes,
-    ImmutableDictionary<string, HfCluster> Clusters
+    ImmutableDictionary<string, HfTunnelModel> Tunnels,
+    ImmutableDictionary<string, HfRouteModel> Routes,
+    ImmutableDictionary<string, HfClusterModel> Clusters
     );
 
-public sealed record class HfTunnel(
+public sealed record class HfTunnelModel(
     string Id,
     string Url,
     string RemoteTunnelId,
@@ -16,7 +17,7 @@ public sealed record class HfTunnel(
 public sealed record class HfTunnelAuthentication {
 }
 
-public sealed record class HfRoute(
+public sealed record class HfRouteModel(
     string Id,
     string ClusterId,
     HfRouteMatch Match
@@ -28,13 +29,13 @@ public sealed record class HfRouteMatch(
     );
 
 
-public sealed record class HfCluster(
+public sealed record class HfClusterModel(
     string Id,
     HfTransport Transport,
-    ImmutableDictionary<string, HfClusterDestination> Destinations
+    ImmutableDictionary<string, HfClusterDestinationModel> Destinations
     );
 
-public sealed record class HfClusterDestination(
+public sealed record class HfClusterDestinationModel(
     string Id,
     string Address
     );
