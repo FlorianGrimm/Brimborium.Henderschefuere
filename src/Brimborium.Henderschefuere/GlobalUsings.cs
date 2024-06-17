@@ -27,6 +27,19 @@ global using Microsoft.Extensions.Primitives;
 
 global using Brimborium.Henderschefuere;
 global using Brimborium.Henderschefuere.Configuration;
+global using Brimborium.Henderschefuere.Delegation;
+global using Brimborium.Henderschefuere.Forwarder;
+global using Brimborium.Henderschefuere.Health;
+global using Brimborium.Henderschefuere.Limits;
+global using Brimborium.Henderschefuere.LoadBalancing;
+global using Brimborium.Henderschefuere.Management;
 global using Brimborium.Henderschefuere.Model;
+global using Brimborium.Henderschefuere.ServiceDiscovery;
+global using Brimborium.Henderschefuere.SessionAffinity;
+global using Brimborium.Henderschefuere.Transforms;
+global using Brimborium.Henderschefuere.Transport;
+global using Brimborium.Henderschefuere.Tunnel;
+global using Brimborium.Henderschefuere.Utilities;
+global using Brimborium.Henderschefuere.WebSocketsTelemetry;
 
 //
