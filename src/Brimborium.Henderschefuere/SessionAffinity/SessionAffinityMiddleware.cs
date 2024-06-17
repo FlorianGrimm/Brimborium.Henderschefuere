@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
-
 namespace Brimborium.Henderschefuere.SessionAffinity;
 
 /// <summary>
 /// Looks up an affinitized <see cref="DestinationState"/> matching the request's affinity key if any is set
 /// </summary>
-internal sealed class SessionAffinityMiddleware
-{
+internal sealed class SessionAffinityMiddleware {
     private readonly RequestDelegate _next;
     private readonly FrozenDictionary<string, ISessionAffinityPolicy> _sessionAffinityPolicies;
     private readonly FrozenDictionary<string, IAffinityFailurePolicy> _affinityFailurePolicies;
@@ -19,30 +16,26 @@ internal sealed class SessionAffinityMiddleware
         RequestDelegate next,
         IEnumerable<ISessionAffinityPolicy> sessionAffinityPolicies,
         IEnumerable<IAffinityFailurePolicy> affinityFailurePolicies,
-        ILogger<SessionAffinityMiddleware> logger)
-    {
+        ILogger<SessionAffinityMiddleware> logger) {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _sessionAffinityPolicies = sessionAffinityPolicies?.ToDictionaryByUniqueId(p => p.Name) ?? throw new ArgumentNullException(nameof(sessionAffinityPolicies));
         _affinityFailurePolicies = affinityFailurePolicies?.ToDictionaryByUniqueId(p => p.Name) ?? throw new ArgumentNullException(nameof(affinityFailurePolicies));
     }
 
-    public Task Invoke(HttpContext context)
-    {
+    public Task Invoke(HttpContext context) {
         var proxyFeature = context.GetReverseProxyFeature();
 
         var config = proxyFeature.Cluster.Config.SessionAffinity;
 
-        if (config is null || !config.Enabled.GetValueOrDefault())
-        {
+        if (config is null || !config.Enabled.GetValueOrDefault()) {
             return _next(context);
         }
 
         return InvokeInternal(context, proxyFeature, config);
     }
 
-    private async Task InvokeInternal(HttpContext context, IReverseProxyFeature proxyFeature, SessionAffinityConfig config)
-    {
+    private async Task InvokeInternal(HttpContext context, IReverseProxyFeature proxyFeature, SessionAffinityConfig config) {
         var destinations = proxyFeature.AvailableDestinations;
         var cluster = proxyFeature.Route.Cluster!;
 
@@ -53,8 +46,7 @@ internal sealed class SessionAffinityMiddleware
         var activity = context.GetYarpActivity();
         activity?.SetTag("proxy.session_affinity.policy", policy.Name);
 
-        switch (affinityResult.Status)
-        {
+        switch (affinityResult.Status) {
             case AffinityStatus.OK:
                 proxyFeature.AvailableDestinations = affinityResult.Destinations!;
                 activity?.SetTag("proxy.session_affinity.status", "success");
@@ -68,8 +60,7 @@ internal sealed class SessionAffinityMiddleware
                 var failurePolicy = _affinityFailurePolicies.GetRequiredServiceById(config.FailurePolicy, SessionAffinityConstants.FailurePolicies.Redistribute);
                 var keepProcessing = await failurePolicy.Handle(context, proxyFeature.Route.Cluster!, affinityResult.Status);
 
-                if (!keepProcessing)
-                {
+                if (!keepProcessing) {
                     // Policy reported the failure is unrecoverable and took the full responsibility for its handling,
                     // so we simply stop processing.
                     Log.AffinityResolutionFailedForCluster(_logger, cluster.ClusterId);
@@ -88,8 +79,7 @@ internal sealed class SessionAffinityMiddleware
         await _next(context);
     }
 
-    private static class Log
-    {
+    private static class Log {
         private static readonly Action<ILogger, string, Exception?> _affinityResolutionFailedForCluster = LoggerMessage.Define<string>(
             LogLevel.Warning,
             EventIds.AffinityResolutionFailedForCluster,
@@ -100,13 +90,11 @@ internal sealed class SessionAffinityMiddleware
             EventIds.AffinityResolutionFailureWasHandledProcessingWillBeContinued,
             "Affinity resolution failure for cluster '{clusterId}' was handled successfully by the policy '{policyName}'. Request processing will be continued.");
 
-        public static void AffinityResolutionFailedForCluster(ILogger logger, string clusterId)
-        {
+        public static void AffinityResolutionFailedForCluster(ILogger logger, string clusterId) {
             _affinityResolutionFailedForCluster(logger, clusterId, null);
         }
 
-        public static void AffinityResolutionFailureWasHandledProcessingWillBeContinued(ILogger logger, string clusterId, string policyName)
-        {
+        public static void AffinityResolutionFailureWasHandledProcessingWillBeContinued(ILogger logger, string clusterId, string policyName) {
             _affinityResolutionFailureWasHandledProcessingWillBeContinued(logger, clusterId, policyName, null);
         }
     }

@@ -6,8 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Brimborium.Henderschefuere.SessionAffinity;
 
-internal sealed class HashCookieSessionAffinityPolicy : BaseHashCookieSessionAffinityPolicy
-{
+internal sealed class HashCookieSessionAffinityPolicy : BaseHashCookieSessionAffinityPolicy {
     private readonly ConditionalWeakTable<DestinationState, string> _hashes = new();
 
     public HashCookieSessionAffinityPolicy(
@@ -17,10 +16,8 @@ internal sealed class HashCookieSessionAffinityPolicy : BaseHashCookieSessionAff
 
     public override string Name => SessionAffinityConstants.Policies.HashCookie;
 
-    protected override string GetDestinationHash(DestinationState d)
-    {
-        return _hashes.GetValue(d, static d =>
-        {
+    protected override string GetDestinationHash(DestinationState d) {
+        return _hashes.GetValue(d, static d => {
             // Stable format across instances
             var destinationIdBytes = Encoding.Unicode.GetBytes(d.DestinationId.ToUpperInvariant());
             var hashBytes = XxHash64.Hash(destinationIdBytes);

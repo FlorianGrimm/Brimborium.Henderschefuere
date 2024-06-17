@@ -1,11 +1,8 @@
 namespace Brimborium.Henderschefuere.Transforms;
 
-public abstract class RequestHeaderTransform : RequestTransform
-{
-    protected RequestHeaderTransform(string headerName, bool append)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+public abstract class RequestHeaderTransform : RequestTransform {
+    protected RequestHeaderTransform(string headerName, bool append) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -16,27 +13,21 @@ public abstract class RequestHeaderTransform : RequestTransform
     internal bool Append { get; }
     internal string HeaderName { get; }
 
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         var value = GetValue(context);
-        if (value is null)
-        {
+        if (value is null) {
             return default;
         }
 
-        if (Append)
-        {
+        if (Append) {
             var existingValues = TakeHeader(context, HeaderName);
             var newValue = StringValues.Concat(existingValues, value);
             AddHeader(context, HeaderName, newValue);
-        }
-        else
-        {
+        } else {
             RemoveHeader(context, HeaderName);
             AddHeader(context, HeaderName, value);
         }

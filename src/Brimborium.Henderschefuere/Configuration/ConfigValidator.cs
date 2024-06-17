@@ -1,75 +1,61 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Brimborium.Henderschefuere.Configuration.ClusterValidators;
-using Brimborium.Henderschefuere.Configuration.RouteValidators;
-using Brimborium.Henderschefuere.Transforms.Builder;
-
 namespace Brimborium.Henderschefuere.Configuration;
 
-internal sealed class ConfigValidator : IConfigValidator
-{
+internal sealed class ConfigValidator : IConfigValidator {
     private readonly ITransformBuilder _transformBuilder;
     private readonly IRouteValidator[] _routeValidators;
     private readonly IClusterValidator[] _clusterValidators;
 
     public ConfigValidator(ITransformBuilder transformBuilder,
         IEnumerable<IRouteValidator> routeValidators,
-        IEnumerable<IClusterValidator> clusterValidators)
-    {
+        IEnumerable<IClusterValidator> clusterValidators) {
         _transformBuilder = transformBuilder ?? throw new ArgumentNullException(nameof(transformBuilder));
         _routeValidators = routeValidators?.ToArray() ?? throw new ArgumentNullException(nameof(routeValidators));
         _clusterValidators = clusterValidators?.ToArray() ?? throw new ArgumentNullException(nameof(clusterValidators));
     }
 
     // Note this performs all validation steps without short circuiting in order to report all possible errors.
-    public async ValueTask<IList<Exception>> ValidateRouteAsync(RouteConfig route)
-    {
+    public async ValueTask<IList<Exception>> ValidateRouteAsync(RouteConfig route) {
         _ = route ?? throw new ArgumentNullException(nameof(route));
         var errors = new List<Exception>();
 
-        if (string.IsNullOrEmpty(route.RouteId))
-        {
+        if (string.IsNullOrEmpty(route.RouteId)) {
             errors.Add(new ArgumentException("Missing Route Id."));
         }
 
         errors.AddRange(_transformBuilder.ValidateRoute(route));
 
-        if (route.Match is null)
-        {
+        if (route.Match is null) {
             errors.Add(new ArgumentException($"Route '{route.RouteId}' did not set any match criteria, it requires Hosts or Path specified. Set the Path to '/{{**catchall}}' to match all requests."));
             return errors;
         }
 
-        if ((route.Match.Hosts is null || route.Match.Hosts.All(string.IsNullOrEmpty)) && string.IsNullOrEmpty(route.Match.Path))
-        {
+        if ((route.Match.Hosts is null || route.Match.Hosts.All(string.IsNullOrEmpty)) && string.IsNullOrEmpty(route.Match.Path)) {
             errors.Add(new ArgumentException($"Route '{route.RouteId}' requires Hosts or Path specified. Set the Path to '/{{**catchall}}' to match all requests."));
         }
 
-        foreach (var routeValidator in _routeValidators)
-        {
-           await routeValidator.ValidateAsync(route, errors);
+        foreach (var routeValidator in _routeValidators) {
+            await routeValidator.ValidateAsync(route, errors);
         }
 
         return errors;
     }
 
     // Note this performs all validation steps without short circuiting in order to report all possible errors.
-    public async ValueTask<IList<Exception>> ValidateClusterAsync(ClusterConfig cluster)
-    {
+    public async ValueTask<IList<Exception>> ValidateClusterAsync(ClusterConfig cluster) {
         _ = cluster ?? throw new ArgumentNullException(nameof(cluster));
         var errors = new List<Exception>();
 
-        if (string.IsNullOrEmpty(cluster.ClusterId))
-        {
+        if (string.IsNullOrEmpty(cluster.ClusterId)) {
             errors.Add(new ArgumentException("Missing Cluster Id."));
         }
 
         errors.AddRange(_transformBuilder.ValidateCluster(cluster));
 
-        foreach (var clusterValidator in _clusterValidators)
-        {
-           await clusterValidator.ValidateAsync(cluster, errors);
+        foreach (var clusterValidator in _clusterValidators) {
+            await clusterValidator.ValidateAsync(cluster, errors);
         }
 
         return errors;

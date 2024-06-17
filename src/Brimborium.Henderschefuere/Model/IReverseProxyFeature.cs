@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Stores the current proxy configuration used when processing the request.
 /// </summary>
-public interface IReverseProxyFeature
-{
+public interface IReverseProxyFeature {
     /// <summary>
     /// The route model for the current request.
     /// </summary>

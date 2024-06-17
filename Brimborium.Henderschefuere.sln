@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{FAA568FA-D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere.SampleServer", "sample\Brimborium.Henderschefuere.SampleServer\Brimborium.Henderschefuere.SampleServer.csproj", "{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Tests.Common", "test\Tests.Common\Brimborium.Tests.Common.csproj", "{27427DD9-FD58-48FA-B133-A63F3C672B74}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27427DD9-FD58-48FA-B133-A63F3C672B74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27427DD9-FD58-48FA-B133-A63F3C672B74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27427DD9-FD58-48FA-B133-A63F3C672B74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27427DD9-FD58-48FA-B133-A63F3C672B74}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +61,7 @@ Global
 		{D5142C2A-6A20-4EDA-8FCA-5CFAEC230952} = {E264A3ED-005A-4B39-8F32-9718F6F00723}
 		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
 		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
+		{27427DD9-FD58-48FA-B133-A63F3C672B74} = {E264A3ED-005A-4B39-8F32-9718F6F00723}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B2CA76EB-7425-490D-87A6-50419A9454E0}

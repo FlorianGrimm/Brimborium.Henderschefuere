@@ -10,12 +10,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Copies only allowed response trailers.
 /// </summary>
-public class ResponseTrailersAllowedTransform : ResponseTrailersTransform
-{
-    public ResponseTrailersAllowedTransform(string[] allowedHeaders)
-    {
-        if (allowedHeaders is null)
-        {
+public class ResponseTrailersAllowedTransform : ResponseTrailersTransform {
+    public ResponseTrailersAllowedTransform(string[] allowedHeaders) {
+        if (allowedHeaders is null) {
             throw new ArgumentNullException(nameof(allowedHeaders));
         }
 
@@ -28,10 +25,8 @@ public class ResponseTrailersAllowedTransform : ResponseTrailersTransform
     private FrozenSet<string> AllowedHeadersSet { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(ResponseTrailersTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(ResponseTrailersTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
@@ -43,8 +38,7 @@ public class ResponseTrailersAllowedTransform : ResponseTrailersTransform
         // because they lookup `IHttpResponseTrailersFeature` for every call. Here we do it just once instead.
         var responseTrailersFeature = context.HttpContext.Features.Get<IHttpResponseTrailersFeature>();
         var outgoingTrailers = responseTrailersFeature?.Trailers;
-        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly)
-        {
+        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly) {
             // Note that trailers, if any, should already have been declared in Proxy's response
             CopyResponseHeaders(context.ProxyResponse.TrailingHeaders, outgoingTrailers);
         }
@@ -55,13 +49,10 @@ public class ResponseTrailersAllowedTransform : ResponseTrailersTransform
     }
 
     // See https://github.com/microsoft/reverse-proxy/blob/main/src/ReverseProxy/Forwarder/HttpTransformer.cs#:~:text=void-,CopyResponseHeaders
-    private void CopyResponseHeaders(HttpHeaders source, IHeaderDictionary destination)
-    {
-        foreach (var header in source.NonValidated)
-        {
+    private void CopyResponseHeaders(HttpHeaders source, IHeaderDictionary destination) {
+        foreach (var header in source.NonValidated) {
             var headerName = header.Key;
-            if (!AllowedHeadersSet.Contains(headerName))
-            {
+            if (!AllowedHeadersSet.Contains(headerName)) {
                 continue;
             }
 

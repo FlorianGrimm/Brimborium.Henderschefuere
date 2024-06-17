@@ -5,20 +5,16 @@ namespace Brimborium.Henderschefuere.Health;
 
 // Policy marking destinations as available only if their active and passive health states
 /// are either 'Healthy' or 'Unknown'/>.
-internal class HealthyAndUnknownDestinationsPolicy : IAvailableDestinationsPolicy
-{
+internal class HealthyAndUnknownDestinationsPolicy : IAvailableDestinationsPolicy {
     public virtual string Name => HealthCheckConstants.AvailableDestinations.HealthyAndUnknown;
 
-    public virtual IReadOnlyList<DestinationState> GetAvailalableDestinations(ClusterConfig config, IReadOnlyList<DestinationState> allDestinations)
-    {
+    public virtual IReadOnlyList<DestinationState> GetAvailalableDestinations(ClusterConfig config, IReadOnlyList<DestinationState> allDestinations) {
         var availableDestinations = allDestinations;
         var activeEnabled = (config.HealthCheck?.Active?.Enabled).GetValueOrDefault();
         var passiveEnabled = (config.HealthCheck?.Passive?.Enabled).GetValueOrDefault();
 
-        if (activeEnabled || passiveEnabled)
-        {
-            availableDestinations = allDestinations.Where(destination =>
-            {
+        if (activeEnabled || passiveEnabled) {
+            availableDestinations = allDestinations.Where(destination => {
                 // Only consider the current state if those checks are enabled.
                 var healthState = destination.Health;
                 var active = activeEnabled ? healthState.Active : DestinationHealth.Unknown;

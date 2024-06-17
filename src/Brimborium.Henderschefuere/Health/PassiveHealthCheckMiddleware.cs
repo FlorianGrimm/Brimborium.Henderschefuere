@@ -5,27 +5,23 @@ using System.Collections.Frozen;
 
 namespace Brimborium.Henderschefuere.Health;
 
-public class PassiveHealthCheckMiddleware
-{
+public class PassiveHealthCheckMiddleware {
     private readonly RequestDelegate _next;
     private readonly FrozenDictionary<string, IPassiveHealthCheckPolicy> _policies;
 
-    public PassiveHealthCheckMiddleware(RequestDelegate next, IEnumerable<IPassiveHealthCheckPolicy> policies)
-    {
+    public PassiveHealthCheckMiddleware(RequestDelegate next, IEnumerable<IPassiveHealthCheckPolicy> policies) {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         _policies = policies?.ToDictionaryByUniqueId(p => p.Name) ?? throw new ArgumentNullException(nameof(policies));
     }
 
-    public async Task Invoke(HttpContext context)
-    {
+    public async Task Invoke(HttpContext context) {
         await _next(context);
 
         var proxyFeature = context.GetReverseProxyFeature();
         var options = proxyFeature.Cluster.Config.HealthCheck?.Passive;
 
         // Do nothing if no target destination has been chosen for the request.
-        if (options is null || !options.Enabled.GetValueOrDefault() || proxyFeature.ProxiedDestination is null)
-        {
+        if (options is null || !options.Enabled.GetValueOrDefault() || proxyFeature.ProxiedDestination is null) {
             return;
         }
 

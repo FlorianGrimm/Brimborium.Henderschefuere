@@ -1,6 +1,4 @@
-﻿using System.Collections.Frozen;
-
-namespace Brimborium.Henderschefuere.Configuration.ClusterValidators;
+﻿namespace Brimborium.Henderschefuere.Configuration.ClusterValidators;
 
 internal sealed class SessionAffinityValidator : IClusterValidator {
     private readonly FrozenDictionary<string, IAffinityFailurePolicy> _affinityFailurePolicies;

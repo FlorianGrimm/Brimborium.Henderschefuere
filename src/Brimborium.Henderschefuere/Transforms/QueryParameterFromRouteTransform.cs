@@ -3,18 +3,14 @@
 
 namespace Brimborium.Henderschefuere.Transforms;
 
-public class QueryParameterRouteTransform : QueryParameterTransform
-{
+public class QueryParameterRouteTransform : QueryParameterTransform {
     public QueryParameterRouteTransform(QueryStringTransformMode mode, string key, string routeValueKey)
-        : base(mode, key)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
+        : base(mode, key) {
+        if (string.IsNullOrEmpty(key)) {
             throw new ArgumentException($"'{nameof(key)}' cannot be null or empty.", nameof(key));
         }
 
-        if (string.IsNullOrEmpty(routeValueKey))
-        {
+        if (string.IsNullOrEmpty(routeValueKey)) {
             throw new ArgumentException($"'{nameof(routeValueKey)}' cannot be null or empty.", nameof(routeValueKey));
         }
 
@@ -24,11 +20,9 @@ public class QueryParameterRouteTransform : QueryParameterTransform
     internal string RouteValueKey { get; }
 
     /// <inheritdoc/>
-    protected override string? GetValue(RequestTransformContext context)
-    {
+    protected override string? GetValue(RequestTransformContext context) {
         var routeValues = context.HttpContext.Request.RouteValues;
-        if (!routeValues.TryGetValue(RouteValueKey, out var value))
-        {
+        if (!routeValues.TryGetValue(RouteValueKey, out var value)) {
             return null;
         }
 

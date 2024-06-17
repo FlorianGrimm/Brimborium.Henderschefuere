@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.LoadBalancing;
 /// <summary>
 /// Names of built-in load balancing policies.
 /// </summary>
-public static class LoadBalancingPolicies
-{
+public static class LoadBalancingPolicies {
     /// <summary>
     /// Select the alphabetically first available destination without considering load. This is useful for dual destination fail-over systems.
     /// </summary>

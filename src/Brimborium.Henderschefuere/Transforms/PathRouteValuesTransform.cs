@@ -1,16 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.AspNetCore.Routing.Patterns;
-using Microsoft.AspNetCore.Routing.Template;
-
 namespace Brimborium.Henderschefuere.Transforms;
 
 /// <summary>
 /// Generates a new request path by plugging matched route parameters into the given pattern.
 /// </summary>
-public class PathRouteValuesTransform : RequestTransform
-{
+public class PathRouteValuesTransform : RequestTransform {
     private readonly TemplateBinderFactory _binderFactory;
 
     /// <summary>
@@ -19,8 +15,7 @@ public class PathRouteValuesTransform : RequestTransform
     /// <param name="pattern">The pattern used to create the new request path.</param>
     /// <param name="binderFactory">The factory used to bind route parameters to the given path pattern.</param>
     public PathRouteValuesTransform(
-        [StringSyntax("Route")] string pattern, TemplateBinderFactory binderFactory)
-    {
+        [StringSyntax("Route")] string pattern, TemplateBinderFactory binderFactory) {
         _ = pattern ?? throw new ArgumentNullException(nameof(pattern));
         _binderFactory = binderFactory ?? throw new ArgumentNullException(nameof(binderFactory));
         Pattern = RoutePatternFactory.Parse(pattern);
@@ -29,10 +24,8 @@ public class PathRouteValuesTransform : RequestTransform
     internal RoutePattern Pattern { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
@@ -42,10 +35,8 @@ public class PathRouteValuesTransform : RequestTransform
         var routeValuesCopy = new RouteValueDictionary();
 
         // Only copy route values used in the pattern, otherwise they'll be added as query parameters.
-        foreach (var pattern in Pattern.Parameters)
-        {
-            if (routeValues.TryGetValue(pattern.Name, out var value))
-            {
+        foreach (var pattern in Pattern.Parameters) {
+            if (routeValues.TryGetValue(pattern.Name, out var value)) {
                 routeValuesCopy[pattern.Name] = value;
             }
         }

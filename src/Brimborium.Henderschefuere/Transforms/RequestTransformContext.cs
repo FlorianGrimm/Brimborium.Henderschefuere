@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Transform state for use with <see cref="RequestTransform"/>
 /// </summary>
-public class RequestTransformContext
-{
+public class RequestTransformContext {
     /// <summary>
     /// The current request context.
     /// </summary>
@@ -40,8 +39,7 @@ public class RequestTransformContext
     /// <summary>
     /// The query used for the proxy request.
     /// </summary>
-    public QueryTransformContext Query
-    {
+    public QueryTransformContext Query {
         get => MaybeQuery ??= new QueryTransformContext(HttpContext.Request);
         set => MaybeQuery = value;
     }

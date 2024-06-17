@@ -8,18 +8,15 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Representation of a cluster's destination for use at runtime.
 /// </summary>
-public sealed class DestinationState : IReadOnlyList<DestinationState>
-{
+public sealed class DestinationState : IReadOnlyList<DestinationState> {
     private volatile DestinationModel _model = default!;
 
     /// <summary>
     /// Creates a new instance. This constructor is for tests and infrastructure, this type is normally constructed by
     /// the configuration loading infrastructure.
     /// </summary>
-    public DestinationState(string destinationId)
-    {
-        if (string.IsNullOrEmpty(destinationId))
-        {
+    public DestinationState(string destinationId) {
+        if (string.IsNullOrEmpty(destinationId)) {
             throw new ArgumentNullException(nameof(destinationId));
         }
         DestinationId = destinationId;
@@ -30,8 +27,7 @@ public sealed class DestinationState : IReadOnlyList<DestinationState>
     /// such as updating the <see cref="ReverseProxyFeature"/> via <see cref="HttpContextFeaturesExtensions"/>
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="model"/> is <see langword="null"/>.</exception>
-    public DestinationState(string destinationId, DestinationModel model) : this(destinationId)
-    {
+    public DestinationState(string destinationId, DestinationModel model) : this(destinationId) {
         Model = model ?? throw new ArgumentNullException(nameof(model));
     }
 
@@ -43,8 +39,7 @@ public sealed class DestinationState : IReadOnlyList<DestinationState>
     /// <summary>
     /// A snapshot of the current configuration
     /// </summary>
-    public DestinationModel Model
-    {
+    public DestinationModel Model {
         get => _model;
         internal set => _model = value ?? throw new ArgumentNullException(nameof(value));
     }
@@ -58,8 +53,7 @@ public sealed class DestinationState : IReadOnlyList<DestinationState>
     /// Keeps track of the total number of concurrent requests on this endpoint.
     /// The setter should only be used for testing purposes.
     /// </summary>
-    public int ConcurrentRequestCount
-    {
+    public int ConcurrentRequestCount {
         get => ConcurrencyCounter.Value;
         set => ConcurrencyCounter.Value = value;
     }
@@ -71,27 +65,22 @@ public sealed class DestinationState : IReadOnlyList<DestinationState>
 
     int IReadOnlyCollection<DestinationState>.Count => 1;
 
-    private Enumerator GetEnumerator()
-    {
+    private Enumerator GetEnumerator() {
         return new Enumerator(this);
     }
 
-    IEnumerator<DestinationState> IEnumerable<DestinationState>.GetEnumerator()
-    {
+    IEnumerator<DestinationState> IEnumerable<DestinationState>.GetEnumerator() {
         return GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
+    IEnumerator IEnumerable.GetEnumerator() {
         return GetEnumerator();
     }
 
-    private struct Enumerator : IEnumerator<DestinationState>
-    {
+    private struct Enumerator : IEnumerator<DestinationState> {
         private bool _read;
 
-        internal Enumerator(DestinationState instance)
-        {
+        internal Enumerator(DestinationState instance) {
             Current = instance;
             _read = false;
         }
@@ -100,23 +89,19 @@ public sealed class DestinationState : IReadOnlyList<DestinationState>
 
         object IEnumerator.Current => Current;
 
-        public bool MoveNext()
-        {
-            if (!_read)
-            {
+        public bool MoveNext() {
+            if (!_read) {
                 _read = true;
                 return true;
             }
             return false;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
 
         }
 
-        void IEnumerator.Reset()
-        {
+        void IEnumerator.Reset() {
             throw new NotSupportedException();
         }
     }

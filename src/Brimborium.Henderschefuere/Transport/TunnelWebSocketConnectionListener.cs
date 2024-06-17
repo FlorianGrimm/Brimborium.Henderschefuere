@@ -3,8 +3,7 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
-internal sealed class TunnelWebSocketConnectionListener : IConnectionListener
-{
+internal sealed class TunnelWebSocketConnectionListener : IConnectionListener {
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TunnelWebSocketOptions _options;
@@ -12,10 +11,8 @@ internal sealed class TunnelWebSocketConnectionListener : IConnectionListener
     private readonly UriEndpointWebSocket _endPoint;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
 
-    public TunnelWebSocketConnectionListener(TunnelWebSocketOptions options, UriEndpointWebSocket endpoint)
-    {
-        if (endpoint.Uri is null)
-        {
+    public TunnelWebSocketConnectionListener(TunnelWebSocketOptions options, UriEndpointWebSocket endpoint) {
+        if (endpoint.Uri is null) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
         _options = options;
@@ -28,23 +25,19 @@ internal sealed class TunnelWebSocketConnectionListener : IConnectionListener
 
     private Uri Uri => _endPoint.Uri!;
 
-    public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default) {
+        try {
             cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(_closedCts.Token, cancellationToken).Token;
 
             // Kestrel will keep an active accept call open as long as the transport is active
             await _connectionLock.WaitAsync(cancellationToken);
 
-            while (true)
-            {
+            while (true) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 int delay = 0;
 
-                try
-                {
+                try {
                     var innerConnection = await WebSocketConnectionContext.ConnectAsync(
                         Uri, _options, cancellationToken);
                     delay = 0;
@@ -68,46 +61,36 @@ internal sealed class TunnelWebSocketConnectionListener : IConnectionListener
                     cancellationToken);
                     return connection;
 #endif
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
+                } catch (Exception ex) when (ex is not OperationCanceledException) {
                     // TODO: More sophisticated backoff and retry
-                    if (delay < 60000)
-                    {
+                    if (delay < 60000) {
                         delay += 5000;
                     }
                     await Task.Delay(delay, cancellationToken);
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
+        } catch (OperationCanceledException) {
             return null;
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
+    public async ValueTask DisposeAsync() {
         var listConnections = _connections.Values.ToList();
         List<Task> tasks = new(listConnections.Count);
-        foreach (var connection in listConnections)
-        {
+        foreach (var connection in listConnections) {
             tasks.Add(connection.DisposeAsync().AsTask());
         }
 
-        if (tasks.Count > 0)
-        {
+        if (tasks.Count > 0) {
             await Task.WhenAll(tasks);
         }
     }
 
-    public ValueTask UnbindAsync(CancellationToken cancellationToken = default)
-    {
+    public ValueTask UnbindAsync(CancellationToken cancellationToken = default) {
         _closedCts.Cancel();
 
         var listConnections = _connections.Values.ToList();
-        foreach (var connection in listConnections)
-        {
+        foreach (var connection in listConnections) {
             // REVIEW: Graceful?
             connection.Abort();
         }

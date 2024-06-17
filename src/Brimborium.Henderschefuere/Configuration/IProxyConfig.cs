@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Runtime.CompilerServices;
-
 namespace Brimborium.Henderschefuere.Configuration;
 
 /// <summary>
 /// Represents a snapshot of proxy configuration data. These properties may be accessed multiple times and should not be modified.
 /// </summary>
-public interface IProxyConfig
-{
+public interface IProxyConfig {
     private static readonly ConditionalWeakTable<IProxyConfig, string> _revisionIdsTable = new();
 
     /// <summary>

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Route criteria for a query parameter that must be present on the incoming request.
 /// </summary>
-public sealed record RouteQueryParameter
-{
+public sealed record RouteQueryParameter {
     /// <summary>
     /// Name of the query parameter to look for.
     /// This field is case insensitive and required.
@@ -33,10 +32,8 @@ public sealed record RouteQueryParameter
     /// </summary>
     public bool IsCaseSensitive { get; init; }
 
-    public bool Equals(RouteQueryParameter? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(RouteQueryParameter? other) {
+        if (other is null) {
             return false;
         }
 
@@ -48,8 +45,7 @@ public sealed record RouteQueryParameter
                 : CaseInsensitiveEqualHelper.Equals(Values, other.Values));
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             Name?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             Mode,

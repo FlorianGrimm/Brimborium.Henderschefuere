@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Describes a destination of a cluster.
 /// </summary>
-public sealed record DestinationConfig
-{
+public sealed record DestinationConfig {
     /// <summary>
     /// Address of this destination. E.g. <c>https://127.0.0.1:123/abcd1234/</c>.
     /// This field is required.
@@ -30,10 +29,8 @@ public sealed record DestinationConfig
     /// </summary>
     public string? Host { get; init; }
 
-    public bool Equals(DestinationConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(DestinationConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -43,8 +40,7 @@ public sealed record DestinationConfig
             && CaseSensitiveEqualHelper.Equals(Metadata, other.Metadata);
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             Address?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             Health?.GetHashCode(StringComparison.OrdinalIgnoreCase),

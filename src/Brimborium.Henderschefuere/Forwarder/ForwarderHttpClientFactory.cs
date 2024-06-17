@@ -1,17 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
-
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Brimborium.Henderschefuere.Forwarder;
 
 /// <summary>
 /// Default implementation of <see cref="IForwarderHttpClientFactory"/>.
 /// </summary>
-public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
-{
+public class ForwarderHttpClientFactory : IForwarderHttpClientFactory {
     private readonly ILogger<ForwarderHttpClientFactory> _logger;
 
     /// <summary>
@@ -22,22 +17,18 @@ public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
     /// <summary>
     /// Initializes a new instance of the <see cref="ForwarderHttpClientFactory"/> class.
     /// </summary>
-    public ForwarderHttpClientFactory(ILogger<ForwarderHttpClientFactory> logger)
-    {
+    public ForwarderHttpClientFactory(ILogger<ForwarderHttpClientFactory> logger) {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
-    public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context)
-    {
-        if (CanReuseOldClient(context))
-        {
+    public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) {
+        if (CanReuseOldClient(context)) {
             Log.ClientReused(_logger, context.ClusterId);
             return context.OldClient!;
         }
 
-        var handler = new SocketsHttpHandler
-        {
+        var handler = new SocketsHttpHandler {
             UseProxy = false,
             AllowAutoRedirect = false,
             AutomaticDecompression = DecompressionMethods.None,
@@ -62,8 +53,7 @@ public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
     /// Checks if the options have changed since the old client was created. If not then the
     /// old client will be re-used. Re-use can avoid the latency of creating new connections.
     /// </summary>
-    protected virtual bool CanReuseOldClient(ForwarderHttpClientContext context)
-    {
+    protected virtual bool CanReuseOldClient(ForwarderHttpClientContext context) {
         return context.OldClient is not null && context.NewConfig == context.OldConfig;
     }
 
@@ -74,48 +64,39 @@ public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
     /// <see cref="SocketsHttpHandler.AutomaticDecompression"/>, and <see cref="SocketsHttpHandler.UseCookies"/>
     /// are disabled prior to this call.
     /// </summary>
-    protected virtual void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler)
-    {
+    protected virtual void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler) {
         var newConfig = context.NewConfig;
-        if (newConfig.SslProtocols.HasValue)
-        {
+        if (newConfig.SslProtocols.HasValue) {
             handler.SslOptions.EnabledSslProtocols = newConfig.SslProtocols.Value;
         }
-        if (newConfig.MaxConnectionsPerServer is not null)
-        {
+        if (newConfig.MaxConnectionsPerServer is not null) {
             handler.MaxConnectionsPerServer = newConfig.MaxConnectionsPerServer.Value;
         }
-        if (newConfig.DangerousAcceptAnyServerCertificate ?? false)
-        {
+        if (newConfig.DangerousAcceptAnyServerCertificate ?? false) {
             handler.SslOptions.RemoteCertificateValidationCallback = delegate { return true; };
         }
 
         handler.EnableMultipleHttp2Connections = newConfig.EnableMultipleHttp2Connections.GetValueOrDefault(true);
 
-        if (newConfig.RequestHeaderEncoding is not null)
-        {
+        if (newConfig.RequestHeaderEncoding is not null) {
             var encoding = Encoding.GetEncoding(newConfig.RequestHeaderEncoding);
             handler.RequestHeaderEncodingSelector = (_, _) => encoding;
         }
 
-        if (newConfig.ResponseHeaderEncoding is not null)
-        {
+        if (newConfig.ResponseHeaderEncoding is not null) {
             var encoding = Encoding.GetEncoding(newConfig.ResponseHeaderEncoding);
             handler.ResponseHeaderEncodingSelector = (_, _) => encoding;
         }
 
         var webProxy = TryCreateWebProxy(newConfig.WebProxy);
-        if (webProxy is not null)
-        {
+        if (webProxy is not null) {
             handler.Proxy = webProxy;
             handler.UseProxy = true;
         }
     }
 
-    private static IWebProxy? TryCreateWebProxy(WebProxyConfig? webProxyConfig)
-    {
-        if (webProxyConfig is null || webProxyConfig.Address is null)
-        {
+    private static IWebProxy? TryCreateWebProxy(WebProxyConfig? webProxyConfig) {
+        if (webProxyConfig is null || webProxyConfig.Address is null) {
             return null;
         }
 
@@ -130,13 +111,11 @@ public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
     /// <summary>
     /// Adds any wrapping middleware around the <see cref="HttpMessageHandler"/>.
     /// </summary>
-    protected virtual HttpMessageHandler WrapHandler(ForwarderHttpClientContext context, HttpMessageHandler handler)
-    {
+    protected virtual HttpMessageHandler WrapHandler(ForwarderHttpClientContext context, HttpMessageHandler handler) {
         return handler;
     }
 
-    private static class Log
-    {
+    private static class Log {
         private static readonly Action<ILogger, string, Exception?> _clientCreated = LoggerMessage.Define<string>(
               LogLevel.Debug,
               EventIds.ClientCreated,
@@ -147,13 +126,11 @@ public class ForwarderHttpClientFactory : IForwarderHttpClientFactory
             EventIds.ClientReused,
             "Existing client reused for cluster '{clusterId}'.");
 
-        public static void ClientCreated(ILogger logger, string clusterId)
-        {
+        public static void ClientCreated(ILogger logger, string clusterId) {
             _clientCreated(logger, clusterId, null);
         }
 
-        public static void ClientReused(ILogger logger, string clusterId)
-        {
+        public static void ClientReused(ILogger logger, string clusterId) {
             _clientReused(logger, clusterId, null);
         }
     }

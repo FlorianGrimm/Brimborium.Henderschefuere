@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.WebSocketsTelemetry;
 
-internal sealed class WebSocketsTelemetryStream : DelegatingStream
-{
+internal sealed class WebSocketsTelemetryStream : DelegatingStream {
     private WebSocketsParser _readParser, _writeParser;
 
     public DateTime EstablishedTime { get; }
@@ -12,37 +11,31 @@ internal sealed class WebSocketsTelemetryStream : DelegatingStream
     public long MessagesWritten => _writeParser.MessageCount;
 
     public WebSocketsTelemetryStream(TimeProvider timeProvider, Stream innerStream)
-        : base(innerStream)
-    {
+        : base(innerStream) {
         EstablishedTime = timeProvider.GetUtcNow().UtcDateTime;
         _readParser = new WebSocketsParser(timeProvider, isServer: true);
         _writeParser = new WebSocketsParser(timeProvider, isServer: false);
     }
 
-    public WebSocketCloseReason GetCloseReason(HttpContext context)
-    {
+    public WebSocketCloseReason GetCloseReason(HttpContext context) {
         var clientCloseTime = _readParser.CloseTime;
         var serverCloseTime = _writeParser.CloseTime;
 
         // Mutual, graceful WebSocket close. We report whichever one we saw first.
-        if (clientCloseTime.HasValue && serverCloseTime.HasValue)
-        {
+        if (clientCloseTime.HasValue && serverCloseTime.HasValue) {
             return clientCloseTime.Value < serverCloseTime.Value ? WebSocketCloseReason.ClientGracefulClose : WebSocketCloseReason.ServerGracefulClose;
         }
 
         // One side sent a WebSocket close, but we never saw a response from the other side
         // It is possible an error occurred, but we saw a graceful close first, so that is the initiator
-        if (clientCloseTime.HasValue)
-        {
+        if (clientCloseTime.HasValue) {
             return WebSocketCloseReason.ClientGracefulClose;
         }
-        if (serverCloseTime.HasValue)
-        {
+        if (serverCloseTime.HasValue) {
             return WebSocketCloseReason.ServerGracefulClose;
         }
 
-        return context.Features.Get<IForwarderErrorFeature>()?.Error switch
-        {
+        return context.Features.Get<IForwarderErrorFeature>()?.Error switch {
             // Either side disconnected without sending a WebSocket close
             ForwarderError.UpgradeRequestClient => WebSocketCloseReason.ClientDisconnect,
             ForwarderError.UpgradeRequestCanceled => WebSocketCloseReason.ClientDisconnect,
@@ -64,17 +57,14 @@ internal sealed class WebSocketsTelemetryStream : DelegatingStream
         };
     }
 
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
         var readTask = base.ReadAsync(buffer, cancellationToken);
 
-        if (buffer.Length == 0)
-        {
+        if (buffer.Length == 0) {
             return readTask;
         }
 
-        if (readTask.IsCompletedSuccessfully)
-        {
+        if (readTask.IsCompletedSuccessfully) {
             var read = readTask.GetAwaiter().GetResult();
             _readParser.Consume(buffer.Span.Slice(0, read));
             return new ValueTask<int>(read);
@@ -82,16 +72,14 @@ internal sealed class WebSocketsTelemetryStream : DelegatingStream
 
         return Core(buffer, readTask);
 
-        async ValueTask<int> Core(Memory<byte> buffer, ValueTask<int> readTask)
-        {
+        async ValueTask<int> Core(Memory<byte> buffer, ValueTask<int> readTask) {
             var read = await readTask;
             _readParser.Consume(buffer.Span.Slice(0, read));
             return read;
         }
     }
 
-    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
         _writeParser.Consume(buffer.Span);
         return base.WriteAsync(buffer, cancellationToken);
     }

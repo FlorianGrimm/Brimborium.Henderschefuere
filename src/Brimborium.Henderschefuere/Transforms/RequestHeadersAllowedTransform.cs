@@ -9,12 +9,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Copies only allowed request headers.
 /// </summary>
-public class RequestHeadersAllowedTransform : RequestTransform
-{
-    public RequestHeadersAllowedTransform(string[] allowedHeaders)
-    {
-        if (allowedHeaders is null)
-        {
+public class RequestHeadersAllowedTransform : RequestTransform {
+    public RequestHeadersAllowedTransform(string[] allowedHeaders) {
+        if (allowedHeaders is null) {
             throw new ArgumentNullException(nameof(allowedHeaders));
         }
 
@@ -27,22 +24,18 @@ public class RequestHeadersAllowedTransform : RequestTransform
     private FrozenSet<string> AllowedHeadersSet { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         Debug.Assert(!context.HeadersCopied);
 
-        foreach (var header in context.HttpContext.Request.Headers)
-        {
+        foreach (var header in context.HttpContext.Request.Headers) {
             var headerName = header.Key;
             var headerValue = header.Value;
             if (!StringValues.IsNullOrEmpty(headerValue)
-                && AllowedHeadersSet.Contains(headerName))
-            {
+                && AllowedHeadersSet.Contains(headerName)) {
                 AddHeader(context, headerName, headerValue);
             }
         }

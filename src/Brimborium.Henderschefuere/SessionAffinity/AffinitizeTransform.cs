@@ -8,23 +8,19 @@ namespace Brimborium.Henderschefuere.SessionAffinity;
 /// <summary>
 /// Affinitizes the request to a chosen <see cref="DestinationState"/>.
 /// </summary>
-internal sealed class AffinitizeTransform : ResponseTransform
-{
+internal sealed class AffinitizeTransform : ResponseTransform {
     private readonly ISessionAffinityPolicy _sessionAffinityPolicy;
 
-    public AffinitizeTransform(ISessionAffinityPolicy sessionAffinityPolicy)
-    {
+    public AffinitizeTransform(ISessionAffinityPolicy sessionAffinityPolicy) {
         _sessionAffinityPolicy = sessionAffinityPolicy ?? throw new ArgumentNullException(nameof(sessionAffinityPolicy));
     }
 
-    public override ValueTask ApplyAsync(ResponseTransformContext context)
-    {
+    public override ValueTask ApplyAsync(ResponseTransformContext context) {
         var proxyFeature = context.HttpContext.GetReverseProxyFeature();
         var options = proxyFeature.Cluster.Config.SessionAffinity;
         // The transform should only be added to routes that have affinity enabled.
         // However, the cluster can be re-assigned dynamically.
-        if (options is null || !options.Enabled.GetValueOrDefault())
-        {
+        if (options is null || !options.Enabled.GetValueOrDefault()) {
             return default;
         }
 

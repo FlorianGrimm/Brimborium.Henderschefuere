@@ -6,14 +6,12 @@ namespace Brimborium.Henderschefuere.Management;
 /// <summary>
 /// Reverse Proxy builder for DI configuration.
 /// </summary>
-internal sealed class ReverseProxyBuilder : IReverseProxyBuilder
-{
+internal sealed class ReverseProxyBuilder : IReverseProxyBuilder {
     /// <summary>
     /// Initializes a new instance of the <see cref="ReverseProxyBuilder"/> class.
     /// </summary>
     /// <param name="services">Services collection.</param>
-    public ReverseProxyBuilder(IServiceCollection services)
-    {
+    public ReverseProxyBuilder(IServiceCollection services) {
         Services = services ?? throw new ArgumentNullException(nameof(services));
     }
 

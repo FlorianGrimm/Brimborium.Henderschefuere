@@ -9,66 +9,54 @@ using System.Runtime.CompilerServices;
 namespace Brimborium.Henderschefuere.Utilities;
 
 // Adapted from https://github.com/dotnet/runtime/blob/82fee2692b3954ba8903fa4764f1f4e36a26341a/src/libraries/Common/src/System/Text/ValueStringBuilder.cs
-internal ref partial struct ValueStringBuilder
-{
+internal ref partial struct ValueStringBuilder {
     public const int StackallocThreshold = 512;
 
     private char[]? _arrayToReturnToPool;
     private Span<char> _chars;
     private int _pos;
 
-    public ValueStringBuilder(Span<char> initialBuffer)
-    {
+    public ValueStringBuilder(Span<char> initialBuffer) {
         _arrayToReturnToPool = null;
         _chars = initialBuffer;
         _pos = 0;
     }
 
-    public int Length
-    {
+    public int Length {
         get => _pos;
-        set
-        {
+        set {
             Debug.Assert(value >= 0);
             Debug.Assert(value <= _chars.Length);
             _pos = value;
         }
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         var s = _chars.Slice(0, _pos).ToString();
         Dispose();
         return s;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(char c)
-    {
+    public void Append(char c) {
         var pos = _pos;
         var chars = _chars;
-        if ((uint)pos < (uint)chars.Length)
-        {
+        if ((uint)pos < (uint)chars.Length) {
             chars[pos] = c;
             _pos = pos + 1;
-        }
-        else
-        {
+        } else {
             GrowAndAppend(c);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(string s)
-    {
-        if (s is null)
-        {
+    public void Append(string s) {
+        if (s is null) {
             return;
         }
 
         var pos = _pos;
-        if (pos > _chars.Length - s.Length)
-        {
+        if (pos > _chars.Length - s.Length) {
             Grow(s.Length);
         }
 
@@ -76,11 +64,9 @@ internal ref partial struct ValueStringBuilder
         _pos += s.Length;
     }
 
-    public void Append(ReadOnlySpan<char> value)
-    {
+    public void Append(ReadOnlySpan<char> value) {
         var pos = _pos;
-        if (pos > _chars.Length - value.Length)
-        {
+        if (pos > _chars.Length - value.Length) {
             Grow(value.Length);
         }
 
@@ -89,22 +75,17 @@ internal ref partial struct ValueStringBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(int i)
-    {
+    public void Append(int i) {
         var pos = _pos;
-        if (i.TryFormat(_chars.Slice(pos), out var charsWritten, default, null))
-        {
+        if (i.TryFormat(_chars.Slice(pos), out var charsWritten, default, null)) {
             _pos = pos + charsWritten;
-        }
-        else
-        {
+        } else {
             Append(i.ToString(CultureInfo.InvariantCulture));
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowAndAppend(char c)
-    {
+    private void GrowAndAppend(char c) {
         Grow(1);
         Append(c);
     }
@@ -118,8 +99,7 @@ internal ref partial struct ValueStringBuilder
     /// Number of chars requested beyond current position.
     /// </param>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void Grow(int additionalCapacityBeyondPos)
-    {
+    private void Grow(int additionalCapacityBeyondPos) {
         Debug.Assert(additionalCapacityBeyondPos > 0);
         Debug.Assert(_pos > _chars.Length - additionalCapacityBeyondPos, "Grow called incorrectly, no resize is needed.");
 
@@ -139,19 +119,16 @@ internal ref partial struct ValueStringBuilder
 
         var toReturn = _arrayToReturnToPool;
         _chars = _arrayToReturnToPool = poolArray;
-        if (toReturn is not null)
-        {
+        if (toReturn is not null) {
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose()
-    {
+    public void Dispose() {
         var toReturn = _arrayToReturnToPool;
         this = default; // for safety, to avoid using pooled array if this instance is erroneously appended to again
-        if (toReturn is not null)
-        {
+        if (toReturn is not null) {
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }

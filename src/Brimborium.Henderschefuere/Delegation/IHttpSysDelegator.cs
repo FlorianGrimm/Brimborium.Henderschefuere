@@ -1,7 +1,6 @@
 namespace Brimborium.Henderschefuere.Delegation;
 
-public interface IHttpSysDelegator
-{
+public interface IHttpSysDelegator {
     /// <summary>
     /// Disposes the handle to the given queue if it exists.
     /// </summary>

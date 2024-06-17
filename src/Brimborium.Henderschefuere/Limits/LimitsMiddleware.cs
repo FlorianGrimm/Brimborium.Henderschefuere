@@ -9,29 +9,24 @@ namespace Brimborium.Henderschefuere.Limits;
 /// the possibility of reassigning routes means we need to apply this limit very late. Trying to apply it twice could
 /// result in unexpected behavior like being unable to set it back to the server default.
 /// </summary>
-internal sealed class LimitsMiddleware
-{
+internal sealed class LimitsMiddleware {
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
 
-    public LimitsMiddleware(RequestDelegate next, ILogger<LimitsMiddleware> logger)
-    {
+    public LimitsMiddleware(RequestDelegate next, ILogger<LimitsMiddleware> logger) {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
-    public Task Invoke(HttpContext context)
-    {
+    public Task Invoke(HttpContext context) {
         _ = context ?? throw new ArgumentNullException(nameof(context));
 
         var config = context.GetRouteModel().Config;
 
-        if (config.MaxRequestBodySize.HasValue)
-        {
+        if (config.MaxRequestBodySize.HasValue) {
             var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
-            if (sizeFeature != null && !sizeFeature.IsReadOnly)
-            {
+            if (sizeFeature != null && !sizeFeature.IsReadOnly) {
                 // -1 for disabled
                 var limit = config.MaxRequestBodySize.Value;
                 long? newValue = limit == -1 ? null : limit;
@@ -43,15 +38,13 @@ internal sealed class LimitsMiddleware
         return _next(context);
     }
 
-    private static class Log
-    {
+    private static class Log {
         private static readonly Action<ILogger, long?, Exception?> _maxRequestBodySizeSet = LoggerMessage.Define<long?>(
             LogLevel.Debug,
             EventIds.MaxRequestBodySizeSet,
             "The MaxRequestBodySize has been set to '{limit}'.");
 
-        public static void MaxRequestBodySizeSet(ILogger logger, long? limit)
-        {
+        public static void MaxRequestBodySizeSet(ILogger logger, long? limit) {
             _maxRequestBodySizeSet(logger, limit, null);
         }
     }

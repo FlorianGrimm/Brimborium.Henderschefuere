@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Config for <see cref="IHttpForwarder.SendAsync(HttpContext, string, HttpMessageInvoker, ForwarderRequestConfig, HttpTransformer, CancellationToken)"/>
 /// </summary>
-public sealed record ForwarderRequestConfig
-{
+public sealed record ForwarderRequestConfig {
     /// <summary>
     /// An empty instance of this type.
     /// </summary>
@@ -40,10 +39,8 @@ public sealed record ForwarderRequestConfig
     /// </summary>
     public bool? AllowResponseBuffering { get; init; }
 
-    public bool Equals(ForwarderRequestConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(ForwarderRequestConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -53,8 +50,7 @@ public sealed record ForwarderRequestConfig
             && AllowResponseBuffering == other.AllowResponseBuffering;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(ActivityTimeout,
             VersionPolicy,
             Version,

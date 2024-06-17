@@ -10,8 +10,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// A stream copier that captures errors.
 /// </summary>
-internal static class StreamCopier
-{
+internal static class StreamCopier {
     // Based on performance investigations, see https://github.com/microsoft/reverse-proxy/pull/330#issuecomment-758851852.
     private const int DefaultBufferSize = 65536;
     public const long UnknownLength = -1;
@@ -19,8 +18,7 @@ internal static class StreamCopier
     public static ValueTask<(StreamCopyResult, Exception?)> CopyAsync(bool isRequest, Stream input, Stream output, long promisedContentLength, TimeProvider timeProvider, ActivityCancellationTokenSource activityToken, CancellationToken cancellation)
         => CopyAsync(isRequest, input, output, promisedContentLength, timeProvider, activityToken, autoFlush: false, cancellation);
 
-    public static ValueTask<(StreamCopyResult, Exception?)> CopyAsync(bool isRequest, Stream input, Stream output, long promisedContentLength, TimeProvider timeProvider, ActivityCancellationTokenSource activityToken, bool autoFlush, CancellationToken cancellation)
-    {
+    public static ValueTask<(StreamCopyResult, Exception?)> CopyAsync(bool isRequest, Stream input, Stream output, long promisedContentLength, TimeProvider timeProvider, ActivityCancellationTokenSource activityToken, bool autoFlush, CancellationToken cancellation) {
         Debug.Assert(input is not null);
         Debug.Assert(output is not null);
         Debug.Assert(timeProvider is not null);
@@ -34,28 +32,22 @@ internal static class StreamCopier
         return CopyAsync(input, output, promisedContentLength, telemetry, activityToken, autoFlush, cancellation);
     }
 
-    private static async ValueTask<(StreamCopyResult, Exception?)> CopyAsync(Stream input, Stream output, long promisedContentLength, StreamCopierTelemetry? telemetry, ActivityCancellationTokenSource activityToken, bool autoFlush, CancellationToken cancellation)
-    {
+    private static async ValueTask<(StreamCopyResult, Exception?)> CopyAsync(Stream input, Stream output, long promisedContentLength, StreamCopierTelemetry? telemetry, ActivityCancellationTokenSource activityToken, bool autoFlush, CancellationToken cancellation) {
         var buffer = ArrayPool<byte>.Shared.Rent(DefaultBufferSize);
         var read = 0;
         long contentLength = 0;
-        try
-        {
-            while (true)
-            {
+        try {
+            while (true) {
                 read = 0;
 
                 // Issue a zero-byte read to the input stream to defer buffer allocation until data is available.
                 // Note that if the underlying stream does not supporting blocking on zero byte reads, then this will
                 // complete immediately and won't save any memory, but will still function correctly.
                 var zeroByteReadTask = input.ReadAsync(Memory<byte>.Empty, cancellation);
-                if (zeroByteReadTask.IsCompletedSuccessfully)
-                {
+                if (zeroByteReadTask.IsCompletedSuccessfully) {
                     // Consume the ValueTask's result in case it is backed by an IValueTaskSource
                     _ = zeroByteReadTask.Result;
-                }
-                else
-                {
+                } else {
                     // Take care not to return the same buffer to the pool twice in case zeroByteReadTask throws
                     var bufferToReturn = buffer;
                     buffer = null;
@@ -69,8 +61,7 @@ internal static class StreamCopier
                 read = await input.ReadAsync(buffer.AsMemory(), cancellation);
                 contentLength += read;
                 // Normally this is enforced by the server, but it could get out of sync if something in the proxy modified the body.
-                if (promisedContentLength != UnknownLength && contentLength > promisedContentLength)
-                {
+                if (promisedContentLength != UnknownLength && contentLength > promisedContentLength) {
                     return (StreamCopyResult.InputError, new InvalidOperationException("More bytes received than the specified Content-Length."));
                 }
 
@@ -80,14 +71,10 @@ internal static class StreamCopier
                 activityToken.ResetTimeout();
 
                 // End of the source stream.
-                if (read == 0)
-                {
-                    if (promisedContentLength == UnknownLength || contentLength == promisedContentLength)
-                    {
+                if (read == 0) {
+                    if (promisedContentLength == UnknownLength || contentLength == promisedContentLength) {
                         return (StreamCopyResult.Success, null);
-                    }
-                    else
-                    {
+                    } else {
                         // This can happen if something in the proxy consumes or modifies part or all of the request body before proxying.
                         return (StreamCopyResult.InputError,
                             new InvalidOperationException($"Sent {contentLength} request content bytes, but Content-Length promised {promisedContentLength}."));
@@ -95,8 +82,7 @@ internal static class StreamCopier
                 }
 
                 await output.WriteAsync(buffer.AsMemory(0, read), cancellation);
-                if (autoFlush)
-                {
+                if (autoFlush) {
                     // HttpClient doesn't always flush outgoing data unless the buffer is full or the caller asks.
                     // This is a problem for streaming protocols like WebSockets and gRPC.
                     await output.FlushAsync(cancellation);
@@ -107,31 +93,22 @@ internal static class StreamCopier
                 // Success, reset the activity monitor.
                 activityToken.ResetTimeout();
             }
-        }
-        catch (Exception ex)
-        {
-            if (read == 0)
-            {
+        } catch (Exception ex) {
+            if (read == 0) {
                 telemetry?.AfterRead(contentLength);
-            }
-            else
-            {
+            } else {
                 telemetry?.AfterWrite();
             }
 
-            if (activityToken.CancelledByLinkedToken)
-            {
+            if (activityToken.CancelledByLinkedToken) {
                 return (StreamCopyResult.Canceled, ex);
             }
 
             // If the activity timeout triggered while reading or writing, blame the sender or receiver.
             var result = read == 0 ? StreamCopyResult.InputError : StreamCopyResult.OutputError;
             return (result, ex);
-        }
-        finally
-        {
-            if (buffer is not null)
-            {
+        } finally {
+            if (buffer is not null) {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 
@@ -139,8 +116,7 @@ internal static class StreamCopier
         }
     }
 
-    private sealed class StreamCopierTelemetry
-    {
+    private sealed class StreamCopierTelemetry {
         private readonly bool _isRequest;
         private readonly TimeProvider _timeProvider;
         private long _contentLength;
@@ -151,8 +127,7 @@ internal static class StreamCopier
         private long _lastTime;
         private long _nextTransferringEvent;
 
-        public StreamCopierTelemetry(bool isRequest, TimeProvider timeProvider)
-        {
+        public StreamCopierTelemetry(bool isRequest, TimeProvider timeProvider) {
             _isRequest = isRequest;
             _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
             _firstReadTime = -1;
@@ -163,8 +138,7 @@ internal static class StreamCopier
             _nextTransferringEvent = _lastTime + _timeProvider.TimestampFrequency;
         }
 
-        public void AfterRead(long contentLength)
-        {
+        public void AfterRead(long contentLength) {
             _contentLength = contentLength;
             _iops++;
 
@@ -172,20 +146,17 @@ internal static class StreamCopier
             var currentReadTime = readStop - _lastTime;
             _lastTime = readStop;
             _readTime += currentReadTime;
-            if (_firstReadTime < 0)
-            {
+            if (_firstReadTime < 0) {
                 _firstReadTime = currentReadTime;
             }
         }
 
-        public void AfterWrite()
-        {
+        public void AfterWrite() {
             var writeStop = _timeProvider.GetTimestamp();
             _writeTime += writeStop - _lastTime;
             _lastTime = writeStop;
 
-            if (writeStop >= _nextTransferringEvent)
-            {
+            if (writeStop >= _nextTransferringEvent) {
                 ForwarderTelemetry.Log.ContentTransferring(
                     _isRequest,
                     _contentLength,
@@ -199,8 +170,7 @@ internal static class StreamCopier
             }
         }
 
-        public void Stop()
-        {
+        public void Stop() {
             ForwarderTelemetry.Log.ContentTransferred(
                 _isRequest,
                 _contentLength,

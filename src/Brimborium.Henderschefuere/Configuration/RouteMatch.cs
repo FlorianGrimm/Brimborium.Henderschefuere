@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Describes the matching criteria for a route.
 /// </summary>
-public sealed record RouteMatch
-{
+public sealed record RouteMatch {
     /// <summary>
     /// Only match requests that use these optional HTTP methods. E.g. GET, POST.
     /// </summary>
@@ -34,10 +33,8 @@ public sealed record RouteMatch
     /// </summary>
     public IReadOnlyList<RouteHeader>? Headers { get; init; }
 
-    public bool Equals(RouteMatch? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(RouteMatch? other) {
+        if (other is null) {
             return false;
         }
 
@@ -48,8 +45,7 @@ public sealed record RouteMatch
             && CollectionEqualityHelper.Equals(QueryParameters, other.QueryParameters);
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             Path?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             CaseInsensitiveEqualHelper.GetHashCode(Hosts),

@@ -1,17 +1,13 @@
 namespace Brimborium.Henderschefuere.Transforms;
 
-public class RequestHeaderRouteValueTransform : RequestHeaderTransform
-{
+public class RequestHeaderRouteValueTransform : RequestHeaderTransform {
     public RequestHeaderRouteValueTransform(string headerName, string routeValueKey, bool append)
-        : base(headerName, append)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+        : base(headerName, append) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
-        if (string.IsNullOrEmpty(routeValueKey))
-        {
+        if (string.IsNullOrEmpty(routeValueKey)) {
             throw new ArgumentException($"'{nameof(routeValueKey)}' cannot be null or empty.", nameof(routeValueKey));
         }
 
@@ -20,11 +16,9 @@ public class RequestHeaderRouteValueTransform : RequestHeaderTransform
 
     internal string RouteValueKey { get; }
 
-    protected override string? GetValue(RequestTransformContext context)
-    {
+    protected override string? GetValue(RequestTransformContext context) {
         var routeValues = context.HttpContext.Request.RouteValues;
-        if (!routeValues.TryGetValue(RouteValueKey, out var value))
-        {
+        if (!routeValues.TryGetValue(RouteValueKey, out var value)) {
             return null;
         }
 

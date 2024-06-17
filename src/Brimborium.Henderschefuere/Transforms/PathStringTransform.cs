@@ -6,17 +6,14 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Modifies the proxy request Path with the given value.
 /// </summary>
-public class PathStringTransform : RequestTransform
-{
+public class PathStringTransform : RequestTransform {
     /// <summary>
     /// Creates a new transform.
     /// </summary>
     /// <param name="mode">A <see cref="PathTransformMode"/> indicating how the given value should update the existing path.</param>
     /// <param name="value">The path value used to update the existing value.</param>
-    public PathStringTransform(PathTransformMode mode, PathString value)
-    {
-        if (value.Value is null)
-        {
+    public PathStringTransform(PathTransformMode mode, PathString value) {
+        if (value.Value is null) {
             throw new ArgumentNullException(nameof(value));
         }
 
@@ -29,15 +26,12 @@ public class PathStringTransform : RequestTransform
     internal PathTransformMode Mode { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
-        switch (Mode)
-        {
+        switch (Mode) {
             case PathTransformMode.Set:
                 context.Path = Value;
                 break;
@@ -54,8 +48,7 @@ public class PathStringTransform : RequestTransform
         return default;
     }
 
-    public enum PathTransformMode
-    {
+    public enum PathTransformMode {
         Set,
         Prefix,
         RemovePrefix,

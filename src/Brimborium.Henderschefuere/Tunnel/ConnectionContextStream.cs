@@ -3,14 +3,12 @@ using System.Threading.Tasks.Sources;
 
 namespace Brimborium.Henderschefuere.Tunnel;
 
-internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
-{
+internal class ConnectionContextStream : Stream, IValueTaskSource<object?> {
     private readonly ConnectionContext _connectionContext;
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();
 
-    public ConnectionContextStream(ConnectionContext connectionContext)
-    {
+    public ConnectionContextStream(ConnectionContext connectionContext) {
         _connectionContext = connectionContext;
     }
 
@@ -22,26 +20,21 @@ internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
 
     public override bool CanWrite => true;
 
-    public override Task FlushAsync(CancellationToken cancellationToken)
-    {
+    public override Task FlushAsync(CancellationToken cancellationToken) {
         return Task.CompletedTask;
     }
 
-    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
         await _connectionContext.Transport.Output.WriteAsync(buffer, cancellationToken);
     }
 
-    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
         var result = await _connectionContext.Transport.Input.ReadAsync(cancellationToken).ConfigureAwait(false);
         return HandleReadResult(result, buffer.Span);
     }
 
-    private int HandleReadResult(ReadResult result, Span<byte> buffer)
-    {
-        if (result.IsCanceled)
-        {
+    private int HandleReadResult(ReadResult result, Span<byte> buffer) {
+        if (result.IsCanceled) {
             throw new OperationCanceledException();
         }
 
@@ -49,10 +42,8 @@ internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
         var bufferLength = sequence.Length;
         var consumed = sequence.Start;
 
-        try
-        {
-            if (bufferLength != 0)
-            {
+        try {
+            if (bufferLength != 0) {
                 var actual = (int)Math.Min(bufferLength, buffer.Length);
                 var slice = actual == bufferLength ? sequence : sequence.Slice(0, actual);
                 consumed = slice.End;
@@ -61,33 +52,26 @@ internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
                 return actual;
             }
 
-            if (result.IsCompleted)
-            {
+            if (result.IsCompleted) {
                 return 0;
             }
-        }
-        finally
-        {
+        } finally {
             _connectionContext.Transport.Input.AdvanceTo(consumed);
         }
 
         return 0;
     }
 
-    public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
-    {
+    public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) {
         // Delegate to CopyToAsync on the PipeReader
         return _connectionContext.Transport.Input.CopyToAsync(destination, cancellationToken);
     }
 
-    internal void Shutdown()
-    {
+    internal void Shutdown() {
         _connectionContext.Abort();
 
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -95,12 +79,9 @@ internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
         }
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+    protected override void Dispose(bool disposing) {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -124,28 +105,23 @@ internal class ConnectionContextStream : Stream, IValueTaskSource<object?>
 
     public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-    public override void Flush()
-    {
+    public override void Flush() {
         throw new NotSupportedException();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
+    public override int Read(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
+    public override long Seek(long offset, SeekOrigin origin) {
         throw new NotSupportedException();
     }
 
-    public override void SetLength(long value)
-    {
+    public override void SetLength(long value) {
         throw new NotSupportedException();
     }
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
 }

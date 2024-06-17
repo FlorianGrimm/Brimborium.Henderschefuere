@@ -31,8 +31,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// this class will need to be updated.
 /// </para>
 /// </remarks>
-internal sealed class StreamCopyHttpContent : HttpContent
-{
+internal sealed class StreamCopyHttpContent : HttpContent {
     private readonly HttpContext _context;
     // HttpClient's machinery keeps an internal buffer that doesn't get flushed to the socket on every write.
     // Some protocols (e.g. gRPC) may rely on specific bytes being sent, and HttpClient's buffering would prevent it.
@@ -43,8 +42,7 @@ internal sealed class StreamCopyHttpContent : HttpContent
     private readonly TaskCompletionSource<(StreamCopyResult, Exception?)> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _started;
 
-    public StreamCopyHttpContent(HttpContext context, bool isStreamingRequest, TimeProvider timeProvider, ILogger logger, ActivityCancellationTokenSource activityToken)
-    {
+    public StreamCopyHttpContent(HttpContext context, bool isStreamingRequest, TimeProvider timeProvider, ILogger logger, ActivityCancellationTokenSource activityToken) {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _isStreamingRequest = isStreamingRequest;
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
@@ -114,15 +112,12 @@ internal sealed class StreamCopyHttpContent : HttpContent
     /// we have full control over pumping bytes to the target stream for all protocols
     /// (except Web Sockets, which is handled separately).
     /// </remarks>
-    protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
-    {
+    protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) {
         return SerializeToStreamAsync(stream, context, CancellationToken.None);
     }
 
-    protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken)
-    {
-        if (Interlocked.Exchange(ref _started, 1) == 1)
-        {
+    protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken) {
+        if (Interlocked.Exchange(ref _started, 1) == 1) {
             throw new InvalidOperationException("Stream was already consumed.");
         }
 
@@ -132,39 +127,29 @@ internal sealed class StreamCopyHttpContent : HttpContent
         // _cancellation will be the same as cancellationToken for HTTP/1.1, so we can avoid the overhead of linking them
         CancellationTokenSource? linkedCts = null;
 
-        if (_activityToken.Token == cancellationToken)
-        {
+        if (_activityToken.Token == cancellationToken) {
             // We're talking to the destination via HTTP/1.1, so this can't be a streaming gRPC request.
             _isStreamingRequest = false;
             // TODO: Log if _isStreamingRequest is true? Something went wrong with protocol selection.
-        }
-        else
-        {
+        } else {
             Debug.Assert(cancellationToken.CanBeCanceled);
             linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_activityToken.Token, cancellationToken);
             cancellationToken = linkedCts.Token;
 
-            if (_isStreamingRequest)
-            {
+            if (_isStreamingRequest) {
                 DisableMinRequestBodyDataRateAndMaxRequestBodySize(_context);
             }
         }
 
-        try
-        {
+        try {
             // Immediately flush request stream to send headers
             // https://github.com/dotnet/corefx/issues/39586#issuecomment-516210081
-            try
-            {
+            try {
                 await stream.FlushAsync(cancellationToken);
-            }
-            catch (OperationCanceledException oex)
-            {
+            } catch (OperationCanceledException oex) {
                 _tcs.TrySetResult((StreamCopyResult.Canceled, oex));
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 _tcs.TrySetResult((StreamCopyResult.OutputError, ex));
                 return;
             }
@@ -189,30 +174,24 @@ internal sealed class StreamCopyHttpContent : HttpContent
             // We have to throw something here so the transport knows the body is incomplete.
             // We can't re-throw the original exception since that would cause concurrency issues.
             // We need to wrap it.
-            if (result == StreamCopyResult.InputError)
-            {
+            if (result == StreamCopyResult.InputError) {
                 throw new IOException("An error occurred when reading the request body from the client.", error);
             }
-            if (result == StreamCopyResult.Canceled)
-            {
+            if (result == StreamCopyResult.Canceled) {
                 throw new OperationCanceledException("The request body copy was canceled.", error);
             }
-        }
-        finally
-        {
+        } finally {
             linkedCts?.Dispose();
         }
     }
 
     // this is used internally by HttpContent.ReadAsStreamAsync(...)
-    protected override Task<Stream> CreateContentReadStreamAsync()
-    {
+    protected override Task<Stream> CreateContentReadStreamAsync() {
         // Nobody should be calling this...
         throw new NotImplementedException();
     }
 
-    protected override bool TryComputeLength(out long length)
-    {
+    protected override bool TryComputeLength(out long length) {
         // We can't know the length of the content being pushed to the output stream.
         length = -1;
         return false;
@@ -228,23 +207,17 @@ internal sealed class StreamCopyHttpContent : HttpContent
     /// Inspired on
     /// <see href="https://github.com/grpc/grpc-dotnet/blob/3ce9b104524a4929f5014c13cd99ba9a1c2431d4/src/Grpc.AspNetCore.Server/Internal/CallHandlers/ServerCallHandlerBase.cs#L127"/>.
     /// </remarks>
-    private void DisableMinRequestBodyDataRateAndMaxRequestBodySize(HttpContext httpContext)
-    {
+    private void DisableMinRequestBodyDataRateAndMaxRequestBodySize(HttpContext httpContext) {
         var minRequestBodyDataRateFeature = httpContext.Features.Get<IHttpMinRequestBodyDataRateFeature>();
-        if (minRequestBodyDataRateFeature is not null)
-        {
+        if (minRequestBodyDataRateFeature is not null) {
             minRequestBodyDataRateFeature.MinDataRate = null;
         }
 
         var maxRequestBodySizeFeature = httpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
-        if (maxRequestBodySizeFeature is not null)
-        {
-            if (!maxRequestBodySizeFeature.IsReadOnly)
-            {
+        if (maxRequestBodySizeFeature is not null) {
+            if (!maxRequestBodySizeFeature.IsReadOnly) {
                 maxRequestBodySizeFeature.MaxRequestBodySize = null;
-            }
-            else
-            {
+            } else {
                 // IsReadOnly could be true if middleware has already started reading the request body
                 // In that case we can't disable the max request body size for the request stream
                 _logger.LogWarning("Unable to disable max request body size.");

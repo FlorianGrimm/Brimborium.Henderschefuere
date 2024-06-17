@@ -3,12 +3,9 @@
 
 namespace Brimborium.Henderschefuere.Transforms;
 
-public abstract class QueryParameterTransform : RequestTransform
-{
-    public QueryParameterTransform(QueryStringTransformMode mode, string key)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
+public abstract class QueryParameterTransform : RequestTransform {
+    public QueryParameterTransform(QueryStringTransformMode mode, string key) {
+        if (string.IsNullOrEmpty(key)) {
             throw new ArgumentException($"'{nameof(key)}' cannot be null or empty.", nameof(key));
         }
 
@@ -21,22 +18,17 @@ public abstract class QueryParameterTransform : RequestTransform
     internal string Key { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         var value = GetValue(context);
-        if (value is not null)
-        {
-            switch (Mode)
-            {
+        if (value is not null) {
+            switch (Mode) {
                 case QueryStringTransformMode.Append:
                     StringValues newValue = value;
-                    if (context.Query.Collection.TryGetValue(Key, out var currentValue))
-                    {
+                    if (context.Query.Collection.TryGetValue(Key, out var currentValue)) {
                         newValue = StringValues.Concat(currentValue, value);
                     }
                     context.Query.Collection[Key] = newValue;
@@ -55,8 +47,7 @@ public abstract class QueryParameterTransform : RequestTransform
     protected abstract string? GetValue(RequestTransformContext context);
 }
 
-public enum QueryStringTransformMode
-{
+public enum QueryStringTransformMode {
     Append,
     Set
 }

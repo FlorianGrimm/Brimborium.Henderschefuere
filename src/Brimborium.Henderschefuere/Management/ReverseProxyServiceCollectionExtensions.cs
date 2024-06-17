@@ -11,13 +11,11 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// Extensions for <see cref="IServiceCollection"/>
 /// used to register the ReverseProxy's components.
 /// </summary>
-public static class ReverseProxyServiceCollectionExtensions
-{
+public static class ReverseProxyServiceCollectionExtensions {
     /// <summary>
     /// Registers the <see cref="IHttpForwarder"/> service for direct forwarding scenarios.
     /// </summary>
-    public static IServiceCollection AddHttpForwarder(this IServiceCollection services)
-    {
+    public static IServiceCollection AddHttpForwarder(this IServiceCollection services) {
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IHttpForwarder, HttpForwarder>();
         services.TryAddSingleton<ITransformBuilder, TransformBuilder>();
@@ -30,8 +28,7 @@ public static class ReverseProxyServiceCollectionExtensions
     /// <summary>
     /// Adds ReverseProxy's services to Dependency Injection.
     /// </summary>
-    public static IReverseProxyBuilder AddReverseProxy(this IServiceCollection services)
-    {
+    public static IReverseProxyBuilder AddReverseProxy(this IServiceCollection services) {
         var builder = new ReverseProxyBuilder(services);
         builder
             .AddConfigBuilder()
@@ -58,15 +55,12 @@ public static class ReverseProxyServiceCollectionExtensions
     /// <summary>
     /// Loads routes and endpoints from config.
     /// </summary>
-    public static IReverseProxyBuilder LoadFromConfig(this IReverseProxyBuilder builder, IConfiguration config)
-    {
-        if (config is null)
-        {
+    public static IReverseProxyBuilder LoadFromConfig(this IReverseProxyBuilder builder, IConfiguration config) {
+        if (config is null) {
             throw new ArgumentNullException(nameof(config));
         }
 
-        builder.Services.AddSingleton<IProxyConfigProvider>(sp =>
-        {
+        builder.Services.AddSingleton<IProxyConfigProvider>(sp => {
             // This is required because we're capturing the configuration via a closure
             return new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), config);
         });
@@ -78,10 +72,8 @@ public static class ReverseProxyServiceCollectionExtensions
     /// Registers a singleton IProxyConfigFilter service. Multiple filters are allowed and they will be run in registration order.
     /// </summary>
     /// <typeparam name="TService">A class that implements IProxyConfigFilter.</typeparam>
-    public static IReverseProxyBuilder AddConfigFilter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TService>(this IReverseProxyBuilder builder) where TService : class, IProxyConfigFilter
-    {
-        if (builder is null)
-        {
+    public static IReverseProxyBuilder AddConfigFilter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TService>(this IReverseProxyBuilder builder) where TService : class, IProxyConfigFilter {
+        if (builder is null) {
             throw new ArgumentNullException(nameof(builder));
         }
 
@@ -94,10 +86,8 @@ public static class ReverseProxyServiceCollectionExtensions
     /// <see cref="AddTransforms(IReverseProxyBuilder, Action{TransformBuilderContext})"/> can be called multiple times to
     /// provide multiple callbacks.
     /// </summary>
-    public static IReverseProxyBuilder AddTransforms(this IReverseProxyBuilder builder, Action<TransformBuilderContext> action)
-    {
-        if (action is null)
-        {
+    public static IReverseProxyBuilder AddTransforms(this IReverseProxyBuilder builder, Action<TransformBuilderContext> action) {
+        if (action is null) {
             throw new ArgumentNullException(nameof(action));
         }
 
@@ -109,8 +99,7 @@ public static class ReverseProxyServiceCollectionExtensions
     /// Provides a <see cref="ITransformProvider"/> implementation that will be run for each route to conditionally add transforms.
     /// <see cref="AddTransforms{T}(IReverseProxyBuilder)"/> can be called multiple times to provide multiple distinct types.
     /// </summary>
-    public static IReverseProxyBuilder AddTransforms<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IReverseProxyBuilder builder) where T : class, ITransformProvider
-    {
+    public static IReverseProxyBuilder AddTransforms<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IReverseProxyBuilder builder) where T : class, ITransformProvider {
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransformProvider, T>());
         return builder;
     }
@@ -120,8 +109,7 @@ public static class ReverseProxyServiceCollectionExtensions
     /// the associated transform actions. <see cref="AddTransformFactory{T}(IReverseProxyBuilder)"/> can be called multiple
     /// times to provide multiple distinct types.
     /// </summary>
-    public static IReverseProxyBuilder AddTransformFactory<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IReverseProxyBuilder builder) where T : class, ITransformFactory
-    {
+    public static IReverseProxyBuilder AddTransformFactory<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IReverseProxyBuilder builder) where T : class, ITransformFactory {
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransformFactory, T>());
         return builder;
     }
@@ -131,26 +119,21 @@ public static class ReverseProxyServiceCollectionExtensions
     /// This will be called each time a cluster is added or changed. Cluster settings are applied to the handler before
     /// the callback. Custom data can be provided in the cluster metadata.
     /// </summary>
-    public static IReverseProxyBuilder ConfigureHttpClient(this IReverseProxyBuilder builder, Action<ForwarderHttpClientContext, SocketsHttpHandler> configure)
-    {
-        if (configure is null)
-        {
+    public static IReverseProxyBuilder ConfigureHttpClient(this IReverseProxyBuilder builder, Action<ForwarderHttpClientContext, SocketsHttpHandler> configure) {
+        if (configure is null) {
             throw new ArgumentNullException(nameof(configure));
         }
 
         // Avoid overriding any other custom factories. This does not handle the case where a IForwarderHttpClientFactory
         // is registered after this call.
         var service = builder.Services.FirstOrDefault(service => service.ServiceType == typeof(IForwarderHttpClientFactory));
-        if (service is not null)
-        {
-            if (service.ImplementationType != typeof(ForwarderHttpClientFactory))
-            {
+        if (service is not null) {
+            if (service.ImplementationType != typeof(ForwarderHttpClientFactory)) {
                 throw new InvalidOperationException($"ConfigureHttpClient will override the custom IForwarderHttpClientFactory type.");
             }
         }
 
-        builder.Services.AddSingleton<IForwarderHttpClientFactory>(services =>
-        {
+        builder.Services.AddSingleton<IForwarderHttpClientFactory>(services => {
             var logger = services.GetRequiredService<ILogger<ForwarderHttpClientFactory>>();
             return new CallbackHttpClientFactory(logger, configure);
         });
@@ -160,11 +143,9 @@ public static class ReverseProxyServiceCollectionExtensions
     /// <summary>
     /// Provides a <see cref="IDestinationResolver"/> implementation which uses <see cref="System.Net.Dns"/> to resolve destinations.
     /// </summary>
-    public static IReverseProxyBuilder AddDnsDestinationResolver(this IReverseProxyBuilder builder, Action<DnsDestinationResolverOptions>? configureOptions = null)
-    {
+    public static IReverseProxyBuilder AddDnsDestinationResolver(this IReverseProxyBuilder builder, Action<DnsDestinationResolverOptions>? configureOptions = null) {
         builder.Services.AddSingleton<IDestinationResolver, DnsDestinationResolver>();
-        if (configureOptions is not null)
-        {
+        if (configureOptions is not null) {
             builder.Services.Configure(configureOptions);
         }
 

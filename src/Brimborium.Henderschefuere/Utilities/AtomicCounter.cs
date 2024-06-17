@@ -3,15 +3,13 @@
 
 namespace Brimborium.Henderschefuere.Utilities;
 
-internal sealed class AtomicCounter
-{
+internal sealed class AtomicCounter {
     private int _value;
 
     /// <summary>
     /// Gets the current value of the counter.
     /// </summary>
-    public int Value
-    {
+    public int Value {
         get => Volatile.Read(ref _value);
         set => Volatile.Write(ref _value, value);
     }
@@ -19,24 +17,21 @@ internal sealed class AtomicCounter
     /// <summary>
     /// Atomically increments the counter value by 1.
     /// </summary>
-    public int Increment()
-    {
+    public int Increment() {
         return Interlocked.Increment(ref _value);
     }
 
     /// <summary>
     /// Atomically decrements the counter value by 1.
     /// </summary>
-    public int Decrement()
-    {
+    public int Decrement() {
         return Interlocked.Decrement(ref _value);
     }
 
     /// <summary>
     /// Atomically resets the counter value to 0.
     /// </summary>
-    public void Reset()
-    {
+    public void Reset() {
         Interlocked.Exchange(ref _value, 0);
     }
 }

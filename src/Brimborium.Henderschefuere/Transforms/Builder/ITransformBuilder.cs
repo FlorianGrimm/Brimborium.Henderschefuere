@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// Validates and builds request and response transforms for a given route.
 /// </summary>
-public interface ITransformBuilder
-{
+public interface ITransformBuilder {
     /// <summary>
     /// Validates that each transform for the given route is known and has the expected parameters. All transforms are validated
     /// so all errors can be reported.

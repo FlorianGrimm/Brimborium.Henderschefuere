@@ -3,12 +3,10 @@
 
 namespace Microsoft.AspNetCore.Builder;
 
-public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
-{
+public class ReverseProxyConventionBuilder : IEndpointConventionBuilder {
     private readonly List<Action<EndpointBuilder>> _conventions;
 
-    internal ReverseProxyConventionBuilder(List<Action<EndpointBuilder>> conventions)
-    {
+    internal ReverseProxyConventionBuilder(List<Action<EndpointBuilder>> conventions) {
         _conventions = conventions ?? throw new ArgumentNullException(nameof(conventions));
     }
 
@@ -16,8 +14,7 @@ public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
     /// Adds the specified convention to the builder. Conventions are used to customize <see cref="EndpointBuilder"/> instances.
     /// </summary>
     /// <param name="convention">The convention to add to the builder.</param>
-    public void Add(Action<EndpointBuilder> convention)
-    {
+    public void Add(Action<EndpointBuilder> convention) {
         _ = convention ?? throw new ArgumentNullException(nameof(convention));
 
         _conventions.Add(convention);
@@ -28,12 +25,10 @@ public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
     /// </summary>
     /// <param name="convention">The convention to add to the builder.</param>
     /// <returns></returns>
-    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder> convention)
-    {
+    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder> convention) {
         _ = convention ?? throw new ArgumentNullException(nameof(convention));
 
-        void Action(EndpointBuilder endpointBuilder)
-        {
+        void Action(EndpointBuilder endpointBuilder) {
             var conventionBuilder = new EndpointBuilderConventionBuilder(endpointBuilder);
             convention(conventionBuilder);
         }
@@ -48,12 +43,10 @@ public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
     /// </summary>
     /// <param name="convention">The convention to add to the builder.</param>
     /// <returns></returns>
-    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder, RouteConfig> convention)
-    {
+    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder, RouteConfig> convention) {
         _ = convention ?? throw new ArgumentNullException(nameof(convention));
 
-        void Action(EndpointBuilder endpointBuilder)
-        {
+        void Action(EndpointBuilder endpointBuilder) {
             var route = endpointBuilder.Metadata.OfType<RouteModel>().Single();
             var conventionBuilder = new EndpointBuilderConventionBuilder(endpointBuilder);
             convention(conventionBuilder, route.Config);
@@ -69,12 +62,10 @@ public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
     /// </summary>
     /// <param name="convention">The convention to add to the builder.</param>
     /// <returns></returns>
-    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder, RouteConfig, ClusterConfig?> convention)
-    {
+    public ReverseProxyConventionBuilder ConfigureEndpoints(Action<IEndpointConventionBuilder, RouteConfig, ClusterConfig?> convention) {
         _ = convention ?? throw new ArgumentNullException(nameof(convention));
 
-        void Action(EndpointBuilder endpointBuilder)
-        {
+        void Action(EndpointBuilder endpointBuilder) {
             var routeModel = endpointBuilder.Metadata.OfType<RouteModel>().Single();
 
             var clusterConfig = routeModel.Cluster?.Model.Config;
@@ -88,17 +79,14 @@ public class ReverseProxyConventionBuilder : IEndpointConventionBuilder
         return this;
     }
 
-    private class EndpointBuilderConventionBuilder : IEndpointConventionBuilder
-    {
+    private class EndpointBuilderConventionBuilder : IEndpointConventionBuilder {
         private readonly EndpointBuilder _endpointBuilder;
 
-        public EndpointBuilderConventionBuilder(EndpointBuilder endpointBuilder)
-        {
+        public EndpointBuilderConventionBuilder(EndpointBuilder endpointBuilder) {
             _endpointBuilder = endpointBuilder;
         }
 
-        public void Add(Action<EndpointBuilder> convention)
-        {
+        public void Add(Action<EndpointBuilder> convention) {
             convention(_endpointBuilder);
         }
     }

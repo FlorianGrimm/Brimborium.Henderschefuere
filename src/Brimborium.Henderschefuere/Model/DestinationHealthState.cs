@@ -6,16 +6,14 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Tracks destination passive and active health states.
 /// </summary>
-public class DestinationHealthState
-{
+public class DestinationHealthState {
     private volatile DestinationHealth _active;
     private volatile DestinationHealth _passive;
 
     /// <summary>
     /// Passive health state.
     /// </summary>
-    public DestinationHealth Passive
-    {
+    public DestinationHealth Passive {
         get => _passive;
         set => _passive = value;
     }
@@ -23,8 +21,7 @@ public class DestinationHealthState
     /// <summary>
     /// Active health state.
     /// </summary>
-    public DestinationHealth Active
-    {
+    public DestinationHealth Active {
         get => _active;
         set => _active = value;
     }

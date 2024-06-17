@@ -12,16 +12,14 @@ namespace Brimborium.Henderschefuere.Model;
 /// Instead, instances of <see cref="RouteModel"/> are replaced
 /// in their entirety when values need to change.
 /// </remarks>
-public sealed class RouteModel
-{
+public sealed class RouteModel {
     /// <summary>
     /// Creates a new instance.
     /// </summary>
     public RouteModel(
         RouteConfig config,
         ClusterState? cluster,
-        HttpTransformer transformer)
-    {
+        HttpTransformer transformer) {
         Config = config ?? throw new ArgumentNullException(nameof(config));
         Cluster = cluster;
         Transformer = transformer ?? throw new ArgumentNullException(nameof(transformer));
@@ -43,8 +41,7 @@ public sealed class RouteModel
     /// </summary>
     public RouteConfig Config { get; }
 
-    internal bool HasConfigChanged(RouteConfig newConfig, ClusterState? cluster, int? routeRevision)
-    {
+    internal bool HasConfigChanged(RouteConfig newConfig, ClusterState? cluster, int? routeRevision) {
         return Cluster != cluster || routeRevision != cluster?.Revision || !Config.Equals(newConfig);
     }
 }

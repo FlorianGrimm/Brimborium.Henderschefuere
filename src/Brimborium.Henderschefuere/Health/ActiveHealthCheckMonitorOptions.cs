@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Defines options for the active health check monitor.
 /// </summary>
-public class ActiveHealthCheckMonitorOptions
-{
+public class ActiveHealthCheckMonitorOptions {
     /// <summary>
     /// Default probing interval.
     /// </summary>

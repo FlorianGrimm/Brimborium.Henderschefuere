@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Allows subscribing to events notifying you when the configuration is loaded and applied, or when those actions fail.
 /// </summary>
-public interface IConfigChangeListener
-{
+public interface IConfigChangeListener {
     /// <summary>
     /// Invoked when an error occurs while loading the configuration.
     /// </summary>

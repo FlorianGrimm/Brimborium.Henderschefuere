@@ -3,27 +3,22 @@
 
 namespace Brimborium.Henderschefuere.LoadBalancing;
 
-internal sealed class PowerOfTwoChoicesLoadBalancingPolicy : ILoadBalancingPolicy
-{
+internal sealed class PowerOfTwoChoicesLoadBalancingPolicy : ILoadBalancingPolicy {
     private readonly IRandomFactory _randomFactory;
 
-    public PowerOfTwoChoicesLoadBalancingPolicy(IRandomFactory randomFactory)
-    {
+    public PowerOfTwoChoicesLoadBalancingPolicy(IRandomFactory randomFactory) {
         _randomFactory = randomFactory;
     }
 
     public string Name => LoadBalancingPolicies.PowerOfTwoChoices;
 
-    public DestinationState? PickDestination(HttpContext context, ClusterState cluster, IReadOnlyList<DestinationState> availableDestinations)
-    {
+    public DestinationState? PickDestination(HttpContext context, ClusterState cluster, IReadOnlyList<DestinationState> availableDestinations) {
         var destinationCount = availableDestinations.Count;
-        if (destinationCount == 0)
-        {
+        if (destinationCount == 0) {
             return null;
         }
-        
-        if (destinationCount == 1)
-        {
+
+        if (destinationCount == 1) {
             return availableDestinations[0];
         }
 
@@ -32,8 +27,7 @@ internal sealed class PowerOfTwoChoicesLoadBalancingPolicy : ILoadBalancingPolic
         var random = _randomFactory.CreateRandomInstance();
         var firstIndex = random.Next(destinationCount);
         int secondIndex;
-        do
-        {
+        do {
             secondIndex = random.Next(destinationCount);
         } while (firstIndex == secondIndex);
         var first = availableDestinations[firstIndex];

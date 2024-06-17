@@ -3,69 +3,58 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This exists solely to track the lifetime of the connection
 /// </summary>
-internal class TrackLifetimeConnectionContext : ConnectionContext
-{
+internal class TrackLifetimeConnectionContext : ConnectionContext {
     private readonly ConnectionContext _connection;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
 
     public TrackLifetimeConnectionContext(
         ConnectionContext connection,
-        TrackLifetimeConnectionContextCollection connectionCollection)
-    {
+        TrackLifetimeConnectionContextCollection connectionCollection) {
         _connection = connection;
         _connectionCollection = connectionCollection;
     }
 
-    public override string ConnectionId
-    {
+    public override string ConnectionId {
         get => _connection.ConnectionId;
         set => _connection.ConnectionId = value;
     }
 
     public override IFeatureCollection Features => _connection.Features;
 
-    public override IDictionary<object, object?> Items
-    {
+    public override IDictionary<object, object?> Items {
         get => _connection.Items;
         set => _connection.Items = value;
     }
 
-    public override IDuplexPipe Transport
-    {
+    public override IDuplexPipe Transport {
         get => _connection.Transport;
         set => _connection.Transport = value;
     }
 
-    public override EndPoint? LocalEndPoint
-    {
+    public override EndPoint? LocalEndPoint {
         get => _connection.LocalEndPoint;
         set => _connection.LocalEndPoint = value;
     }
 
-    public override EndPoint? RemoteEndPoint
-    {
+    public override EndPoint? RemoteEndPoint {
         get => _connection.RemoteEndPoint;
         set => _connection.RemoteEndPoint = value;
     }
 
-    public override CancellationToken ConnectionClosed
-    {
+    public override CancellationToken ConnectionClosed {
         get => _connection.ConnectionClosed;
         set => _connection.ConnectionClosed = value;
     }
 
-    public override void Abort()
-    {
+    public override void Abort() {
         _connection.Abort();
     }
 
-    public override void Abort(ConnectionAbortedException abortReason)
-    {
+    public override void Abort(ConnectionAbortedException abortReason) {
         _connection.Abort(abortReason);
     }
 
-    public override ValueTask DisposeAsync()
-    {
+    public override ValueTask DisposeAsync() {
         _connectionCollection.Remove(this);
         return _connection.DisposeAsync();
     }

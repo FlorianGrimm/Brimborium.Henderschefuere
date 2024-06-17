@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// Validates and builds transforms from the given parameters
 /// </summary>
-public interface ITransformFactory
-{
+public interface ITransformFactory {
     /// <summary>
     /// Checks if the given transform values match a known transform, and if those values have any errors.
     /// </summary>

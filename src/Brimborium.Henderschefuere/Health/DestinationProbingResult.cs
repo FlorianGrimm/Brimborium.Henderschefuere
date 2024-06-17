@@ -6,10 +6,8 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Result of a destination's active health probing.
 /// </summary>
-public readonly struct DestinationProbingResult
-{
-    public DestinationProbingResult(DestinationState destination, HttpResponseMessage? response, Exception? exception)
-    {
+public readonly struct DestinationProbingResult {
+    public DestinationProbingResult(DestinationState destination, HttpResponseMessage? response, Exception? exception) {
         Destination = destination ?? throw new ArgumentNullException(nameof(destination));
         Response = response;
         Exception = exception;

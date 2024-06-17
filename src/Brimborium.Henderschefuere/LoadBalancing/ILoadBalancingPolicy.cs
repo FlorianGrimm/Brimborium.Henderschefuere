@@ -7,8 +7,7 @@ namespace Brimborium.Henderschefuere.LoadBalancing;
 /// Provides a method that applies a load balancing policy
 /// to select a destination.
 /// </summary>
-public interface ILoadBalancingPolicy
-{
+public interface ILoadBalancingPolicy {
     /// <summary>
     ///  A unique identifier for this load balancing policy. This will be referenced from config.
     /// </summary>

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.SessionAffinity;
 /// <summary>
 /// Provides session affinity for load-balanced clusters.
 /// </summary>
-public interface ISessionAffinityPolicy
-{
+public interface ISessionAffinityPolicy {
     /// <summary>
     ///  A unique identifier for this session affinity implementation. This will be referenced from config.
     /// </summary>
@@ -32,8 +31,7 @@ public interface ISessionAffinityPolicy
     /// <param name="destinations"><see cref="DestinationState"/>s available for the request.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns><see cref="AffinityResult"/> carrying the found affinitized destinations if any and the <see cref="AffinityStatus"/>.</returns>
-    ValueTask<AffinityResult> FindAffinitizedDestinationsAsync(HttpContext context, ClusterState cluster, SessionAffinityConfig config, IReadOnlyList<DestinationState> destinations, CancellationToken cancellationToken)
-    {
+    ValueTask<AffinityResult> FindAffinitizedDestinationsAsync(HttpContext context, ClusterState cluster, SessionAffinityConfig config, IReadOnlyList<DestinationState> destinations, CancellationToken cancellationToken) {
         cancellationToken.ThrowIfCancellationRequested();
 
         return new ValueTask<AffinityResult>(FindAffinitizedDestinations(context, cluster, config, destinations));
@@ -56,8 +54,7 @@ public interface ISessionAffinityPolicy
     /// <param name="config">Affinity config.</param>
     /// <param name="destination"><see cref="DestinationState"/> to which request is to be affinitized.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    ValueTask AffinitizeResponseAsync(HttpContext context, ClusterState cluster, SessionAffinityConfig config, DestinationState destination, CancellationToken cancellationToken)
-    {
+    ValueTask AffinitizeResponseAsync(HttpContext context, ClusterState cluster, SessionAffinityConfig config, DestinationState destination, CancellationToken cancellationToken) {
         AffinitizeResponse(context, cluster, config, destination);
         return default;
     }

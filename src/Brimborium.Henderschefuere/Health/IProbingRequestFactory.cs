@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// A factory for creating <see cref="HttpRequestMessage"/>s for active health probes to be sent to destinations.
 /// </summary>
-public interface IProbingRequestFactory
-{
+public interface IProbingRequestFactory {
     /// <summary>
     /// Creates a probing request.
     /// </summary>

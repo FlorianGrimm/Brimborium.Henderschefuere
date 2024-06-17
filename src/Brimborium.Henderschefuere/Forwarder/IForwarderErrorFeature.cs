@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Stores errors and exceptions that occurred when forwarding the request to the destination.
 /// </summary>
-public interface IForwarderErrorFeature
-{
+public interface IForwarderErrorFeature {
     /// <summary>
     /// The specified ProxyError.
     /// </summary>

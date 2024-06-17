@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.SessionAffinity;
 
-internal static class Log
-{
+internal static class Log {
     private static readonly Action<ILogger, string, Exception?> _affinityCannotBeEstablishedBecauseNoDestinationsFound = LoggerMessage.Define<string>(
         LogLevel.Warning,
         EventIds.AffinityCannotBeEstablishedBecauseNoDestinationsFoundOnCluster,
@@ -20,18 +19,15 @@ internal static class Log
         EventIds.DestinationMatchingToAffinityKeyNotFound,
         "Destination matching to the request affinity key is not found on cluster `{clusterId}`. Configured failure policy will be applied.");
 
-    public static void AffinityCannotBeEstablishedBecauseNoDestinationsFound(ILogger logger, string clusterId)
-    {
+    public static void AffinityCannotBeEstablishedBecauseNoDestinationsFound(ILogger logger, string clusterId) {
         _affinityCannotBeEstablishedBecauseNoDestinationsFound(logger, clusterId, null);
     }
 
-    public static void RequestAffinityKeyDecryptionFailed(ILogger logger, Exception? ex)
-    {
+    public static void RequestAffinityKeyDecryptionFailed(ILogger logger, Exception? ex) {
         _requestAffinityKeyDecryptionFailed(logger, ex);
     }
 
-    public static void DestinationMatchingToAffinityKeyNotFound(ILogger logger, string clusterId)
-    {
+    public static void DestinationMatchingToAffinityKeyNotFound(ILogger logger, string clusterId) {
         _destinationMatchingToAffinityKeyNotFound(logger, clusterId, null);
     }
 }

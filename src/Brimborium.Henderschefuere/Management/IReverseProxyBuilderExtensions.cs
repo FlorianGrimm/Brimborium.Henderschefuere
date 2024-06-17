@@ -7,10 +7,8 @@ using Brimborium.Henderschefuere.Routing;
 
 namespace Brimborium.Henderschefuere.Management;
 
-internal static class IReverseProxyBuilderExtensions
-{
-    public static IReverseProxyBuilder AddConfigBuilder(this IReverseProxyBuilder builder)
-    {
+internal static class IReverseProxyBuilderExtensions {
+    public static IReverseProxyBuilder AddConfigBuilder(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IYarpRateLimiterPolicyProvider, YarpRateLimiterPolicyProvider>();
         builder.Services.TryAddSingleton<IYarpOutputCachePolicyProvider, YarpOutputCachePolicyProvider>();
         builder.Services.TryAddSingleton<IConfigValidator, ConfigValidator>();
@@ -42,8 +40,7 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddRuntimeStateManagers(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddRuntimeStateManagers(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IDestinationHealthUpdater, DestinationHealthUpdater>();
 
         builder.Services.TryAddSingleton<IClusterDestinationsUpdater, ClusterDestinationsUpdater>();
@@ -54,23 +51,20 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddConfigManager(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddConfigManager(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<ProxyConfigManager>();
         builder.Services.TryAddSingleton<IProxyStateLookup>(sp => sp.GetRequiredService<ProxyConfigManager>());
         return builder;
     }
 
-    public static IReverseProxyBuilder AddProxy(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddProxy(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IForwarderHttpClientFactory, ForwarderHttpClientFactory>();
 
         builder.Services.AddHttpForwarder();
         return builder;
     }
 
-    public static IReverseProxyBuilder AddLoadBalancingPolicies(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddLoadBalancingPolicies(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IRandomFactory, RandomFactory>();
 
         builder.Services.TryAddEnumerable(new[] {
@@ -84,8 +78,7 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddSessionAffinityPolicies(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddSessionAffinityPolicies(this IReverseProxyBuilder builder) {
         builder.Services.TryAddEnumerable(new[] {
             ServiceDescriptor.Singleton<IAffinityFailurePolicy, RedistributeAffinityFailurePolicy>(),
             ServiceDescriptor.Singleton<IAffinityFailurePolicy, Return503ErrorAffinityFailurePolicy>()
@@ -101,13 +94,11 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddActiveHealthChecks(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddActiveHealthChecks(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IProbingRequestFactory, DefaultProbingRequestFactory>();
 
         // Avoid registering several IActiveHealthCheckMonitor implementations.
-        if (!builder.Services.Any(d => d.ServiceType == typeof(IActiveHealthCheckMonitor)))
-        {
+        if (!builder.Services.Any(d => d.ServiceType == typeof(IActiveHealthCheckMonitor))) {
             builder.Services.AddSingleton<ActiveHealthCheckMonitor>();
             builder.Services.AddSingleton<IActiveHealthCheckMonitor>(p =>
                 p.GetRequiredService<ActiveHealthCheckMonitor>());
@@ -119,14 +110,12 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddPassiveHealthCheck(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddPassiveHealthCheck(this IReverseProxyBuilder builder) {
         builder.Services.AddSingleton<IPassiveHealthCheckPolicy, TransportFailureRateHealthPolicy>();
         return builder;
     }
 
-    public static IReverseProxyBuilder AddHttpSysDelegation(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddHttpSysDelegation(this IReverseProxyBuilder builder) {
         builder.Services.AddSingleton<HttpSysDelegator>();
         builder.Services.TryAddSingleton<IHttpSysDelegator>(p => p.GetRequiredService<HttpSysDelegator>());
         builder.Services.AddSingleton<IClusterChangeListener>(p => p.GetRequiredService<HttpSysDelegator>());
@@ -134,8 +123,7 @@ internal static class IReverseProxyBuilderExtensions
         return builder;
     }
 
-    public static IReverseProxyBuilder AddDestinationResolver(this IReverseProxyBuilder builder)
-    {
+    public static IReverseProxyBuilder AddDestinationResolver(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<IDestinationResolver, NoOpDestinationResolver>();
         return builder;
     }

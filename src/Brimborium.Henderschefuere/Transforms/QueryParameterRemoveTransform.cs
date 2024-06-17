@@ -6,12 +6,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// A request transform that removes the given query parameter.
 /// </summary>
-public class QueryParameterRemoveTransform : RequestTransform
-{
-    public QueryParameterRemoveTransform(string key)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
+public class QueryParameterRemoveTransform : RequestTransform {
+    public QueryParameterRemoveTransform(string key) {
+        if (string.IsNullOrEmpty(key)) {
             throw new ArgumentException($"'{nameof(key)}' cannot be null or empty.", nameof(key));
         }
 
@@ -21,10 +18,8 @@ public class QueryParameterRemoveTransform : RequestTransform
     internal string Key { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 

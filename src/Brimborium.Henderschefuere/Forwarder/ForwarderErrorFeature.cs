@@ -3,10 +3,8 @@
 
 namespace Brimborium.Henderschefuere.Forwarder;
 
-internal sealed class ForwarderErrorFeature : IForwarderErrorFeature
-{
-    internal ForwarderErrorFeature(ForwarderError error, Exception? ex)
-    {
+internal sealed class ForwarderErrorFeature : IForwarderErrorFeature {
+    internal ForwarderErrorFeature(ForwarderError error, Exception? ex) {
         Error = error;
         Exception = ex;
     }

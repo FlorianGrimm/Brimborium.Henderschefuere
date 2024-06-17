@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// For use with <see cref="RequestHeaderForwardedTransform"/>.
 /// </summary>
-public enum NodeFormat
-{
+public enum NodeFormat {
     None,
     Random,
     RandomAndPort,

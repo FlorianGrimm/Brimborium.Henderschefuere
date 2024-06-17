@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// The base class for request transforms.
 /// </summary>
-public abstract class RequestTransform
-{
+public abstract class RequestTransform {
     /// <summary>
     /// Transforms any of the available fields before building the outgoing request.
     /// </summary>
@@ -22,25 +21,18 @@ public abstract class RequestTransform
     /// <param name="context">The transform context.</param>
     /// <param name="headerName">The name of the header to take.</param>
     /// <returns>The requested header value, or StringValues.Empty if none.</returns>
-    public static StringValues TakeHeader(RequestTransformContext context, string headerName)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+    public static StringValues TakeHeader(RequestTransformContext context, string headerName) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
         var proxyRequest = context.ProxyRequest;
 
-        if (RequestUtilities.TryGetValues(proxyRequest.Headers, headerName, out var existingValues))
-        {
+        if (RequestUtilities.TryGetValues(proxyRequest.Headers, headerName, out var existingValues)) {
             proxyRequest.Headers.Remove(headerName);
-        }
-        else if (proxyRequest.Content is { } content && RequestUtilities.TryGetValues(content.Headers, headerName, out existingValues))
-        {
+        } else if (proxyRequest.Content is { } content && RequestUtilities.TryGetValues(content.Headers, headerName, out existingValues)) {
             content.Headers.Remove(headerName);
-        }
-        else if (!context.HeadersCopied)
-        {
+        } else if (!context.HeadersCopied) {
             existingValues = context.HttpContext.Request.Headers[headerName];
         }
 
@@ -50,15 +42,12 @@ public abstract class RequestTransform
     /// <summary>
     /// Adds the given header to the HttpRequestMessage or HttpContent where applicable.
     /// </summary>
-    public static void AddHeader(RequestTransformContext context, string headerName, StringValues values)
-    {
-        if (context is null)
-        {
+    public static void AddHeader(RequestTransformContext context, string headerName, StringValues values) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
-        if (string.IsNullOrEmpty(headerName))
-        {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -68,15 +57,12 @@ public abstract class RequestTransform
     /// <summary>
     /// Removes the given header from the HttpRequestMessage or HttpContent where applicable.
     /// </summary>
-    public static void RemoveHeader(RequestTransformContext context, string headerName)
-    {
-        if (context is null)
-        {
+    public static void RemoveHeader(RequestTransformContext context, string headerName) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
-        if (string.IsNullOrEmpty(headerName))
-        {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 

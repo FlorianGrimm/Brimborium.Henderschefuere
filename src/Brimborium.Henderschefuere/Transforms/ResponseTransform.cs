@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Transforms for responses.
 /// </summary>
-public abstract class ResponseTransform
-{
+public abstract class ResponseTransform {
     /// <summary>
     /// Transforms the given response. The status and headers will have (optionally) already been
     /// copied to the <see cref="HttpResponse"/> and any changes should be made there.
@@ -23,26 +22,19 @@ public abstract class ResponseTransform
     /// <param name="context">The transform context.</param>
     /// <param name="headerName">The name of the header to take.</param>
     /// <returns>The response header value, or StringValues.Empty if none.</returns>
-    public static StringValues TakeHeader(ResponseTransformContext context, string headerName)
-    {
-        if (context is null)
-        {
+    public static StringValues TakeHeader(ResponseTransformContext context, string headerName) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
-        if (string.IsNullOrEmpty(headerName))
-        {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
-        if (context.HttpContext.Response.Headers.TryGetValue(headerName, out var existingValues))
-        {
+        if (context.HttpContext.Response.Headers.TryGetValue(headerName, out var existingValues)) {
             context.HttpContext.Response.Headers.Remove(headerName);
-        }
-        else if (context.ProxyResponse is { } proxyResponse && !context.HeadersCopied)
-        {
-            if (!RequestUtilities.TryGetValues(proxyResponse.Headers, headerName, out existingValues))
-            {
+        } else if (context.ProxyResponse is { } proxyResponse && !context.HeadersCopied) {
+            if (!RequestUtilities.TryGetValues(proxyResponse.Headers, headerName, out existingValues)) {
                 RequestUtilities.TryGetValues(proxyResponse.Content.Headers, headerName, out existingValues);
             }
         }
@@ -53,13 +45,11 @@ public abstract class ResponseTransform
     /// <summary>
     /// Sets the given header on the HttpResponse.
     /// </summary>
-    public static void SetHeader(ResponseTransformContext context, string headerName, StringValues values)
-    {
+    public static void SetHeader(ResponseTransformContext context, string headerName, StringValues values) {
         context.HttpContext.Response.Headers[headerName] = values;
     }
 
-    internal static bool Success(ResponseTransformContext context)
-    {
+    internal static bool Success(ResponseTransformContext context) {
         // TODO: How complex should this get? Compare with http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header
         return context.HttpContext.Response.StatusCode < 400;
     }

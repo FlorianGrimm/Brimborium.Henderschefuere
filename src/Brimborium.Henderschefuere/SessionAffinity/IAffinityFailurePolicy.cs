@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.SessionAffinity;
 /// <summary>
 /// Affinity failures handling policy.
 /// </summary>
-public interface IAffinityFailurePolicy
-{
+public interface IAffinityFailurePolicy {
     /// <summary>
     ///  A unique identifier for this failure policy. This will be referenced from config.
     /// </summary>

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.ServiceDiscovery;
 /// <summary>
 /// Resolves destination addresses.
 /// </summary>
-public interface IDestinationResolver
-{
+public interface IDestinationResolver {
     /// <summary>
     /// Resolves the provided destinations and returns resolved destinations.
     /// </summary>

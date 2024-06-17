@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Specifies the conditions under which a response transform will run.
 /// </summary>
-public enum ResponseCondition
-{
+public enum ResponseCondition {
     /// <summary>
     /// The transform runs for all conditions.
     /// </summary>

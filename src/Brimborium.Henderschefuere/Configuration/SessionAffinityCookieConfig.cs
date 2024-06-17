@@ -8,8 +8,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Config for session affinity cookies.
 /// </summary>
-public sealed record SessionAffinityCookieConfig
-{
+public sealed record SessionAffinityCookieConfig {
     /// <summary>
     /// The cookie path.
     /// </summary>
@@ -36,7 +35,7 @@ public sealed record SessionAffinityCookieConfig
     /// The SameSite attribute of the cookie.
     /// </summary>
     /// <remarks>Defaults to <see cref="SameSiteMode.Unspecified"/>.</remarks>
-    public SameSiteMode? SameSite { get; init; }
+    public Microsoft.AspNetCore.Http.SameSiteMode? SameSite { get; init; }
 
     /// <summary>
     /// Gets or sets the lifespan of a cookie.
@@ -55,10 +54,8 @@ public sealed record SessionAffinityCookieConfig
     /// <remarks>Defaults to "false".</remarks>
     public bool? IsEssential { get; init; }
 
-    public bool Equals(SessionAffinityCookieConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(SessionAffinityCookieConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -72,8 +69,7 @@ public sealed record SessionAffinityCookieConfig
             && IsEssential == other.IsEssential;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(Path?.GetHashCode(StringComparison.Ordinal),
             Domain?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             HttpOnly,

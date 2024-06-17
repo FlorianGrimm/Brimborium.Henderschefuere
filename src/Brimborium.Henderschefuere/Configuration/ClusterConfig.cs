@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// A cluster is a group of equivalent endpoints and associated policies.
 /// </summary>
-public sealed record ClusterConfig
-{
+public sealed record ClusterConfig {
     /// <summary>
     /// The Id for this cluster. This needs to be globally unique.
     /// This field is required.
@@ -49,10 +48,8 @@ public sealed record ClusterConfig
     /// </summary>
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
 
-    public bool Equals(ClusterConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(ClusterConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -60,10 +57,8 @@ public sealed record ClusterConfig
             && CollectionEqualityHelper.Equals(Destinations, other.Destinations);
     }
 
-    internal bool EqualsExcludingDestinations(ClusterConfig other)
-    {
-        if (other is null)
-        {
+    internal bool EqualsExcludingDestinations(ClusterConfig other) {
+        if (other is null) {
             return false;
         }
 
@@ -77,8 +72,7 @@ public sealed record ClusterConfig
             && CaseSensitiveEqualHelper.Equals(Metadata, other.Metadata);
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             ClusterId?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             LoadBalancingPolicy?.GetHashCode(StringComparison.OrdinalIgnoreCase),

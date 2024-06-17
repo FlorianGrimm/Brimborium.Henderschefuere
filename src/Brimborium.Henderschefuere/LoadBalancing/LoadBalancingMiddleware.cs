@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
-
 namespace Brimborium.Henderschefuere.LoadBalancing;
 
 /// <summary>
 /// Load balances across the available destinations.
 /// </summary>
-internal sealed class LoadBalancingMiddleware
-{
+internal sealed class LoadBalancingMiddleware {
     private readonly ILogger _logger;
     private readonly FrozenDictionary<string, ILoadBalancingPolicy> _loadBalancingPolicies;
     private readonly RequestDelegate _next;
@@ -17,15 +14,13 @@ internal sealed class LoadBalancingMiddleware
     public LoadBalancingMiddleware(
         RequestDelegate next,
         ILogger<LoadBalancingMiddleware> logger,
-        IEnumerable<ILoadBalancingPolicy> loadBalancingPolicies)
-    {
+        IEnumerable<ILoadBalancingPolicy> loadBalancingPolicies) {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _loadBalancingPolicies = loadBalancingPolicies?.ToDictionaryByUniqueId(p => p.Name) ?? throw new ArgumentNullException(nameof(loadBalancingPolicies));
     }
 
-    public Task Invoke(HttpContext context)
-    {
+    public Task Invoke(HttpContext context) {
         var proxyFeature = context.GetReverseProxyFeature();
 
         var destinations = proxyFeature.AvailableDestinations;
@@ -33,43 +28,33 @@ internal sealed class LoadBalancingMiddleware
 
         DestinationState? destination;
 
-        if (destinationCount == 0)
-        {
+        if (destinationCount == 0) {
             destination = null;
-        }
-        else if (destinationCount == 1)
-        {
+        } else if (destinationCount == 1) {
             destination = destinations[0];
-        }
-        else
-        {
+        } else {
             var currentPolicy = _loadBalancingPolicies.GetRequiredServiceById(proxyFeature.Cluster.Config.LoadBalancingPolicy, LoadBalancingPolicies.PowerOfTwoChoices);
             destination = currentPolicy.PickDestination(context, proxyFeature.Route.Cluster!, destinations);
         }
 
-        if (destination is null)
-        {
+        if (destination is null) {
             // We intentionally do not short circuit here, we allow for later middleware to decide how to handle this case.
             Log.NoAvailableDestinations(_logger, proxyFeature.Cluster.Config.ClusterId);
             proxyFeature.AvailableDestinations = Array.Empty<DestinationState>();
-        }
-        else
-        {
+        } else {
             proxyFeature.AvailableDestinations = destination;
         }
 
         return _next(context);
     }
 
-    private static class Log
-    {
+    private static class Log {
         private static readonly Action<ILogger, string, Exception?> _noAvailableDestinations = LoggerMessage.Define<string>(
             LogLevel.Warning,
             EventIds.NoAvailableDestinations,
             "No available destinations after load balancing for cluster '{clusterId}'.");
 
-        public static void NoAvailableDestinations(ILogger logger, string clusterId)
-        {
+        public static void NoAvailableDestinations(ILogger logger, string clusterId) {
             _noAvailableDestinations(logger, clusterId, null);
         }
     }

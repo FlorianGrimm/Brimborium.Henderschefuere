@@ -1,15 +1,13 @@
 using System.Threading.Tasks.Sources;
 
 namespace Brimborium.Henderschefuere.Tunnel;
-internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable
-{
+internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable {
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();
 
     private readonly HttpContext _context;
 
-    public DuplexHttpStream(HttpContext context)
-    {
+    public DuplexHttpStream(HttpContext context) {
         _context = context;
     }
 
@@ -30,8 +28,7 @@ internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable
 
     public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-    public override Task FlushAsync(CancellationToken cancellationToken)
-    {
+    public override Task FlushAsync(CancellationToken cancellationToken) {
         return Task.CompletedTask;
     }
 
@@ -49,14 +46,11 @@ internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable
     public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
         _tcs.OnCompleted(continuation, state, token, flags);
 
-    public void Abort()
-    {
+    public void Abort() {
         _context.Abort();
 
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -64,12 +58,9 @@ internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable
         }
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+    protected override void Dispose(bool disposing) {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -80,28 +71,23 @@ internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable
         }
     }
 
-    public override void Flush()
-    {
+    public override void Flush() {
         throw new NotSupportedException();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
+    public override int Read(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
+    public override long Seek(long offset, SeekOrigin origin) {
         throw new NotSupportedException();
     }
 
-    public override void SetLength(long value)
-    {
+    public override void SetLength(long value) {
         throw new NotSupportedException();
     }
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
 }

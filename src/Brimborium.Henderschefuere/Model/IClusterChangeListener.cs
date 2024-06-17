@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Listener for changes in the clusters.
 /// </summary>
-public interface IClusterChangeListener
-{
+public interface IClusterChangeListener {
     /// <summary>
     /// Gets called after a new <see cref="ClusterState"/> has been added.
     /// </summary>

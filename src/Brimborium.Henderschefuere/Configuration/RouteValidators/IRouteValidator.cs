@@ -3,8 +3,7 @@ namespace Brimborium.Henderschefuere.Configuration.RouteValidators;
 /// <summary>
 /// Provides method to validate route configuration.
 /// </summary>
-public interface IRouteValidator
-{
+public interface IRouteValidator {
     /// <summary>
     /// Perform validation on a route by adding exceptions to the provided collection.
     /// </summary>

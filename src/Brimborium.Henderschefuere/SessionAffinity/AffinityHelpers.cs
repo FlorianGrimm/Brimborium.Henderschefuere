@@ -3,14 +3,11 @@
 
 namespace Brimborium.Henderschefuere.SessionAffinity;
 
-internal static class AffinityHelpers
-{
-    internal static CookieOptions CreateCookieOptions(SessionAffinityCookieConfig? config, bool isHttps, TimeProvider timeProvider)
-    {
-        return new CookieOptions
-        {
+internal static class AffinityHelpers {
+    internal static CookieOptions CreateCookieOptions(SessionAffinityCookieConfig? config, bool isHttps, TimeProvider timeProvider) {
+        return new CookieOptions {
             Path = config?.Path ?? "/",
-            SameSite = config?.SameSite ?? SameSiteMode.Unspecified,
+            SameSite = config?.SameSite ?? Microsoft.AspNetCore.Http.SameSiteMode.Unspecified,
             HttpOnly = config?.HttpOnly ?? true,
             MaxAge = config?.MaxAge,
             Domain = config?.Domain,

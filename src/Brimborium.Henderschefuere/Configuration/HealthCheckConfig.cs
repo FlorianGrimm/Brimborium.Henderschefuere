@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// All health check config.
 /// </summary>
-public sealed record HealthCheckConfig
-{
+public sealed record HealthCheckConfig {
     /// <summary>
     /// Passive health check config.
     /// </summary>
@@ -23,10 +22,8 @@ public sealed record HealthCheckConfig
     /// </summary>
     public string? AvailableDestinationsPolicy { get; init; }
 
-    public bool Equals(HealthCheckConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(HealthCheckConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -35,8 +32,7 @@ public sealed record HealthCheckConfig
             && string.Equals(AvailableDestinationsPolicy, other.AvailableDestinationsPolicy, StringComparison.OrdinalIgnoreCase);
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             Passive,
             Active,

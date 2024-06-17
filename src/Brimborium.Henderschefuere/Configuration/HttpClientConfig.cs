@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security.Authentication;
-
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Brimborium.Henderschefuere.Configuration;
@@ -13,8 +11,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <remarks>
 /// If you need a more granular approach, please use a <see href="https://microsoft.github.io/reverse-proxy/articles/http-client-config.html#custom-iforwarderhttpclientfactory">custom implementation of <see cref="IForwarderHttpClientFactory"/></see>.
 /// </remarks>
-public sealed record HttpClientConfig
-{
+public sealed record HttpClientConfig {
     /// <summary>
     /// An empty options instance.
     /// </summary>
@@ -80,10 +77,8 @@ public sealed record HttpClientConfig
     /// </remarks>
     public string? ResponseHeaderEncoding { get; init; }
 
-    public bool Equals(HttpClientConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(HttpClientConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -97,8 +92,7 @@ public sealed record HttpClientConfig
                && WebProxy == other.WebProxy;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(SslProtocols,
             DangerousAcceptAnyServerCertificate,
             MaxConnectionsPerServer,

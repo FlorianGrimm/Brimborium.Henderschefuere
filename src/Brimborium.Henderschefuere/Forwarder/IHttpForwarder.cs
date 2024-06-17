@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Forward an HTTP request to a chosen destination.
 /// </summary>
-public interface IHttpForwarder
-{
+public interface IHttpForwarder {
     /// <summary>
     /// Forwards the incoming request to the destination server, and the response back to the client.
     /// </summary>

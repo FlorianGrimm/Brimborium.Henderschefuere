@@ -16,8 +16,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// to enable a fast calculation of the current failure rate. When a new proxied request is reported, its status firstly affects those 2 aggregated counters and then also gets put
 /// in the record history. Once some record moves out of the detection time window, the failed and total counter deltas stored on it get subtracted from the respective aggregated counters.
 /// </remarks>
-internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPolicy
-{
+internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPolicy {
     private static readonly TimeSpan _defaultReactivationPeriod = TimeSpan.FromSeconds(60);
     private readonly IDestinationHealthUpdater _healthUpdater;
     private readonly TransportFailureRateHealthPolicyOptions _policyOptions;
@@ -30,15 +29,13 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
     public TransportFailureRateHealthPolicy(
         IOptions<TransportFailureRateHealthPolicyOptions> policyOptions,
         TimeProvider timeProvider,
-        IDestinationHealthUpdater healthUpdater)
-    {
+        IDestinationHealthUpdater healthUpdater) {
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         _policyOptions = policyOptions?.Value ?? throw new ArgumentNullException(nameof(policyOptions));
         _healthUpdater = healthUpdater ?? throw new ArgumentNullException(nameof(healthUpdater));
     }
 
-    public void RequestProxied(HttpContext context, ClusterState cluster, DestinationState destination)
-    {
+    public void RequestProxied(HttpContext context, ClusterState cluster, DestinationState destination) {
         var newHealth = EvaluateProxiedRequest(cluster, destination, DetermineIfDestinationFailed(context));
         var clusterReactivationPeriod = cluster.Model.Config.HealthCheck?.Passive?.ReactivationPeriod ?? _defaultReactivationPeriod;
         // Avoid reactivating until the history has expired so that it does not affect future health assessments.
@@ -46,13 +43,11 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
         _healthUpdater.SetPassive(cluster, destination, newHealth, reactivationPeriod);
     }
 
-    private DestinationHealth EvaluateProxiedRequest(ClusterState cluster, DestinationState destination, bool failed)
-    {
+    private DestinationHealth EvaluateProxiedRequest(ClusterState cluster, DestinationState destination, bool failed) {
         var history = _requestHistories.GetOrCreateValue(destination);
         var rateLimitEntry = _clusterFailureRateLimits.GetValue(cluster, c => new ParsedMetadataEntry<double>(TryParse, c, TransportFailureRateHealthPolicyOptions.FailureRateLimitMetadataName));
         var rateLimit = rateLimitEntry.GetParsedOrDefault(_policyOptions.DefaultFailureRateLimit);
-        lock (history)
-        {
+        lock (history) {
             var failureRate = history.AddNew(
                 _timeProvider,
                 _policyOptions.DetectionWindowSize,
@@ -62,21 +57,17 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
         }
     }
 
-    private static bool TryParse(string stringValue, out double parsedValue)
-    {
+    private static bool TryParse(string stringValue, out double parsedValue) {
         return double.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedValue);
     }
 
-    private static bool DetermineIfDestinationFailed(HttpContext context)
-    {
+    private static bool DetermineIfDestinationFailed(HttpContext context) {
         var errorFeature = context.Features.Get<IForwarderErrorFeature>();
-        if (errorFeature is null)
-        {
+        if (errorFeature is null) {
             return false;
         }
 
-        if (context.RequestAborted.IsCancellationRequested)
-        {
+        if (context.RequestAborted.IsCancellationRequested) {
             // The client disconnected/canceled the request - the failure may not be the destination's fault
             return false;
         }
@@ -91,8 +82,7 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
             || error == ForwarderError.UpgradeResponseDestination;
     }
 
-    private class ProxiedRequestHistory
-    {
+    private class ProxiedRequestHistory {
         private long _nextRecordCreatedAt;
         private long _nextRecordTotalCount;
         private long _nextRecordFailedCount;
@@ -100,12 +90,10 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
         private double _totalCount;
         private readonly Queue<HistoryRecord> _records = new Queue<HistoryRecord>();
 
-        public double AddNew(TimeProvider timeProvider, TimeSpan detectionWindowSize, int totalCountThreshold, bool failed)
-        {
+        public double AddNew(TimeProvider timeProvider, TimeSpan detectionWindowSize, int totalCountThreshold, bool failed) {
             var eventTime = timeProvider.GetTimestamp();
             var detectionWindowSizeLong = detectionWindowSize.TotalSeconds * timeProvider.TimestampFrequency;
-            if (_nextRecordCreatedAt == 0)
-            {
+            if (_nextRecordCreatedAt == 0) {
                 // Initialization.
                 _nextRecordCreatedAt = eventTime + timeProvider.TimestampFrequency;
             }
@@ -113,8 +101,7 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
             // Don't create a new record on each event because it can negatively affect performance.
             // Instead, accumulate failed and total request counts reported during some period
             // and then add only one record storing them.
-            if (eventTime >= _nextRecordCreatedAt)
-            {
+            if (eventTime >= _nextRecordCreatedAt) {
                 _records.Enqueue(new HistoryRecord(_nextRecordCreatedAt, _nextRecordTotalCount, _nextRecordFailedCount));
                 _nextRecordCreatedAt = eventTime + timeProvider.TimestampFrequency;
                 _nextRecordTotalCount = 0;
@@ -123,14 +110,12 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
 
             _nextRecordTotalCount++;
             _totalCount++;
-            if (failed)
-            {
+            if (failed) {
                 _failedCount++;
                 _nextRecordFailedCount++;
             }
 
-            while (_records.Count > 0 && (eventTime - _records.Peek().RecordedAt > detectionWindowSizeLong))
-            {
+            while (_records.Count > 0 && (eventTime - _records.Peek().RecordedAt > detectionWindowSizeLong)) {
                 var removed = _records.Dequeue();
                 _failedCount -= removed.FailedCount;
                 _totalCount -= removed.TotalCount;
@@ -139,10 +124,8 @@ internal sealed class TransportFailureRateHealthPolicy : IPassiveHealthCheckPoli
             return _totalCount < totalCountThreshold || _totalCount == 0 ? 0.0 : _failedCount / _totalCount;
         }
 
-        private readonly struct HistoryRecord
-        {
-            public HistoryRecord(long recordedAt, long totalCount, long failedCount)
-            {
+        private readonly struct HistoryRecord {
+            public HistoryRecord(long recordedAt, long totalCount, long failedCount) {
                 RecordedAt = recordedAt;
                 TotalCount = totalCount;
                 FailedCount = failedCount;

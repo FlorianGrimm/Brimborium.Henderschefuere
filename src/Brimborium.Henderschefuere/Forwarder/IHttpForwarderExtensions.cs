@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Extensions methods for <see cref="IHttpForwarder"/>.
 /// </summary>
-public static class IHttpForwarderExtensions
-{
+public static class IHttpForwarderExtensions {
     /// <summary>
     /// Forwards the incoming request to the destination server, and the response back to the client.
     /// </summary>
@@ -17,10 +16,8 @@ public static class IHttpForwarderExtensions
     /// <param name="httpClient">The HTTP client used to forward the request.</param>
     /// <returns>The status of a forwarding operation.</returns>
     public static ValueTask<ForwarderError> SendAsync(this IHttpForwarder forwarder, HttpContext context, string destinationPrefix,
-        HttpMessageInvoker httpClient)
-    {
-        if (forwarder is null)
-        {
+        HttpMessageInvoker httpClient) {
+        if (forwarder is null) {
             throw new ArgumentNullException(nameof(forwarder));
         }
 
@@ -37,10 +34,8 @@ public static class IHttpForwarderExtensions
     /// <param name="requestConfig">Config for the outgoing request.</param>
     /// <returns>The status of a forwarding operation.</returns>
     public static ValueTask<ForwarderError> SendAsync(this IHttpForwarder forwarder, HttpContext context, string destinationPrefix,
-        HttpMessageInvoker httpClient, ForwarderRequestConfig requestConfig)
-    {
-        if (forwarder is null)
-        {
+        HttpMessageInvoker httpClient, ForwarderRequestConfig requestConfig) {
+        if (forwarder is null) {
             throw new ArgumentNullException(nameof(forwarder));
         }
 
@@ -57,8 +52,7 @@ public static class IHttpForwarderExtensions
     /// <param name="requestTransform">Transform function to apply to the forwarded request.</param>
     /// <returns>The status of a forwarding operation.</returns>
     public static ValueTask<ForwarderError> SendAsync(this IHttpForwarder forwarder, HttpContext context, string destinationPrefix,
-        HttpMessageInvoker httpClient, Func<HttpContext, HttpRequestMessage, ValueTask> requestTransform)
-    {
+        HttpMessageInvoker httpClient, Func<HttpContext, HttpRequestMessage, ValueTask> requestTransform) {
         return forwarder.SendAsync(context, destinationPrefix, httpClient, ForwarderRequestConfig.Empty, requestTransform);
     }
 
@@ -73,8 +67,7 @@ public static class IHttpForwarderExtensions
     /// <param name="requestTransform">Transform function to apply to the forwarded request.</param>
     /// <returns>The status of a forwarding operation.</returns>
     public static ValueTask<ForwarderError> SendAsync(this IHttpForwarder forwarder, HttpContext context, string destinationPrefix,
-        HttpMessageInvoker httpClient, ForwarderRequestConfig requestConfig, Func<HttpContext, HttpRequestMessage, ValueTask> requestTransform)
-    {
+        HttpMessageInvoker httpClient, ForwarderRequestConfig requestConfig, Func<HttpContext, HttpRequestMessage, ValueTask> requestTransform) {
         return forwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig, new RequestTransformer(requestTransform));
     }
 }

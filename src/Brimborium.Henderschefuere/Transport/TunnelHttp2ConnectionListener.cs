@@ -3,8 +3,7 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
-internal sealed class TunnelHttp2ConnectionListener : IConnectionListener
-{
+internal sealed class TunnelHttp2ConnectionListener : IConnectionListener {
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TunnelHttp2Options _options;
@@ -14,10 +13,8 @@ internal sealed class TunnelHttp2ConnectionListener : IConnectionListener
 
     private HttpMessageInvoker? _httpMessageInvoker;
 
-    public TunnelHttp2ConnectionListener(TunnelHttp2Options options, UriEndPointHttp2 endpoint)
-    {
-        if (string.IsNullOrEmpty(endpoint.Uri?.ToString()))
-        {
+    public TunnelHttp2ConnectionListener(TunnelHttp2Options options, UriEndPointHttp2 endpoint) {
+        if (string.IsNullOrEmpty(endpoint.Uri?.ToString())) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
         _options = options;
@@ -28,29 +25,23 @@ internal sealed class TunnelHttp2ConnectionListener : IConnectionListener
 
     public EndPoint EndPoint => _endPoint;
 
-    public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default) {
+        try {
             cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(_closedCts.Token, cancellationToken).Token;
 
             // Kestrel will keep an active accept call open as long as the transport is active
             await _connectionLock.WaitAsync(cancellationToken);
-            if (_httpMessageInvoker is null)
-            {
-                lock (this)
-                {
+            if (_httpMessageInvoker is null) {
+                lock (this) {
                     _httpMessageInvoker ??= CreateHttpMessageInvoker();
                 }
             }
 
-            while (true)
-            {
+            while (true) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 int delay = 0;
-                try
-                {
+                try {
                     var innerConnection = await HttpClientConnectionContext.ConnectAsync(
                         _httpMessageInvoker, _endPoint.Uri!, cancellationToken);
                     delay = 0;
@@ -75,61 +66,48 @@ internal sealed class TunnelHttp2ConnectionListener : IConnectionListener
                     return connection;
 #endif
 
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
+                } catch (Exception ex) when (ex is not OperationCanceledException) {
                     // TODO: More sophisticated backoff and retry
-                    if (delay < 60000)
-                    {
+                    if (delay < 60000) {
                         delay += 5000;
                     }
                     await Task.Delay(delay, cancellationToken);
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
+        } catch (OperationCanceledException) {
             return null;
         }
     }
 
-    private HttpMessageInvoker CreateHttpMessageInvoker()
-    {
-        var socketsHttpHandler = new SocketsHttpHandler
-        {
+    private HttpMessageInvoker CreateHttpMessageInvoker() {
+        var socketsHttpHandler = new SocketsHttpHandler {
             EnableMultipleHttp2Connections = true,
             PooledConnectionLifetime = Timeout.InfiniteTimeSpan,
             PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan
         };
-        if (_options.ConfigureSocketsHttpHandler is { } configure)
-        {
+        if (_options.ConfigureSocketsHttpHandler is { } configure) {
             configure(_endPoint.Uri!, socketsHttpHandler);
         }
         return _httpMessageInvoker = new HttpMessageInvoker(socketsHttpHandler);
     }
 
-    public async ValueTask DisposeAsync()
-    {
+    public async ValueTask DisposeAsync() {
         var listConnections = _connections.Values.ToList();
         List<Task> tasks = new(listConnections.Count);
-        foreach (var connection in listConnections)
-        {
+        foreach (var connection in listConnections) {
             tasks.Add(connection.DisposeAsync().AsTask());
         }
 
-        if (tasks.Count > 0)
-        {
+        if (tasks.Count > 0) {
             await Task.WhenAll(tasks);
         }
     }
 
-    public ValueTask UnbindAsync(CancellationToken cancellationToken = default)
-    {
+    public ValueTask UnbindAsync(CancellationToken cancellationToken = default) {
         _closedCts.Cancel();
 
         var listConnections = _connections.Values.ToList();
-        foreach (var connection in listConnections)
-        {
+        foreach (var connection in listConnections) {
             // REVIEW: Graceful?
             connection.Abort();
         }

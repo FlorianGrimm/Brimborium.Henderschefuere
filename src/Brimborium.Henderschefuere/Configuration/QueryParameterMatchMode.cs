@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// How to match Query Parameter values.
 /// </summary>
-public enum QueryParameterMatchMode
-{
+public enum QueryParameterMatchMode {
     /// <summary>
     /// Query string must match in its entirety,
     /// Subject to case sensitivity settings.

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Passive health check evaluation policy.
 /// </summary>
-public interface IPassiveHealthCheckPolicy
-{
+public interface IPassiveHealthCheckPolicy {
     /// <summary>
     /// Policy's name.
     /// </summary>

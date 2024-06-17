@@ -5,10 +5,8 @@ namespace Brimborium.Henderschefuere.ServiceDiscovery {
     /// <summary>
     /// Represents a collection of resolved destinations.
     /// </summary>
-    public sealed class ResolvedDestinationCollection
-    {
-        public ResolvedDestinationCollection(IReadOnlyDictionary<string, DestinationConfig> destinations, IChangeToken? changeToken)
-        {
+    public sealed class ResolvedDestinationCollection {
+        public ResolvedDestinationCollection(IReadOnlyDictionary<string, DestinationConfig> destinations, IChangeToken? changeToken) {
             Destinations = destinations;
             ChangeToken = changeToken;
         }

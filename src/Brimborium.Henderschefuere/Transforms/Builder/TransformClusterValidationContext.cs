@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// State used when validating transforms for the given cluster.
 /// </summary>
-public class TransformClusterValidationContext
-{
+public class TransformClusterValidationContext {
     /// <summary>
     /// Application services that can be used to validate transforms.
     /// </summary>

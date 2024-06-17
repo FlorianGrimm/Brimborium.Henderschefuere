@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// How to match header values.
 /// </summary>
-public enum HeaderMatchMode
-{
+public enum HeaderMatchMode {
     /// <summary>
     /// Any of the headers with the given name must match in its entirety, subject to case sensitivity settings.
     /// If a header contains multiple values (separated by , or ;), they are split before matching.

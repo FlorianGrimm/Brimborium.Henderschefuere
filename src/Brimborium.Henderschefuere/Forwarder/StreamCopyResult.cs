@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Forwarder;
 
-internal enum StreamCopyResult
-{
+internal enum StreamCopyResult {
     Success,
     InputError,
     OutputError,

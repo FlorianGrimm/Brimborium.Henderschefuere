@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Utilities;
 
-internal sealed class ParsedMetadataEntry<T>
-{
+internal sealed class ParsedMetadataEntry<T> {
     private readonly Parser _parser;
     private readonly string _metadataName;
     private readonly ClusterState _cluster;
@@ -13,25 +12,19 @@ internal sealed class ParsedMetadataEntry<T>
 
     public delegate bool Parser(string stringValue, out T parsedValue);
 
-    public ParsedMetadataEntry(Parser parser, ClusterState cluster, string metadataName)
-    {
+    public ParsedMetadataEntry(Parser parser, ClusterState cluster, string metadataName) {
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
         _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
         _metadataName = metadataName ?? throw new ArgumentNullException(nameof(metadataName));
     }
 
-    public T GetParsedOrDefault(T defaultValue)
-    {
+    public T GetParsedOrDefault(T defaultValue) {
         var currentValue = _value;
-        if (_cluster.Model.Config.Metadata is not null && _cluster.Model.Config.Metadata.TryGetValue(_metadataName, out var stringValue))
-        {
-            if (currentValue is null || currentValue.Item1 != stringValue)
-            {
+        if (_cluster.Model.Config.Metadata is not null && _cluster.Model.Config.Metadata.TryGetValue(_metadataName, out var stringValue)) {
+            if (currentValue is null || currentValue.Item1 != stringValue) {
                 _value = Tuple.Create<string?, T>(stringValue, _parser(stringValue, out var parsedValue) ? parsedValue : defaultValue);
             }
-        }
-        else if (currentValue is null || currentValue.Item1 is not null)
-        {
+        } else if (currentValue is null || currentValue.Item1 is not null) {
             _value = Tuple.Create<string?, T>(null, defaultValue);
         }
 

@@ -14,8 +14,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// APIs that can be used when transforming requests.
 /// </summary>
-public static class RequestUtilities
-{
+public static class RequestUtilities {
 #if NET8_0_OR_GREATER
     private static readonly SearchValues<char> s_validPathChars =
         SearchValues.Create("!$&'()*+,-./0123456789:;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~");
@@ -25,8 +24,7 @@ public static class RequestUtilities
     /// Converts the given HTTP method (usually obtained from <see cref="HttpRequest.Method"/>)
     /// into the corresponding <see cref="HttpMethod"/> static instance.
     /// </summary>
-    internal static HttpMethod GetHttpMethod(string method) => method switch
-    {
+    internal static HttpMethod GetHttpMethod(string method) => method switch {
         string mth when HttpMethods.IsGet(mth) => HttpMethod.Get,
         string mth when HttpMethods.IsPost(mth) => HttpMethod.Post,
         string mth when HttpMethods.IsPut(mth) => HttpMethod.Put,
@@ -40,24 +38,20 @@ public static class RequestUtilities
         _ => new HttpMethod(method)
     };
 
-    internal static bool ShouldSkipRequestHeader(string headerName)
-    {
-        if (_headersToExclude.Contains(headerName))
-        {
+    internal static bool ShouldSkipRequestHeader(string headerName) {
+        if (_headersToExclude.Contains(headerName)) {
             return true;
         }
 
         // Filter out HTTP/2 pseudo headers like ":method" and ":path", those go into other fields.
-        if (headerName.StartsWith(':'))
-        {
+        if (headerName.StartsWith(':')) {
             return true;
         }
 
         return false;
     }
 
-    internal static bool ShouldSkipResponseHeader(string headerName)
-    {
+    internal static bool ShouldSkipResponseHeader(string headerName) {
         return _headersToExclude.Contains(headerName);
     }
 
@@ -106,12 +100,10 @@ public static class RequestUtilities
     /// e.g. "http://example.com:80/path/prefix"</param>
     /// <param name="path">The path to append.</param>
     /// <param name="query">The query to append</param>
-    public static Uri MakeDestinationAddress(string destinationPrefix, PathString path, QueryString query)
-    {
+    public static Uri MakeDestinationAddress(string destinationPrefix, PathString path, QueryString query) {
         ReadOnlySpan<char> prefixSpan = destinationPrefix;
 
-        if (path.HasValue && destinationPrefix.EndsWith('/'))
-        {
+        if (path.HasValue && destinationPrefix.EndsWith('/')) {
             // When PathString has a value it always starts with a '/'. Avoid double slashes when concatenating.
             prefixSpan = prefixSpan[0..^1];
         }
@@ -122,12 +114,10 @@ public static class RequestUtilities
     }
 
     // This isn't using PathString.ToUriComponent() because it doesn't round trip some escape sequences the way we want.
-    private static string EncodePath(PathString path)
-    {
+    private static string EncodePath(PathString path) {
         var value = path.Value;
 
-        if (string.IsNullOrEmpty(value))
-        {
+        if (string.IsNullOrEmpty(value)) {
             return string.Empty;
         }
 
@@ -152,20 +142,16 @@ public static class RequestUtilities
             : EncodePath(value, indexOfInvalidChar);
     }
 
-    private static string EncodePath(string value, int i)
-    {
+    private static string EncodePath(string value, int i) {
         var builder = new ValueStringBuilder(stackalloc char[ValueStringBuilder.StackallocThreshold]);
 
         var start = 0;
         var count = i;
         var requiresEscaping = false;
 
-        while (i < value.Length)
-        {
-            if (IsValidPathChar(value[i]))
-            {
-                if (requiresEscaping)
-                {
+        while (i < value.Length) {
+            if (IsValidPathChar(value[i])) {
+                if (requiresEscaping) {
                     // the current segment requires escape
                     builder.Append(Uri.EscapeDataString(value.Substring(start, count)));
 
@@ -176,11 +162,8 @@ public static class RequestUtilities
 
                 count++;
                 i++;
-            }
-            else
-            {
-                if (!requiresEscaping)
-                {
+            } else {
+                if (!requiresEscaping) {
                     // the current segment doesn't require escape
                     builder.Append(value.AsSpan(start, count));
 
@@ -196,12 +179,9 @@ public static class RequestUtilities
 
         Debug.Assert(count > 0);
 
-        if (requiresEscaping)
-        {
+        if (requiresEscaping) {
             builder.Append(Uri.EscapeDataString(value.Substring(start, count)));
-        }
-        else
-        {
+        } else {
             builder.Append(value.AsSpan(start, count));
         }
 
@@ -254,22 +234,17 @@ public static class RequestUtilities
     // as long as they appear in one (and only one, otherwise they would be duplicated).
     // Some headers may only appear on HttpContentHeaders, in which case we inject
     // an EmptyHttpContent - dummy 0-length container only used for headers.
-    internal static void AddHeader(HttpRequestMessage request, string headerName, StringValues value)
-    {
-        if (value.Count == 1)
-        {
+    internal static void AddHeader(HttpRequestMessage request, string headerName, StringValues value) {
+        if (value.Count == 1) {
             string headerValue = value!;
 
-            if (ContainsNewLines(headerValue))
-            {
+            if (ContainsNewLines(headerValue)) {
                 // TODO: Log
                 return;
             }
 
-            if (!request.Headers.TryAddWithoutValidation(headerName, headerValue))
-            {
-                if (request.Content is null && _contentHeaders.Contains(headerName))
-                {
+            if (!request.Headers.TryAddWithoutValidation(headerName, headerValue)) {
+                if (request.Content is null && _contentHeaders.Contains(headerName)) {
                     request.Content = new EmptyHttpContent();
                 }
 
@@ -277,9 +252,7 @@ public static class RequestUtilities
                 // TODO: Log
                 Debug.Assert(added.GetValueOrDefault(), $"A header was dropped; {headerName}: {headerValue}");
             }
-        }
-        else
-        {
+        } else {
             string[] headerValues = value!;
 
 #if !NET7_0_OR_GREATER
@@ -294,19 +267,15 @@ public static class RequestUtilities
             }
 #endif
 
-            foreach (var headerValue in headerValues)
-            {
-                if (ContainsNewLines(headerValue))
-                {
+            foreach (var headerValue in headerValues) {
+                if (ContainsNewLines(headerValue)) {
                     // TODO: Log
                     return;
                 }
             }
 
-            if (!request.Headers.TryAddWithoutValidation(headerName, headerValues))
-            {
-                if (request.Content is null && _contentHeaders.Contains(headerName))
-                {
+            if (!request.Headers.TryAddWithoutValidation(headerName, headerValues)) {
+                if (request.Content is null && _contentHeaders.Contains(headerName)) {
                     request.Content = new EmptyHttpContent();
                 }
 
@@ -317,8 +286,7 @@ public static class RequestUtilities
         }
 
 #if DEBUG
-        if (request.Content is EmptyHttpContent content && content.Headers.TryGetValues(HeaderNames.ContentLength, out var contentLength))
-        {
+        if (request.Content is EmptyHttpContent content && content.Headers.TryGetValues(HeaderNames.ContentLength, out var contentLength)) {
             Debug.Assert(contentLength.Single() == "0", "An actual content should have been set");
         }
 #endif
@@ -327,48 +295,35 @@ public static class RequestUtilities
         static bool ContainsNewLines(string value) => value.AsSpan().IndexOfAny('\r', '\n') >= 0;
     }
 
-    internal static void RemoveHeader(HttpRequestMessage request, string headerName)
-    {
-        if (_contentHeaders.Contains(headerName))
-        {
+    internal static void RemoveHeader(HttpRequestMessage request, string headerName) {
+        if (_contentHeaders.Contains(headerName)) {
             request.Content?.Headers.Remove(headerName);
-        }
-        else
-        {
+        } else {
             request.Headers.Remove(headerName);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static StringValues Concat(in StringValues existing, in HeaderStringValues values)
-    {
-        if (values.Count <= 1)
-        {
+    internal static StringValues Concat(in StringValues existing, in HeaderStringValues values) {
+        if (values.Count <= 1) {
             return StringValues.Concat(existing, values.ToString());
-        }
-        else
-        {
+        } else {
             return ConcatSlow(existing, values);
         }
 
-        static StringValues ConcatSlow(in StringValues existing, in HeaderStringValues values)
-        {
+        static StringValues ConcatSlow(in StringValues existing, in HeaderStringValues values) {
             Debug.Assert(values.Count > 1);
 
             var count = existing.Count;
             var newArray = new string[count + values.Count];
 
-            if (count == 1)
-            {
+            if (count == 1) {
                 newArray[0] = existing.ToString();
-            }
-            else
-            {
+            } else {
                 existing.ToArray().CopyTo(newArray, 0);
             }
 
-            foreach (var value in values)
-            {
+            foreach (var value in values) {
                 newArray[count++] = value;
             }
             Debug.Assert(count == newArray.Length);
@@ -378,27 +333,20 @@ public static class RequestUtilities
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool TryGetValues(HttpHeaders headers, string headerName, out StringValues values)
-    {
-        if (headers.NonValidated.TryGetValues(headerName, out var headerStringValues))
-        {
-            if (headerStringValues.Count <= 1)
-            {
+    internal static bool TryGetValues(HttpHeaders headers, string headerName, out StringValues values) {
+        if (headers.NonValidated.TryGetValues(headerName, out var headerStringValues)) {
+            if (headerStringValues.Count <= 1) {
                 values = headerStringValues.ToString();
-            }
-            else
-            {
+            } else {
                 values = ToArray(headerStringValues);
             }
             return true;
         }
 
-        static StringValues ToArray(in HeaderStringValues values)
-        {
+        static StringValues ToArray(in HeaderStringValues values) {
             var array = new string[values.Count];
             var i = 0;
-            foreach (var value in values)
-            {
+            foreach (var value in values) {
                 array[i++] = value;
             }
             Debug.Assert(i == array.Length);
@@ -409,8 +357,7 @@ public static class RequestUtilities
         return false;
     }
 
-    internal static bool IsResponseSet(HttpResponse response)
-    {
+    internal static bool IsResponseSet(HttpResponse response) {
         return response.StatusCode != StatusCodes.Status200OK
             || response.HasStarted;
     }

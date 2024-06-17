@@ -1,24 +1,16 @@
-﻿using Microsoft.AspNetCore.Routing.Patterns;
+﻿namespace Brimborium.Henderschefuere.Configuration.RouteValidators;
 
-namespace Brimborium.Henderschefuere.Configuration.RouteValidators;
-
-internal sealed class PathValidator : IRouteValidator
-{
-    public ValueTask ValidateAsync(RouteConfig routeConfig, IList<Exception> errors)
-    {
+internal sealed class PathValidator : IRouteValidator {
+    public ValueTask ValidateAsync(RouteConfig routeConfig, IList<Exception> errors) {
         var route = routeConfig.Match;
-        if (string.IsNullOrEmpty(route.Path))
-        {
+        if (string.IsNullOrEmpty(route.Path)) {
             // Path is optional when Host is specified
             return ValueTask.CompletedTask;
         }
 
-        try
-        {
+        try {
             RoutePatternFactory.Parse(route.Path);
-        }
-        catch (RoutePatternException ex)
-        {
+        } catch (RoutePatternException ex) {
             errors.Add(new ArgumentException($"Invalid path '{route.Path}' for route '{routeConfig.RouteId}'.", ex));
         }
 

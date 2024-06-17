@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.WebSocketsTelemetry;
 
-internal enum WebSocketCloseReason : int
-{
+internal enum WebSocketCloseReason : int {
     Unknown,
     ClientGracefulClose,
     ServerGracefulClose,

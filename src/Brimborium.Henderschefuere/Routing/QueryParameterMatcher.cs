@@ -6,28 +6,22 @@ namespace Brimborium.Henderschefuere.Routing;
 /// <summary>
 /// A request query parameter matcher used during routing.
 /// </summary>
-internal sealed class QueryParameterMatcher
-{
+internal sealed class QueryParameterMatcher {
     /// <summary>
     /// Creates a new instance.
     /// </summary>
-    public QueryParameterMatcher(string name, IReadOnlyList<string>? values, QueryParameterMatchMode mode, bool isCaseSensitive)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
+    public QueryParameterMatcher(string name, IReadOnlyList<string>? values, QueryParameterMatchMode mode, bool isCaseSensitive) {
+        if (string.IsNullOrEmpty(name)) {
             throw new ArgumentException("A query parameter name is required.", nameof(name));
         }
         if (mode != QueryParameterMatchMode.Exists
-            && (values is null || values.Count == 0))
-        {
+            && (values is null || values.Count == 0)) {
             throw new ArgumentException("Query parameter values must have at least one value.", nameof(values));
         }
-        if (mode == QueryParameterMatchMode.Exists && values?.Count > 0)
-        {
+        if (mode == QueryParameterMatchMode.Exists && values?.Count > 0) {
             throw new ArgumentException($"Query parameter values must not be specified when using '{nameof(QueryParameterMatchMode.Exists)}'.", nameof(values));
         }
-        if (values is not null && values.Any(string.IsNullOrEmpty))
-        {
+        if (values is not null && values.Any(string.IsNullOrEmpty)) {
             throw new ArgumentNullException(nameof(values), "Query parameter values must not be empty.");
         }
 

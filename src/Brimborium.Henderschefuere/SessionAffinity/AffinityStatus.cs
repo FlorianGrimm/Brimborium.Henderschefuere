@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.SessionAffinity;
 /// <summary>
 /// Affinity resolution status.
 /// </summary>
-public enum AffinityStatus
-{
+public enum AffinityStatus {
     OK,
     AffinityKeyNotSet,
     AffinityKeyExtractionFailed,

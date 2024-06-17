@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// Enables the implementor to inspect each route and conditionally add transforms.
 /// </summary>
-public interface ITransformProvider
-{
+public interface ITransformProvider {
     /// <summary>
     /// Validates any route data needed for transforms.
     /// </summary>

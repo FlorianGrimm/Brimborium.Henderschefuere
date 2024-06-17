@@ -6,12 +6,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Sets or appends simple request header values.
 /// </summary>
-public class RequestHeaderValueTransform : RequestHeaderTransform
-{
-    public RequestHeaderValueTransform(string headerName, string value, bool append) : base(headerName, append)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+public class RequestHeaderValueTransform : RequestHeaderTransform {
+    public RequestHeaderValueTransform(string headerName, string value, bool append) : base(headerName, append) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -21,14 +18,12 @@ public class RequestHeaderValueTransform : RequestHeaderTransform
     internal string Value { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
         return base.ApplyAsync(context);
     }
 
     /// <inheritdoc/>
-    protected override string GetValue(RequestTransformContext context)
-    {
+    protected override string GetValue(RequestTransformContext context) {
         return Value;
     }
 }

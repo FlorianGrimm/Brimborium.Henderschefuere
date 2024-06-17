@@ -8,8 +8,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// An implementation of the Forwarded header as defined in https://tools.ietf.org/html/rfc7239.
 /// </summary>
-public class RequestHeaderForwardedTransform : RequestTransform
-{
+public class RequestHeaderForwardedTransform : RequestTransform {
     internal static readonly RequestHeaderForwardedTransform RemoveTransform =
         new RequestHeaderForwardedTransform(new NullRandomFactory(), NodeFormat.Random, NodeFormat.Random, false, false, ForwardedTransformActions.Remove);
 
@@ -19,8 +18,7 @@ public class RequestHeaderForwardedTransform : RequestTransform
 
     private readonly IRandomFactory _randomFactory;
 
-    public RequestHeaderForwardedTransform(IRandomFactory randomFactory, NodeFormat forFormat, NodeFormat byFormat, bool host, bool proto, ForwardedTransformActions action)
-    {
+    public RequestHeaderForwardedTransform(IRandomFactory randomFactory, NodeFormat forFormat, NodeFormat byFormat, bool host, bool proto, ForwardedTransformActions action) {
         _randomFactory = randomFactory ?? throw new ArgumentNullException(nameof(randomFactory));
         ForFormat = forFormat;
         ByFormat = byFormat;
@@ -41,17 +39,14 @@ public class RequestHeaderForwardedTransform : RequestTransform
     internal ForwardedTransformActions TransformAction { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         var httpContext = context.HttpContext;
 
-        switch (TransformAction)
-        {
+        switch (TransformAction) {
             case ForwardedTransformActions.Set:
                 RemoveHeader(context, ForwardedHeaderName);
                 AddHeader(context, ForwardedHeaderName, GetHeaderValue(httpContext));
@@ -71,8 +66,7 @@ public class RequestHeaderForwardedTransform : RequestTransform
         return default;
     }
 
-    private string GetHeaderValue(HttpContext httpContext)
-    {
+    private string GetHeaderValue(HttpContext httpContext) {
         var builder = new ValueStringBuilder(stackalloc char[ValueStringBuilder.StackallocThreshold]);
         AppendProto(httpContext, ref builder);
         AppendHost(httpContext, ref builder);
@@ -81,22 +75,17 @@ public class RequestHeaderForwardedTransform : RequestTransform
         return builder.ToString();
     }
 
-    private void AppendProto(HttpContext context, ref ValueStringBuilder builder)
-    {
-        if (ProtoEnabled)
-        {
+    private void AppendProto(HttpContext context, ref ValueStringBuilder builder) {
+        if (ProtoEnabled) {
             // Always first doesn't need to check for ';'
             builder.Append("proto=");
             builder.Append(context.Request.Scheme);
         }
     }
 
-    private void AppendHost(HttpContext context, ref ValueStringBuilder builder)
-    {
-        if (HostEnabled)
-        {
-            if (builder.Length > 0)
-            {
+    private void AppendHost(HttpContext context, ref ValueStringBuilder builder) {
+        if (HostEnabled) {
+            if (builder.Length > 0) {
                 builder.Append(';');
             }
             // Quoted because of the ':' when there's a port.
@@ -106,12 +95,9 @@ public class RequestHeaderForwardedTransform : RequestTransform
         }
     }
 
-    private void AppendFor(HttpContext context, ref ValueStringBuilder builder)
-    {
-        if (ForFormat > NodeFormat.None)
-        {
-            if (builder.Length > 0)
-            {
+    private void AppendFor(HttpContext context, ref ValueStringBuilder builder) {
+        if (ForFormat > NodeFormat.None) {
+            if (builder.Length > 0) {
                 builder.Append(';');
             }
             builder.Append("for=");
@@ -119,12 +105,9 @@ public class RequestHeaderForwardedTransform : RequestTransform
         }
     }
 
-    private void AppendBy(HttpContext context, ref ValueStringBuilder builder)
-    {
-        if (ByFormat > NodeFormat.None)
-        {
-            if (builder.Length > 0)
-            {
+    private void AppendBy(HttpContext context, ref ValueStringBuilder builder) {
+        if (ByFormat > NodeFormat.None) {
+            if (builder.Length > 0) {
                 builder.Append(';');
             }
             builder.Append("by=");
@@ -133,11 +116,9 @@ public class RequestHeaderForwardedTransform : RequestTransform
     }
 
     // https://tools.ietf.org/html/rfc7239#section-6
-    private void AppendNode(IPAddress? ipAddress, int port, NodeFormat format, ref ValueStringBuilder builder)
-    {
+    private void AppendNode(IPAddress? ipAddress, int port, NodeFormat format, ref ValueStringBuilder builder) {
         // Prefer IPv4 formatting
-        if (ipAddress is { IsIPv4MappedToIPv6: true })
-        {
+        if (ipAddress is { IsIPv4MappedToIPv6: true }) {
             ipAddress = ipAddress.MapToIPv4();
         }
 
@@ -150,25 +131,20 @@ public class RequestHeaderForwardedTransform : RequestTransform
             && ipAddress is not null && ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6;
         var quote = addPort || addRandomPort || ipv6;
 
-        if (quote)
-        {
+        if (quote) {
             builder.Append('"');
         }
 
-        switch (format)
-        {
+        switch (format) {
             case NodeFormat.Ip:
             case NodeFormat.IpAndPort:
             case NodeFormat.IpAndRandomPort:
-                if (ipAddress is not null)
-                {
-                    if (ipv6)
-                    {
+                if (ipAddress is not null) {
+                    if (ipv6) {
                         builder.Append('[');
                     }
                     builder.Append(ipAddress.ToString());
-                    if (ipv6)
-                    {
+                    if (ipv6) {
                         builder.Append(']');
                     }
                     break;
@@ -189,31 +165,25 @@ public class RequestHeaderForwardedTransform : RequestTransform
                 throw new NotImplementedException(format.ToString());
         }
 
-        if (addPort)
-        {
+        if (addPort) {
             builder.Append(':');
             builder.Append(port);
-        }
-        else if (addRandomPort)
-        {
+        } else if (addRandomPort) {
             builder.Append(':');
             AppendRandom(ref builder);
         }
 
-        if (quote)
-        {
+        if (quote) {
             builder.Append('"');
         }
     }
 
     // https://tools.ietf.org/html/rfc7239#section-6.3
-    private void AppendRandom(ref ValueStringBuilder builder)
-    {
+    private void AppendRandom(ref ValueStringBuilder builder) {
         var random = _randomFactory.CreateRandomInstance();
         builder.Append('_');
         // This length is arbitrary.
-        for (var i = 0; i < 9; i++)
-        {
+        for (var i = 0; i < 9; i++) {
             builder.Append(ObfChars[random.Next(ObfChars.Length)]);
         }
     }

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Defines options for the transport failure rate passive health policy.
 /// </summary>
-public class TransportFailureRateHealthPolicyOptions
-{
+public class TransportFailureRateHealthPolicyOptions {
     /// <summary>
     /// Name of failure rate limit metadata parameter. Destination marked as unhealthy once this limit is reached.
     /// </summary>

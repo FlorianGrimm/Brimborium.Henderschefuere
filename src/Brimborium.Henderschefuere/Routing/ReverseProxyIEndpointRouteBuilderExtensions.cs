@@ -9,15 +9,12 @@ namespace Microsoft.AspNetCore.Builder;
 /// Extension methods for <see cref="IEndpointRouteBuilder"/>
 /// used to add Reverse Proxy to the ASP .NET Core request pipeline.
 /// </summary>
-public static class ReverseProxyIEndpointRouteBuilderExtensions
-{
+public static class ReverseProxyIEndpointRouteBuilderExtensions {
     /// <summary>
     /// Adds Reverse Proxy routes to the route table using the default processing pipeline.
     /// </summary>
-    public static ReverseProxyConventionBuilder MapReverseProxy(this IEndpointRouteBuilder endpoints)
-    {
-        return endpoints.MapReverseProxy(app =>
-        {
+    public static ReverseProxyConventionBuilder MapReverseProxy(this IEndpointRouteBuilder endpoints) {
+        return endpoints.MapReverseProxy(app => {
             app.UseSessionAffinity();
             app.UseLoadBalancing();
             app.UsePassiveHealthChecks();
@@ -28,14 +25,11 @@ public static class ReverseProxyIEndpointRouteBuilderExtensions
     /// Adds Reverse Proxy routes to the route table with the customized processing pipeline. The pipeline includes
     /// by default the initialization step and the final proxy step, but not LoadBalancingMiddleware or other intermediate components.
     /// </summary>
-    public static ReverseProxyConventionBuilder MapReverseProxy(this IEndpointRouteBuilder endpoints, Action<IReverseProxyApplicationBuilder> configureApp)
-    {
-        if (endpoints is null)
-        {
+    public static ReverseProxyConventionBuilder MapReverseProxy(this IEndpointRouteBuilder endpoints, Action<IReverseProxyApplicationBuilder> configureApp) {
+        if (endpoints is null) {
             throw new ArgumentNullException(nameof(endpoints));
         }
-        if (configureApp is null)
-        {
+        if (configureApp is null) {
             throw new ArgumentNullException(nameof(configureApp));
         }
 
@@ -52,11 +46,9 @@ public static class ReverseProxyIEndpointRouteBuilderExtensions
         return GetOrCreateDataSource(endpoints).DefaultBuilder;
     }
 
-    private static ProxyConfigManager GetOrCreateDataSource(IEndpointRouteBuilder endpoints)
-    {
+    private static ProxyConfigManager GetOrCreateDataSource(IEndpointRouteBuilder endpoints) {
         var dataSource = endpoints.DataSources.OfType<ProxyConfigManager>().FirstOrDefault();
-        if (dataSource is null)
-        {
+        if (dataSource is null) {
             dataSource = endpoints.ServiceProvider.GetRequiredService<ProxyConfigManager>();
             endpoints.DataSources.Add(dataSource);
 

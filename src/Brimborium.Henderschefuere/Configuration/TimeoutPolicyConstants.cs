@@ -3,7 +3,6 @@
 
 namespace Brimborium.Henderschefuere.Configuration;
 
-internal static class TimeoutPolicyConstants
-{
+internal static class TimeoutPolicyConstants {
     internal const string Disable = "Disable";
 }

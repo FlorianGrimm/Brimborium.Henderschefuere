@@ -8,8 +8,7 @@ namespace Brimborium.Henderschefuere.Utilities;
 /// (Environment.TickCount64, Stopwatch.GetTimestamp, as opposed to DateTime).
 /// </summary>
 [Obsolete("For testing only. Use TimeProvider instead.")]
-public interface IClock
-{
+public interface IClock {
     /// <summary>
     /// Gets the current time in UTC as a <see cref="DateTimeOffset"/>.
     /// </summary>

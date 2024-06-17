@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Stores the current proxy configuration used when processing the request.
 /// </summary>
-public class ReverseProxyFeature : IReverseProxyFeature
-{
+public class ReverseProxyFeature : IReverseProxyFeature {
     private IReadOnlyList<DestinationState> _availableDestinations = default!;
 
     /// <inheritdoc/>
@@ -20,8 +19,7 @@ public class ReverseProxyFeature : IReverseProxyFeature
     public IReadOnlyList<DestinationState> AllDestinations { get; init; } = default!;
 
     /// <inheritdoc/>
-    public IReadOnlyList<DestinationState> AvailableDestinations
-    {
+    public IReadOnlyList<DestinationState> AvailableDestinations {
         get => _availableDestinations;
         set => _availableDestinations = value ?? throw new ArgumentNullException(nameof(value));
     }

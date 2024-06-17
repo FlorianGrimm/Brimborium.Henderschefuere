@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// State used when validating transforms for the given route.
 /// </summary>
-public class TransformRouteValidationContext
-{
+public class TransformRouteValidationContext {
     /// <summary>
     /// Application services that can be used to validate transforms.
     /// </summary>

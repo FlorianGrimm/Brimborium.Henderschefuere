@@ -3,10 +3,8 @@
 
 namespace Brimborium.Henderschefuere.Health;
 
-internal partial class ActiveHealthCheckMonitor
-{
-    private static class Log
-    {
+internal partial class ActiveHealthCheckMonitor {
+    private static class Log {
         private static readonly Action<ILogger, Exception> _explicitActiveCheckOfAllClustersHealthFailed = LoggerMessage.Define(
             LogLevel.Error,
             EventIds.ExplicitActiveCheckOfAllClustersHealthFailed,
@@ -52,48 +50,39 @@ internal partial class ActiveHealthCheckMonitor
             EventIds.SendingHealthProbeToEndpointOfDestination,
             "Sending a health probe to endpoint `{endpointUri}` of destination `{destinationId}` on cluster `{clusterId}`.");
 
-        public static void ExplicitActiveCheckOfAllClustersHealthFailed(ILogger logger, Exception ex)
-        {
+        public static void ExplicitActiveCheckOfAllClustersHealthFailed(ILogger logger, Exception ex) {
             _explicitActiveCheckOfAllClustersHealthFailed(logger, ex);
         }
 
-        public static void ActiveHealthProbingFailedOnCluster(ILogger logger, string clusterId, Exception ex)
-        {
+        public static void ActiveHealthProbingFailedOnCluster(ILogger logger, string clusterId, Exception ex) {
             _activeHealthProbingFailedOnCluster(logger, clusterId, ex);
         }
 
-        public static void ErrorOccuredDuringActiveHealthProbingShutdownOnCluster(ILogger logger, string clusterId, Exception ex)
-        {
+        public static void ErrorOccuredDuringActiveHealthProbingShutdownOnCluster(ILogger logger, string clusterId, Exception ex) {
             _errorOccuredDuringActiveHealthProbingShutdownOnCluster(logger, clusterId, ex);
         }
 
-        public static void ActiveHealthProbeConstructionFailedOnCluster(ILogger logger, string destinationId, string clusterId, Exception ex)
-        {
+        public static void ActiveHealthProbeConstructionFailedOnCluster(ILogger logger, string destinationId, string clusterId, Exception ex) {
             _activeHealthProbeConstructionFailedOnCluster(logger, destinationId, clusterId, ex);
         }
 
-        public static void StartingActiveHealthProbingOnCluster(ILogger logger, string clusterId)
-        {
+        public static void StartingActiveHealthProbingOnCluster(ILogger logger, string clusterId) {
             _startingActiveHealthProbingOnCluster(logger, clusterId, null);
         }
 
-        public static void StoppedActiveHealthProbingOnCluster(ILogger logger, string clusterId)
-        {
+        public static void StoppedActiveHealthProbingOnCluster(ILogger logger, string clusterId) {
             _stoppedActiveHealthProbingOnCluster(logger, clusterId, null);
         }
 
-        public static void DestinationProbingCompleted(ILogger logger, string destinationId, string clusterId, int responseCode)
-        {
+        public static void DestinationProbingCompleted(ILogger logger, string destinationId, string clusterId, int responseCode) {
             _destinationProbingCompleted(logger, destinationId, clusterId, responseCode, null);
         }
 
-        public static void DestinationProbingFailed(ILogger logger, string destinationId, string clusterId, Exception ex)
-        {
+        public static void DestinationProbingFailed(ILogger logger, string destinationId, string clusterId, Exception ex) {
             _destinationProbingFailed(logger, destinationId, clusterId, ex);
         }
 
-        public static void SendingHealthProbeToEndpointOfDestination(ILogger logger, Uri? endpointUri, string destinationId, string clusterId)
-        {
+        public static void SendingHealthProbeToEndpointOfDestination(ILogger logger, Uri? endpointUri, string destinationId, string clusterId) {
             _sendingHealthProbeToEndpointOfDestination(logger, endpointUri, destinationId, clusterId, null);
         }
     }

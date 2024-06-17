@@ -14,20 +14,17 @@ namespace Brimborium.Henderschefuere.Configuration;
 // TODO: update or remove this once AspNetCore provides a mechanism to validate the RateLimiter policies https://github.com/dotnet/aspnetcore/issues/45684
 
 
-internal interface IYarpRateLimiterPolicyProvider
-{
+internal interface IYarpRateLimiterPolicyProvider {
     ValueTask<object?> GetPolicyAsync(string policyName);
 }
 
-internal class YarpRateLimiterPolicyProvider : IYarpRateLimiterPolicyProvider
-{
+internal class YarpRateLimiterPolicyProvider : IYarpRateLimiterPolicyProvider {
 #if NET7_0_OR_GREATER
     private readonly RateLimiterOptions _rateLimiterOptions;
 
     private readonly IDictionary _policyMap, _unactivatedPolicyMap;
 
-    public YarpRateLimiterPolicyProvider(IOptions<RateLimiterOptions> rateLimiterOptions)
-    {
+    public YarpRateLimiterPolicyProvider(IOptions<RateLimiterOptions> rateLimiterOptions) {
         _rateLimiterOptions = rateLimiterOptions?.Value ?? throw new ArgumentNullException(nameof(rateLimiterOptions));
 
         var type = typeof(RateLimiterOptions);
@@ -38,8 +35,7 @@ internal class YarpRateLimiterPolicyProvider : IYarpRateLimiterPolicyProvider
             ?? throw new NotSupportedException("This version of YARP is incompatible with the current version of ASP.NET Core.");
     }
 
-    public ValueTask<object?> GetPolicyAsync(string policyName)
-    {
+    public ValueTask<object?> GetPolicyAsync(string policyName) {
         return ValueTask.FromResult(_policyMap[policyName] ?? _unactivatedPolicyMap[policyName]);
     }
 #else

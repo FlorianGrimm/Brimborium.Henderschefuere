@@ -8,8 +8,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Brimborium.Henderschefuere.Forwarder;
 
-internal static class ProtocolHelper
-{
+internal static class ProtocolHelper {
     internal static readonly Version Http2Version = HttpVersion.Version20;
     internal static readonly Version Http11Version = HttpVersion.Version11;
 
@@ -17,10 +16,8 @@ internal static class ProtocolHelper
 
     public static bool IsHttp2OrGreater(string protocol) => HttpProtocol.IsHttp2(protocol) || HttpProtocol.IsHttp3(protocol);
 
-    public static string GetVersionPolicy(HttpVersionPolicy policy)
-    {
-        return policy switch
-        {
+    public static string GetVersionPolicy(HttpVersionPolicy policy) {
+        return policy switch {
             HttpVersionPolicy.RequestVersionOrLower => "RequestVersionOrLower",
             HttpVersionPolicy.RequestVersionOrHigher => "RequestVersionOrHigher",
             HttpVersionPolicy.RequestVersionExact => "RequestVersionExact",
@@ -40,8 +37,7 @@ internal static class ProtocolHelper
     /// <summary>
     /// Creates a security key for sending in the Sec-WebSocket-Key header.
     /// </summary>
-    internal static string CreateSecWebSocketKey()
-    {
+    internal static string CreateSecWebSocketKey() {
         // The value of this header field MUST be a nonce consisting of a randomly selected 16-byte
         // value that has been base64-encoded
         Span<byte> bytes = stackalloc byte[16];
@@ -52,8 +48,7 @@ internal static class ProtocolHelper
         return secKey;
     }
 
-    internal static bool CheckSecWebSocketKey(string? key)
-    {
+    internal static bool CheckSecWebSocketKey(string? key) {
         // The value of this header field MUST be a nonce consisting of a randomly selected 16-byte
         // value that has been base64-encoded
         return !string.IsNullOrEmpty(key) && key.Length == 24;
@@ -62,8 +57,7 @@ internal static class ProtocolHelper
     /// <summary>
     /// Creates the Accept response to a given security key for sending in or verifying the Sec-WebSocket-Accept header value.
     /// </summary>
-    internal static string CreateSecWebSocketAccept(string? key)
-    {
+    internal static string CreateSecWebSocketAccept(string? key) {
         Debug.Assert(CheckSecWebSocketKey(key)); // This should have already been validated elsewhere.
         // GUID appended by the server as part of the security key response.  Defined in the RFC.
         var wsServerGuidBytes = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"u8;

@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Model;
 
-public enum DestinationHealth
-{
+public enum DestinationHealth {
     Unknown,
 
     Healthy,

@@ -6,37 +6,31 @@ using System.Runtime.CompilerServices;
 
 namespace Brimborium.Henderschefuere.Health;
 
-internal sealed class ClusterDestinationsUpdater : IClusterDestinationsUpdater
-{
+internal sealed class ClusterDestinationsUpdater : IClusterDestinationsUpdater {
     private readonly ConditionalWeakTable<ClusterState, SemaphoreSlim> _clusterLocks = new ConditionalWeakTable<ClusterState, SemaphoreSlim>();
     private readonly FrozenDictionary<string, IAvailableDestinationsPolicy> _destinationPolicies;
 
-    public ClusterDestinationsUpdater(IEnumerable<IAvailableDestinationsPolicy> destinationPolicies)
-    {
+    public ClusterDestinationsUpdater(IEnumerable<IAvailableDestinationsPolicy> destinationPolicies) {
         _destinationPolicies = destinationPolicies?.ToDictionaryByUniqueId(p => p.Name) ?? throw new ArgumentNullException(nameof(destinationPolicies));
     }
 
-    public void UpdateAvailableDestinations(ClusterState cluster)
-    {
+    public void UpdateAvailableDestinations(ClusterState cluster) {
         var allDestinations = cluster.DestinationsState?.AllDestinations;
-        if (allDestinations is null)
-        {
+        if (allDestinations is null) {
             throw new InvalidOperationException($"{nameof(UpdateAllDestinations)} must be called first.");
         }
 
         UpdateInternal(cluster, allDestinations, force: false);
     }
 
-    public void UpdateAllDestinations(ClusterState cluster)
-    {
+    public void UpdateAllDestinations(ClusterState cluster) {
         // Values already makes a copy of the collection, downcast to avoid making a second copy.
         // https://github.com/dotnet/runtime/blob/e164551f1c96138521b4e58f14f8ac1e4369005d/src/libraries/System.Collections.Concurrent/src/System/Collections/Concurrent/ConcurrentDictionary.cs#L2145-L2168
         var allDestinations = (IReadOnlyList<DestinationState>)cluster.Destinations.Values;
         UpdateInternal(cluster, allDestinations, force: true);
     }
 
-    private void UpdateInternal(ClusterState cluster, IReadOnlyList<DestinationState> allDestinations, bool force)
-    {
+    private void UpdateInternal(ClusterState cluster, IReadOnlyList<DestinationState> allDestinations, bool force) {
         // Prevent overlapping updates and debounce extra concurrent calls.
         // If there are multiple concurrent calls to rebuild the dynamic state, we want to ensure that
         // updates don't conflict with each other. Additionally, we debounce extra concurrent calls if
@@ -47,25 +41,19 @@ internal sealed class ClusterDestinationsUpdater : IClusterDestinationsUpdater
         // taken into account by one of blocked threads after they get unblocked to run a rebuild.
         var updateLock = _clusterLocks.GetValue(cluster, _ => new SemaphoreSlim(2));
         var lockTaken = false;
-        if (force)
-        {
+        if (force) {
             lockTaken = true;
             updateLock.Wait();
-        }
-        else
-        {
+        } else {
             lockTaken = updateLock.Wait(0);
         }
 
-        if (!lockTaken)
-        {
+        if (!lockTaken) {
             return;
         }
 
-        lock (updateLock)
-        {
-            try
-            {
+        lock (updateLock) {
+            try {
                 var config = cluster.Model.Config;
                 var destinationPolicy = _destinationPolicies.GetRequiredServiceById(
                     config.HealthCheck?.AvailableDestinationsPolicy,
@@ -74,9 +62,7 @@ internal sealed class ClusterDestinationsUpdater : IClusterDestinationsUpdater
                 var availableDestinations = destinationPolicy.GetAvailalableDestinations(config, allDestinations);
 
                 cluster.DestinationsState = new ClusterDestinationsState(allDestinations, availableDestinations);
-            }
-            finally
-            {
+            } finally {
                 // Semaphore is released while still holding the lock to AVOID the following case.
                 // The first thread (T1) finished a rebuild and left the lock while still holding the semaphore. The second thread (T2)
                 // waiting on the lock gets awaken, proceeds under the lock and begins the next rebuild. If at this exact moment

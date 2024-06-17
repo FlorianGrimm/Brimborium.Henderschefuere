@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Transform state for use with <see cref="ResponseTrailersTransform"/>
 /// </summary>
-public class ResponseTrailersTransformContext
-{
+public class ResponseTrailersTransformContext {
     /// <summary>
     /// The current request context.
     /// </summary>

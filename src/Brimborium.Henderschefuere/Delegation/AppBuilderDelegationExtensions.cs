@@ -9,8 +9,7 @@ namespace Microsoft.AspNetCore.Builder;
 /// <summary>
 /// Extensions for adding delegation middleware to the pipeline.
 /// </summary>
-public static class AppBuilderDelegationExtensions
-{
+public static class AppBuilderDelegationExtensions {
     /// <summary>
     /// Adds middleware to check if the selected destination should use Http.sys delegation.
     /// If so, the request is delegated to the destination queue instead of being proxied over HTTP.
@@ -19,8 +18,7 @@ public static class AppBuilderDelegationExtensions
     /// <remarks>
     /// This middleware only works with the ASP.NET Core Http.sys server implementation.
     /// </remarks>
-    public static IReverseProxyApplicationBuilder UseHttpSysDelegation(this IReverseProxyApplicationBuilder builder)
-    {
+    public static IReverseProxyApplicationBuilder UseHttpSysDelegation(this IReverseProxyApplicationBuilder builder) {
         // IServerDelegationFeature isn't added to DI https://github.com/dotnet/aspnetcore/issues/40043
         _ = builder.ApplicationServices.GetRequiredService<IServer>().Features?.Get<IServerDelegationFeature>()
             ?? throw new NotSupportedException($"{typeof(IHttpSysRequestDelegationFeature).FullName} is not available. Http.sys delegation is only supported when using the Http.sys server");

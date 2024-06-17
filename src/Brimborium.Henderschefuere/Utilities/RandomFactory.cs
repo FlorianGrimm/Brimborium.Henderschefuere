@@ -4,11 +4,9 @@
 namespace Brimborium.Henderschefuere.Utilities;
 
 /// <inheritdoc/>
-internal sealed class RandomFactory : IRandomFactory
-{
+internal sealed class RandomFactory : IRandomFactory {
     /// <inheritdoc/>
-    public Random CreateRandomInstance()
-    {
+    public Random CreateRandomInstance() {
         return Random.Shared;
     }
 }

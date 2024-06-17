@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// State used when building transforms for the given route.
 /// </summary>
-public class TransformBuilderContext
-{
+public class TransformBuilderContext {
     /// <summary>
     /// Application services that can be used to construct transforms.
     /// </summary>

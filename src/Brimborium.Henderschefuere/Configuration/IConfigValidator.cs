@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Provides methods to validate routes and clusters.
 /// </summary>
-public interface IConfigValidator
-{
+public interface IConfigValidator {
     /// <summary>
     /// Validates a route and returns all errors
     /// </summary>

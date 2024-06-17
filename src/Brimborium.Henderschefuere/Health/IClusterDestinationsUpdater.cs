@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Updates the cluster's destination collections.
 /// </summary>
-public interface IClusterDestinationsUpdater
-{
+public interface IClusterDestinationsUpdater {
     /// <summary>
     /// Updates the cluster's collection of destination available for proxying requests to.
     /// Call this if health state has changed for any destinations.

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Session affinity options.
 /// </summary>
-public sealed record SessionAffinityConfig
-{
+public sealed record SessionAffinityConfig {
 
     /// <summary>
     /// Indicates whether session affinity is enabled.
@@ -41,10 +40,8 @@ public sealed record SessionAffinityConfig
     /// </summary>
     public SessionAffinityCookieConfig? Cookie { get; init; }
 
-    public bool Equals(SessionAffinityConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(SessionAffinityConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -55,8 +52,7 @@ public sealed record SessionAffinityConfig
             && Cookie == other.Cookie;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(Enabled,
             Policy?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             FailurePolicy?.GetHashCode(StringComparison.OrdinalIgnoreCase),

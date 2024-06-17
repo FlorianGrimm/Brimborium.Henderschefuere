@@ -11,16 +11,14 @@ using System.Security.Authentication;
 namespace Brimborium.Henderschefuere.Utilities.Tls;
 
 // SSL3/TLS protocol frames definitions.
-public enum TlsContentType : byte
-{
+public enum TlsContentType : byte {
     ChangeCipherSpec = 20,
     Alert = 21,
     Handshake = 22,
     AppData = 23
 }
 
-public enum TlsHandshakeType : byte
-{
+public enum TlsHandshakeType : byte {
     HelloRequest = 0,
     ClientHello = 1,
     ServerHello = 2,
@@ -38,14 +36,12 @@ public enum TlsHandshakeType : byte
     MessageHash = 254
 }
 
-public enum TlsAlertLevel : byte
-{
+public enum TlsAlertLevel : byte {
     Warning = 1,
     Fatal = 2,
 }
 
-public enum TlsAlertDescription : byte
-{
+public enum TlsAlertDescription : byte {
     CloseNotify = 0, // warning
     UnexpectedMessage = 10, // error
     BadRecordMac = 20, // error
@@ -72,8 +68,7 @@ public enum TlsAlertDescription : byte
     UnsupportedExt = 110, // error
 }
 
-public enum ExtensionType : ushort
-{
+public enum ExtensionType : ushort {
     ServerName = 0,
     MaximumFagmentLength = 1,
     ClientCertificateUrl = 2,
@@ -84,8 +79,7 @@ public enum ExtensionType : ushort
     SupportedVersions = 43
 }
 
-public struct TlsFrameHeader
-{
+public struct TlsFrameHeader {
     public TlsContentType Type;
     public SslProtocols Version;
     public int Length;
@@ -93,13 +87,11 @@ public struct TlsFrameHeader
     public override string ToString() => $"{Version}:{Type}[{Length}]";
 }
 
-public static class TlsFrameHelper
-{
+public static class TlsFrameHelper {
     public const int HeaderSize = 5;
 
     [Flags]
-    public enum ProcessingOptions
-    {
+    public enum ProcessingOptions {
         ServerName = 0x1,
         ApplicationProtocol = 0x2,
         Versions = 0x4,
@@ -108,16 +100,14 @@ public static class TlsFrameHelper
     }
 
     [Flags]
-    public enum ApplicationProtocolInfo
-    {
+    public enum ApplicationProtocolInfo {
         None = 0,
         Http11 = 1,
         Http2 = 2,
         Other = 128
     }
 
-    public struct TlsFrameInfo
-    {
+    public struct TlsFrameInfo {
         internal TlsCipherSuite[]? _ciphers;
         public TlsFrameHeader Header;
         public TlsHandshakeType HandshakeType;
@@ -125,33 +115,22 @@ public static class TlsFrameHelper
         public string TargetName;
         public ApplicationProtocolInfo ApplicationProtocols;
         public TlsAlertDescription AlertDescription;
-        public ReadOnlyMemory<TlsCipherSuite> TlsCipherSuites
-        {
-            get
-            {
+        public ReadOnlyMemory<TlsCipherSuite> TlsCipherSuites {
+            get {
                 return _ciphers is null ? ReadOnlyMemory<TlsCipherSuite>.Empty : new ReadOnlyMemory<TlsCipherSuite>(_ciphers);
             }
         }
 
-        public override string ToString()
-        {
-            if (Header.Type == TlsContentType.Handshake)
-            {
-                if (HandshakeType == TlsHandshakeType.ClientHello)
-                {
+        public override string ToString() {
+            if (Header.Type == TlsContentType.Handshake) {
+                if (HandshakeType == TlsHandshakeType.ClientHello) {
                     return $"{Header.Version}:{HandshakeType}[{Header.Length}] TargetName='{TargetName}' SupportedVersion='{SupportedVersions}' ApplicationProtocols='{ApplicationProtocols}'";
-                }
-                else if (HandshakeType == TlsHandshakeType.ServerHello)
-                {
+                } else if (HandshakeType == TlsHandshakeType.ServerHello) {
                     return $"{Header.Version}:{HandshakeType}[{Header.Length}] SupportedVersion='{SupportedVersions}' ApplicationProtocols='{ApplicationProtocols}'";
-                }
-                else
-                {
+                } else {
                     return $"{Header.Version}:{HandshakeType}[{Header.Length}] SupportedVersion='{SupportedVersions}'";
                 }
-            }
-            else
-            {
+            } else {
                 return $"{Header.Version}:{Header.Type}[{Header.Length}]";
             }
         }
@@ -178,19 +157,15 @@ public static class TlsFrameHelper
     private static readonly IdnMapping s_idnMapping = new IdnMapping() { AllowUnassigned = true };
     private static readonly Encoding s_encoding = Encoding.GetEncoding("utf-8", new EncoderExceptionFallback(), new DecoderExceptionFallback());
 
-    public static bool TryGetFrameHeader(ReadOnlySpan<byte> frame, ref TlsFrameHeader header)
-    {
+    public static bool TryGetFrameHeader(ReadOnlySpan<byte> frame, ref TlsFrameHeader header) {
         var result = frame.Length > 4;
 
-        if (frame.Length >= 1)
-        {
+        if (frame.Length >= 1) {
             header.Type = (TlsContentType)frame[0];
 
-            if (frame.Length > 4)
-            {
+            if (frame.Length > 4) {
                 // SSLv3, TLS or later
-                if (frame[1] == 3)
-                {
+                if (frame[1] == 3) {
                     header.Length = ((frame[3] << 8) | frame[4]);
                     header.Version = TlsMinorVersionToProtocol(frame[2]);
                     return true;
@@ -200,13 +175,10 @@ public static class TlsFrameHelper
                         frame[3] == 3) // SSL3 or above
                 {
                     int length;
-                    if ((frame[0] & 0x80) != 0)
-                    {
+                    if ((frame[0] & 0x80) != 0) {
                         // Two bytes
                         length = (((frame[0] & 0x7f) << 8) | frame[1]) + 2;
-                    }
-                    else
-                    {
+                    } else {
                         // Three bytes
                         length = (((frame[0] & 0x3f) << 8) | frame[1]) + 3;
                     }
@@ -215,8 +187,7 @@ public static class TlsFrameHelper
                     // However, we expect something reasonable for initial HELLO
                     // We don't have enough logic to verify full validity,
                     // the limits bellow are queses.
-                    if (length > 20 && length < 1000)
-                    {
+                    if (length > 20 && length < 1000) {
 #pragma warning disable CS0618 // Ssl2 and Ssl3 are obsolete
                         header.Version = SslProtocols.Ssl2;
 #pragma warning restore CS0618
@@ -235,10 +206,8 @@ public static class TlsFrameHelper
     }
 
     // Returns frame size e.g. header + content
-    public static int GetFrameSize(ReadOnlySpan<byte> frame)
-    {
-        if (frame.Length < 5 || frame[1] < 3)
-        {
+    public static int GetFrameSize(ReadOnlySpan<byte> frame) {
+        if (frame.Length < 5 || frame[1] < 3) {
             return -1;
         }
 
@@ -251,11 +220,9 @@ public static class TlsFrameHelper
     // It is OK to call it again if more data becomes available.
     // It is also possible to limit what information is processed.
     // If callback delegate is provided, it will be called on ALL extensions.
-    public static bool TryGetFrameInfo(ReadOnlySpan<byte> frame, ref TlsFrameInfo info, ProcessingOptions options = ProcessingOptions.All, HelloExtensionCallback? callback = null)
-    {
+    public static bool TryGetFrameInfo(ReadOnlySpan<byte> frame, ref TlsFrameInfo info, ProcessingOptions options = ProcessingOptions.All, HelloExtensionCallback? callback = null) {
         const int HandshakeTypeOffset = 5;
-        if (frame.Length < HeaderSize)
-        {
+        if (frame.Length < HeaderSize) {
             return false;
         }
 
@@ -265,8 +232,7 @@ public static class TlsFrameHelper
 
         info.SupportedVersions = info.Header.Version;
 #pragma warning disable CS0618 // Ssl2 and Ssl3 are obsolete
-        if (info.Header.Version == SslProtocols.Ssl2)
-        {
+        if (info.Header.Version == SslProtocols.Ssl2) {
             // This is safe. We would not get here if the length is too small.
             info.SupportedVersions |= TlsMinorVersionToProtocol(frame[4]);
             // We only recognize Unified ClientHello at the moment.
@@ -277,12 +243,10 @@ public static class TlsFrameHelper
         }
 #pragma warning restore CS0618
 
-        if (info.Header.Type == TlsContentType.Alert)
-        {
+        if (info.Header.Type == TlsContentType.Alert) {
             TlsAlertLevel level = default;
             TlsAlertDescription description = default;
-            if (TryGetAlertInfo(frame, ref level, ref description))
-            {
+            if (TryGetAlertInfo(frame, ref level, ref description)) {
                 info.AlertDescription = description;
                 return true;
             }
@@ -290,8 +254,7 @@ public static class TlsFrameHelper
             return false;
         }
 
-        if (info.Header.Type != TlsContentType.Handshake || frame.Length <= HandshakeTypeOffset)
-        {
+        if (info.Header.Type != TlsContentType.Handshake || frame.Length <= HandshakeTypeOffset) {
             return false;
         }
 
@@ -303,10 +266,8 @@ public static class TlsFrameHelper
 #pragma warning disable SYSLIB0039 // TLS 1.0 and 1.1 are obsolete
         if (((int)info.Header.Version >= (int)SslProtocols.Tls) &&
 #pragma warning restore SYSLIB0039
-            (info.HandshakeType == TlsHandshakeType.ClientHello || info.HandshakeType == TlsHandshakeType.ServerHello))
-        {
-            if (!TryParseHelloFrame(frame.Slice(HeaderSize), ref info, options, callback))
-            {
+            (info.HandshakeType == TlsHandshakeType.ClientHello || info.HandshakeType == TlsHandshakeType.ServerHello)) {
+            if (!TryParseHelloFrame(frame.Slice(HeaderSize), ref info, options, callback)) {
                 isComplete = false;
             }
         }
@@ -316,11 +277,9 @@ public static class TlsFrameHelper
 
     // This is similar to TryGetFrameInfo but it will only process SNI.
     // It returns TargetName as string or NULL if SNI is missing or parsing error happened.
-    public static string? GetServerName(ReadOnlySpan<byte> frame)
-    {
+    public static string? GetServerName(ReadOnlySpan<byte> frame) {
         TlsFrameInfo info = default;
-        if (!TryGetFrameInfo(frame, ref info, ProcessingOptions.ServerName))
-        {
+        if (!TryGetFrameInfo(frame, ref info, ProcessingOptions.ServerName)) {
             return null;
         }
 
@@ -328,10 +287,8 @@ public static class TlsFrameHelper
     }
 
     // This function will parse TLS Alert message and it will return alert level and description.
-    public static bool TryGetAlertInfo(ReadOnlySpan<byte> frame, ref TlsAlertLevel level, ref TlsAlertDescription description)
-    {
-        if (frame.Length < 7 || frame[0] != (byte)TlsContentType.Alert)
-        {
+    public static bool TryGetAlertInfo(ReadOnlySpan<byte> frame, ref TlsAlertLevel level, ref TlsAlertDescription description) {
+        if (frame.Length < 7 || frame[0] != (byte)TlsContentType.Alert) {
             return false;
         }
 
@@ -342,8 +299,7 @@ public static class TlsFrameHelper
     }
 
     private static byte[] CreateProtocolVersionAlert(SslProtocols version) =>
-        version switch
-        {
+        version switch {
             SslProtocols.Tls13 => s_protocolMismatch13,
             SslProtocols.Tls12 => s_protocolMismatch12,
 #pragma warning disable SYSLIB0039 // TLS 1.0 and 1.1 are obsolete
@@ -356,19 +312,15 @@ public static class TlsFrameHelper
             _ => Array.Empty<byte>(),
         };
 
-    public static byte[] CreateAlertFrame(SslProtocols version, TlsAlertDescription reason)
-    {
-        if (reason == TlsAlertDescription.ProtocolVersion)
-        {
+    public static byte[] CreateAlertFrame(SslProtocols version, TlsAlertDescription reason) {
+        if (reason == TlsAlertDescription.ProtocolVersion) {
             return CreateProtocolVersionAlert(version);
         }
 #pragma warning disable SYSLIB0039 // TLS 1.0 and 1.1 are obsolete
-        else if ((int)version > (int)SslProtocols.Tls)
-        {
+        else if ((int)version > (int)SslProtocols.Tls) {
             // Create TLS1.2 alert
             var buffer = new byte[] { (byte)TlsContentType.Alert, 3, 3, 0, 2, 2, (byte)reason };
-            switch (version)
-            {
+            switch (version) {
                 case SslProtocols.Tls13:
                     buffer[2] = 4;
                     break;
@@ -386,8 +338,7 @@ public static class TlsFrameHelper
         return Array.Empty<byte>();
     }
 
-    private static bool TryParseHelloFrame(ReadOnlySpan<byte> sslHandshake, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback)
-    {
+    private static bool TryParseHelloFrame(ReadOnlySpan<byte> sslHandshake, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback) {
         // https://tools.ietf.org/html/rfc6101#section-5.6
         // struct {
         //     HandshakeType msg_type;    /* handshake type */
@@ -405,22 +356,19 @@ public static class TlsFrameHelper
 
         if (sslHandshake.Length < HelloOffset ||
             ((TlsHandshakeType)sslHandshake[HandshakeTypeOffset] != TlsHandshakeType.ClientHello &&
-             (TlsHandshakeType)sslHandshake[HandshakeTypeOffset] != TlsHandshakeType.ServerHello))
-        {
+             (TlsHandshakeType)sslHandshake[HandshakeTypeOffset] != TlsHandshakeType.ServerHello)) {
             return false;
         }
 
         var helloLength = ReadUInt24BigEndian(sslHandshake.Slice(HelloLengthOffset));
         var helloData = sslHandshake.Slice(HelloOffset);
 
-        if (helloData.Length < helloLength)
-        {
+        if (helloData.Length < helloLength) {
             return false;
         }
 
         // ProtocolVersion may be different from frame header.
-        if (helloData[ProtocolVersionMajorOffset] == ProtocolVersionTlsMajorValue)
-        {
+        if (helloData[ProtocolVersionMajorOffset] == ProtocolVersionTlsMajorValue) {
             info.SupportedVersions |= TlsMinorVersionToProtocol(helloData[ProtocolVersionMinorOffset]);
         }
 
@@ -429,8 +377,7 @@ public static class TlsFrameHelper
                     TryParseServerHello(helloData.Slice(0, helloLength), ref info, options, callback);
     }
 
-    private static bool TryParseClientHello(ReadOnlySpan<byte> clientHello, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback)
-    {
+    private static bool TryParseClientHello(ReadOnlySpan<byte> clientHello, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback) {
         // Basic structure: https://tools.ietf.org/html/rfc6101#section-5.6.1.2
         // Extended structure: https://tools.ietf.org/html/rfc3546#section-2.1
         // struct {
@@ -447,8 +394,7 @@ public static class TlsFrameHelper
         // Skip SessionID (max size 32 => size fits in 1 byte)
         p = SkipOpaqueType1(p);
 
-        if (options.HasFlag(ProcessingOptions.CipherSuites))
-        {
+        if (options.HasFlag(ProcessingOptions.CipherSuites)) {
             TryGetCipherSuites(p, ref info);
         }
         // Skip cipher suites (max size 2^16-1 => size fits in 2 bytes)
@@ -458,24 +404,21 @@ public static class TlsFrameHelper
         p = SkipOpaqueType1(p);
 
         // no extension
-        if (p.IsEmpty)
-        {
+        if (p.IsEmpty) {
             return true;
         }
 
         // client_hello_extension_list (max size 2^16-1 => size fits in 2 bytes)
         int extensionListLength = BinaryPrimitives.ReadUInt16BigEndian(p);
         p = SkipBytes(p, sizeof(ushort));
-        if (extensionListLength != p.Length)
-        {
+        if (extensionListLength != p.Length) {
             return false;
         }
 
         return TryParseHelloExtensions(p, ref info, options, callback);
     }
 
-    private static bool TryParseServerHello(ReadOnlySpan<byte> serverHello, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback)
-    {
+    private static bool TryParseServerHello(ReadOnlySpan<byte> serverHello, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback) {
         // Basic structure: https://tools.ietf.org/html/rfc6101#section-5.6.1.3
         // Extended structure: https://tools.ietf.org/html/rfc3546#section-2.2
         // struct {
@@ -496,16 +439,14 @@ public static class TlsFrameHelper
         p = SkipBytes(p, CipherSuiteLength + CompressionMethiodLength);
 
         // is invalid structure or no extensions?
-        if (p.IsEmpty)
-        {
+        if (p.IsEmpty) {
             return false;
         }
 
         // client_hello_extension_list (max size 2^16-1 => size fits in 2 bytes)
         int extensionListLength = BinaryPrimitives.ReadUInt16BigEndian(p);
         p = SkipBytes(p, sizeof(ushort));
-        if (extensionListLength != p.Length)
-        {
+        if (extensionListLength != p.Length) {
             return false;
         }
 
@@ -513,48 +454,37 @@ public static class TlsFrameHelper
     }
 
     // This is common for ClientHello and ServerHello.
-    private static bool TryParseHelloExtensions(ReadOnlySpan<byte> extensions, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback)
-    {
+    private static bool TryParseHelloExtensions(ReadOnlySpan<byte> extensions, ref TlsFrameInfo info, ProcessingOptions options, HelloExtensionCallback? callback) {
         const int ExtensionHeader = 4;
         var isComplete = true;
 
-        while (extensions.Length >= ExtensionHeader)
-        {
+        while (extensions.Length >= ExtensionHeader) {
             var extensionType = (ExtensionType)BinaryPrimitives.ReadUInt16BigEndian(extensions);
             extensions = SkipBytes(extensions, sizeof(ushort));
 
             var extensionLength = BinaryPrimitives.ReadUInt16BigEndian(extensions);
             extensions = SkipBytes(extensions, sizeof(ushort));
-            if (extensions.Length < extensionLength)
-            {
+            if (extensions.Length < extensionLength) {
                 isComplete = false;
                 break;
             }
 
             var extensionData = extensions.Slice(0, extensionLength);
 
-            if (extensionType == ExtensionType.ServerName && options.HasFlag(ProcessingOptions.ServerName))
-            {
-                if (!TryGetSniFromServerNameList(extensionData, out var sni))
-                {
+            if (extensionType == ExtensionType.ServerName && options.HasFlag(ProcessingOptions.ServerName)) {
+                if (!TryGetSniFromServerNameList(extensionData, out var sni)) {
                     return false;
                 }
 
                 info.TargetName = sni!;
-            }
-            else if (extensionType == ExtensionType.SupportedVersions && options.HasFlag(ProcessingOptions.Versions))
-            {
-                if (!TryGetSupportedVersionsFromExtension(extensionData, out var versions))
-                {
+            } else if (extensionType == ExtensionType.SupportedVersions && options.HasFlag(ProcessingOptions.Versions)) {
+                if (!TryGetSupportedVersionsFromExtension(extensionData, out var versions)) {
                     return false;
                 }
 
                 info.SupportedVersions |= versions;
-            }
-            else if (extensionType == ExtensionType.ApplicationProtocols && options.HasFlag(ProcessingOptions.ApplicationProtocol))
-            {
-                if (!TryGetApplicationProtocolsFromExtension(extensionData, out var alpn))
-                {
+            } else if (extensionType == ExtensionType.ApplicationProtocols && options.HasFlag(ProcessingOptions.ApplicationProtocol)) {
+                if (!TryGetApplicationProtocolsFromExtension(extensionData, out var alpn)) {
                     return false;
                 }
 
@@ -568,8 +498,7 @@ public static class TlsFrameHelper
         return isComplete;
     }
 
-    private static bool TryGetSniFromServerNameList(ReadOnlySpan<byte> serverNameListExtension, out string? sni)
-    {
+    private static bool TryGetSniFromServerNameList(ReadOnlySpan<byte> serverNameListExtension, out string? sni) {
         // https://tools.ietf.org/html/rfc3546#section-3.1
         // struct {
         //     ServerName server_name_list<1..2^16-1>
@@ -578,16 +507,14 @@ public static class TlsFrameHelper
         const int ServerNameListOffset = sizeof(ushort);
         sni = null;
 
-        if (serverNameListExtension.Length < ServerNameListOffset)
-        {
+        if (serverNameListExtension.Length < ServerNameListOffset) {
             return false;
         }
 
         int serverNameListLength = BinaryPrimitives.ReadUInt16BigEndian(serverNameListExtension);
         var serverNameList = serverNameListExtension.Slice(ServerNameListOffset);
 
-        if (serverNameListLength != serverNameList.Length)
-        {
+        if (serverNameListLength != serverNameList.Length) {
             return false;
         }
 
@@ -597,8 +524,7 @@ public static class TlsFrameHelper
         return invalid == false;
     }
 
-    private static string? GetSniFromServerName(ReadOnlySpan<byte> serverName, out bool invalid)
-    {
+    private static string? GetSniFromServerName(ReadOnlySpan<byte> serverName, out bool invalid) {
         // https://tools.ietf.org/html/rfc3546#section-3.1
         // struct {
         //     NameType name_type;
@@ -609,8 +535,7 @@ public static class TlsFrameHelper
         // ServerName is an opaque type (length of sufficient size for max data length is prepended)
         const int NameTypeOffset = 0;
         const int HostNameStructOffset = NameTypeOffset + sizeof(NameType);
-        if (serverName.Length < HostNameStructOffset)
-        {
+        if (serverName.Length < HostNameStructOffset) {
             invalid = true;
             return null;
         }
@@ -618,8 +543,7 @@ public static class TlsFrameHelper
         // Following can underflow but it is ok due to equality check below
         var nameType = (NameType)serverName[NameTypeOffset];
         var hostNameStruct = serverName.Slice(HostNameStructOffset);
-        if (nameType != NameType.HostName)
-        {
+        if (nameType != NameType.HostName) {
             invalid = true;
             return null;
         }
@@ -627,8 +551,7 @@ public static class TlsFrameHelper
         return GetSniFromHostNameStruct(hostNameStruct, out invalid);
     }
 
-    private static string? GetSniFromHostNameStruct(ReadOnlySpan<byte> hostNameStruct, out bool invalid)
-    {
+    private static string? GetSniFromHostNameStruct(ReadOnlySpan<byte> hostNameStruct, out bool invalid) {
         // https://tools.ietf.org/html/rfc3546#section-3.1
         // HostName is an opaque type (length of sufficient size for max data length is prepended)
         const int HostNameLengthOffset = 0;
@@ -636,8 +559,7 @@ public static class TlsFrameHelper
 
         int hostNameLength = BinaryPrimitives.ReadUInt16BigEndian(hostNameStruct);
         var hostName = hostNameStruct.Slice(HostNameOffset);
-        if (hostNameLength != hostName.Length)
-        {
+        if (hostNameLength != hostName.Length) {
             invalid = true;
             return null;
         }
@@ -646,8 +568,7 @@ public static class TlsFrameHelper
         return DecodeString(hostName);
     }
 
-    private static bool TryGetSupportedVersionsFromExtension(ReadOnlySpan<byte> extensionData, out SslProtocols protocols)
-    {
+    private static bool TryGetSupportedVersionsFromExtension(ReadOnlySpan<byte> extensionData, out SslProtocols protocols) {
         // https://tools.ietf.org/html/rfc8446#section-4.2.1
         // struct {
         // select(Handshake.msg_type) {
@@ -666,16 +587,13 @@ public static class TlsFrameHelper
         var supportedVersionLength = extensionData[VersionListLengthOffset];
         extensionData = extensionData.Slice(VersionListNameOffset);
 
-        if (extensionData.Length != supportedVersionLength)
-        {
+        if (extensionData.Length != supportedVersionLength) {
             return false;
         }
 
         // Get list of protocols we support.I nore the rest.
-        while (extensionData.Length >= VersionLength)
-        {
-            if (extensionData[ProtocolVersionMajorOffset] == ProtocolVersionTlsMajorValue)
-            {
+        while (extensionData.Length >= VersionLength) {
+            if (extensionData[ProtocolVersionMajorOffset] == ProtocolVersionTlsMajorValue) {
                 protocols |= TlsMinorVersionToProtocol(extensionData[ProtocolVersionMinorOffset]);
             }
 
@@ -685,8 +603,7 @@ public static class TlsFrameHelper
         return true;
     }
 
-    private static bool TryGetApplicationProtocolsFromExtension(ReadOnlySpan<byte> extensionData, out ApplicationProtocolInfo alpn)
-    {
+    private static bool TryGetApplicationProtocolsFromExtension(ReadOnlySpan<byte> extensionData, out ApplicationProtocolInfo alpn) {
         // https://tools.ietf.org/html/rfc7301#section-3.1
         // opaque ProtocolName<1..2 ^ 8 - 1 >;
         //
@@ -699,45 +616,33 @@ public static class TlsFrameHelper
 
         alpn = ApplicationProtocolInfo.None;
 
-        if (extensionData.Length < AlpnListOffset)
-        {
+        if (extensionData.Length < AlpnListOffset) {
             return false;
         }
 
         int AlpnListLength = BinaryPrimitives.ReadUInt16BigEndian(extensionData);
         var alpnList = extensionData.Slice(AlpnListOffset);
-        if (AlpnListLength != alpnList.Length)
-        {
+        if (AlpnListLength != alpnList.Length) {
             return false;
         }
 
-        while (!alpnList.IsEmpty)
-        {
+        while (!alpnList.IsEmpty) {
             var protocolLength = alpnList[0];
-            if (alpnList.Length < protocolLength + 1)
-            {
+            if (alpnList.Length < protocolLength + 1) {
                 return false;
             }
 
             var protocol = alpnList.Slice(1, protocolLength);
-            if (protocolLength == 2)
-            {
-                if (protocol.SequenceEqual(SslApplicationProtocol.Http2.Protocol.Span))
-                {
+            if (protocolLength == 2) {
+                if (protocol.SequenceEqual(SslApplicationProtocol.Http2.Protocol.Span)) {
                     alpn |= ApplicationProtocolInfo.Http2;
-                }
-                else
-                {
+                } else {
                     alpn |= ApplicationProtocolInfo.Other;
                 }
-            }
-            else if (protocolLength == SslApplicationProtocol.Http11.Protocol.Length &&
-                     protocol.SequenceEqual(SslApplicationProtocol.Http11.Protocol.Span))
-            {
+            } else if (protocolLength == SslApplicationProtocol.Http11.Protocol.Length &&
+                       protocol.SequenceEqual(SslApplicationProtocol.Http11.Protocol.Span)) {
                 alpn |= ApplicationProtocolInfo.Http11;
-            }
-            else
-            {
+            } else {
                 alpn |= ApplicationProtocolInfo.Other;
             }
 
@@ -747,16 +652,13 @@ public static class TlsFrameHelper
         return true;
     }
 
-    private static bool TryGetCipherSuites(ReadOnlySpan<byte> bytes, ref TlsFrameInfo info)
-    {
-        if (bytes.Length < OpaqueType2LengthSize)
-        {
+    private static bool TryGetCipherSuites(ReadOnlySpan<byte> bytes, ref TlsFrameInfo info) {
+        if (bytes.Length < OpaqueType2LengthSize) {
             return false;
         }
 
         var length = BinaryPrimitives.ReadUInt16BigEndian(bytes);
-        if (bytes.Length < OpaqueType2LengthSize + length)
-        {
+        if (bytes.Length < OpaqueType2LengthSize + length) {
             return false;
         }
 
@@ -764,18 +666,15 @@ public static class TlsFrameHelper
         var count = length / 2;
 
         info._ciphers = new TlsCipherSuite[count];
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             info._ciphers[i] = (TlsCipherSuite)BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(i * 2, 2));
         }
 
         return true;
     }
 
-    private static SslProtocols TlsMinorVersionToProtocol(byte value)
-    {
-        return value switch
-        {
+    private static SslProtocols TlsMinorVersionToProtocol(byte value) {
+        return value switch {
             4 => SslProtocols.Tls13,
             3 => SslProtocols.Tls12,
 #pragma warning disable SYSLIB0039 // TLS 1.0 and 1.1 are obsolete
@@ -789,8 +688,7 @@ public static class TlsFrameHelper
         };
     }
 
-    private static string? DecodeString(ReadOnlySpan<byte> bytes)
-    {
+    private static string? DecodeString(ReadOnlySpan<byte> bytes) {
         // https://tools.ietf.org/html/rfc3546#section-3.1
         // Per spec:
         //   If the hostname labels contain only US-ASCII characters, then the
@@ -808,33 +706,25 @@ public static class TlsFrameHelper
         //   insensitively.
 
         string idnEncodedString;
-        try
-        {
+        try {
             idnEncodedString = s_encoding.GetString(bytes);
-        }
-        catch (DecoderFallbackException)
-        {
+        } catch (DecoderFallbackException) {
             return null;
         }
 
-        try
-        {
+        try {
             return s_idnMapping.GetUnicode(idnEncodedString);
-        }
-        catch (ArgumentException)
-        {
+        } catch (ArgumentException) {
             // client has not done IDN mapping
             return idnEncodedString;
         }
     }
 
-    private static int ReadUInt24BigEndian(ReadOnlySpan<byte> bytes)
-    {
+    private static int ReadUInt24BigEndian(ReadOnlySpan<byte> bytes) {
         return (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
     }
 
-    private static ReadOnlySpan<byte> SkipBytes(ReadOnlySpan<byte> bytes, int numberOfBytesToSkip)
-    {
+    private static ReadOnlySpan<byte> SkipBytes(ReadOnlySpan<byte> bytes, int numberOfBytesToSkip) {
         return (numberOfBytesToSkip < bytes.Length) ? bytes.Slice(numberOfBytesToSkip) : ReadOnlySpan<byte>.Empty;
     }
 
@@ -843,10 +733,8 @@ public static class TlsFrameHelper
     //   - data (length bytes)
     // We will only use opaque types which are of max size: 255 (length = 1) or 2^16-1 (length = 2).
     // We will call them SkipOpaqueType`length`
-    private static ReadOnlySpan<byte> SkipOpaqueType1(ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.Length < OpaqueType1LengthSize)
-        {
+    private static ReadOnlySpan<byte> SkipOpaqueType1(ReadOnlySpan<byte> bytes) {
+        if (bytes.Length < OpaqueType1LengthSize) {
             return ReadOnlySpan<byte>.Empty;
         }
 
@@ -856,10 +744,8 @@ public static class TlsFrameHelper
         return SkipBytes(bytes, totalBytes);
     }
 
-    private static ReadOnlySpan<byte> SkipOpaqueType2(ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.Length < OpaqueType2LengthSize)
-        {
+    private static ReadOnlySpan<byte> SkipOpaqueType2(ReadOnlySpan<byte> bytes) {
+        if (bytes.Length < OpaqueType2LengthSize) {
             return ReadOnlySpan<byte>.Empty;
         }
 
@@ -869,8 +755,7 @@ public static class TlsFrameHelper
         return SkipBytes(bytes, totalBytes);
     }
 
-    private enum NameType : byte
-    {
+    private enum NameType : byte {
         HostName = 0x00
     }
 }

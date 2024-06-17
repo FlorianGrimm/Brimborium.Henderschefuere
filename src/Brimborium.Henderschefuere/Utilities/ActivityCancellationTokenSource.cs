@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
-
 namespace Brimborium.Henderschefuere.Utilities;
 
-internal sealed class ActivityCancellationTokenSource : CancellationTokenSource
-{
+internal sealed class ActivityCancellationTokenSource : CancellationTokenSource {
     // Avoid paying the cost of updating the timeout timer if doing so won't meaningfully affect
     // the overall timeout duration (default is 100s). This is a trade-off between precision and performance.
     // The exact value is somewhat arbitrary, but should be large enough to avoid most timer updates.
@@ -16,8 +13,7 @@ internal sealed class ActivityCancellationTokenSource : CancellationTokenSource
     private static readonly ConcurrentQueue<ActivityCancellationTokenSource> _sharedSources = new();
     private static int _count;
 
-    private static readonly Action<object?> _linkedTokenCancelDelegate = static s =>
-    {
+    private static readonly Action<object?> _linkedTokenCancelDelegate = static s => {
         var cts = (ActivityCancellationTokenSource)s!;
         cts.CancelledByLinkedToken = true;
         cts.Cancel(throwOnFirstException: false);
@@ -32,32 +28,25 @@ internal sealed class ActivityCancellationTokenSource : CancellationTokenSource
 
     public bool CancelledByLinkedToken { get; private set; }
 
-    private void StartTimeout()
-    {
+    private void StartTimeout() {
         _lastTimeoutTicks = (uint)Environment.TickCount;
         CancelAfter(_activityTimeoutMs);
     }
 
-    public void ResetTimeout()
-    {
+    public void ResetTimeout() {
         var currentMs = (uint)Environment.TickCount;
         var elapsedMs = currentMs - _lastTimeoutTicks;
 
-        if (elapsedMs > TimeoutResolutionMs)
-        {
+        if (elapsedMs > TimeoutResolutionMs) {
             _lastTimeoutTicks = currentMs;
             CancelAfter(_activityTimeoutMs);
         }
     }
 
-    public static ActivityCancellationTokenSource Rent(TimeSpan activityTimeout, CancellationToken linkedToken1 = default, CancellationToken linkedToken2 = default)
-    {
-        if (_sharedSources.TryDequeue(out var cts))
-        {
+    public static ActivityCancellationTokenSource Rent(TimeSpan activityTimeout, CancellationToken linkedToken1 = default, CancellationToken linkedToken2 = default) {
+        if (_sharedSources.TryDequeue(out var cts)) {
             Interlocked.Decrement(ref _count);
-        }
-        else
-        {
+        } else {
             cts = new ActivityCancellationTokenSource();
         }
 
@@ -69,19 +58,16 @@ internal sealed class ActivityCancellationTokenSource : CancellationTokenSource
         return cts;
     }
 
-    public void Return()
-    {
+    public void Return() {
         _linkedRegistration1.Dispose();
         _linkedRegistration1 = default;
         _linkedRegistration2.Dispose();
         _linkedRegistration2 = default;
 
-        if (TryReset())
-        {
+        if (TryReset()) {
             Debug.Assert(!CancelledByLinkedToken);
 
-            if (Interlocked.Increment(ref _count) <= MaxQueueSize)
-            {
+            if (Interlocked.Increment(ref _count) <= MaxQueueSize) {
                 _sharedSources.Enqueue(this);
                 return;
             }

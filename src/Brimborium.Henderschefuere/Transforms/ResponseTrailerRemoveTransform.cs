@@ -8,12 +8,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Removes a response trailer.
 /// </summary>
-public class ResponseTrailerRemoveTransform : ResponseTrailersTransform
-{
-    public ResponseTrailerRemoveTransform(string headerName, ResponseCondition condition)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+public class ResponseTrailerRemoveTransform : ResponseTrailersTransform {
+    public ResponseTrailerRemoveTransform(string headerName, ResponseCondition condition) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -27,18 +24,15 @@ public class ResponseTrailerRemoveTransform : ResponseTrailersTransform
 
     // Assumes the response status code has been set on the HttpContext already.
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(ResponseTrailersTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(ResponseTrailersTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         Debug.Assert(context.ProxyResponse is not null);
 
         if (Condition == ResponseCondition.Always
-            || Success(context) == (Condition == ResponseCondition.Success))
-        {
+            || Success(context) == (Condition == ResponseCondition.Success)) {
             var responseTrailersFeature = context.HttpContext.Features.Get<IHttpResponseTrailersFeature>();
             var responseTrailers = responseTrailersFeature?.Trailers;
             // Support should have already been checked by the caller.

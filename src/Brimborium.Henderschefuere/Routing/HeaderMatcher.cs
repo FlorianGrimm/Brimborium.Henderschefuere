@@ -1,35 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Net.Http.Headers;
-
 namespace Brimborium.Henderschefuere.Routing;
 
 /// <summary>
 /// A request header matcher used during routing.
 /// </summary>
-internal sealed class HeaderMatcher
-{
+internal sealed class HeaderMatcher {
     /// <summary>
     /// Creates a new instance.
     /// </summary>
-    public HeaderMatcher(string name, IReadOnlyList<string>? values, HeaderMatchMode mode, bool isCaseSensitive)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
+    public HeaderMatcher(string name, IReadOnlyList<string>? values, HeaderMatchMode mode, bool isCaseSensitive) {
+        if (string.IsNullOrEmpty(name)) {
             throw new ArgumentException("A header name is required.", nameof(name));
         }
         if ((mode != HeaderMatchMode.Exists && mode != HeaderMatchMode.NotExists)
-            && (values is null || values.Count == 0))
-        {
+            && (values is null || values.Count == 0)) {
             throw new ArgumentException("Header values must have at least one value.", nameof(values));
         }
-        if ((mode == HeaderMatchMode.Exists || mode == HeaderMatchMode.NotExists) && values?.Count > 0)
-        {
+        if ((mode == HeaderMatchMode.Exists || mode == HeaderMatchMode.NotExists) && values?.Count > 0) {
             throw new ArgumentException($"Header values must not be specified when using '{mode}'.", nameof(values));
         }
-        if (values is not null && values.Any(string.IsNullOrEmpty))
-        {
+        if (values is not null && values.Any(string.IsNullOrEmpty)) {
             throw new ArgumentNullException(nameof(values), "Header values must be not be empty.");
         }
 

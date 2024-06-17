@@ -2,36 +2,30 @@ using Microsoft.AspNetCore.Http.Connections;
 
 namespace Brimborium.Henderschefuere.Transport;
 
-internal sealed class WebSocketConnectionContext : HttpConnection
-{
+internal sealed class WebSocketConnectionContext : HttpConnection {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
 
     private WebSocketConnectionContext(HttpConnectionOptions options)
-        : base(options, null)
-    {
+        : base(options, null) {
     }
 
-    public override CancellationToken ConnectionClosed
-    {
+    public override CancellationToken ConnectionClosed {
         get => _cts.Token;
         set { }
     }
 
-    public override void Abort()
-    {
+    public override void Abort() {
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
     }
 
-    public override void Abort(ConnectionAbortedException abortReason)
-    {
+    public override void Abort(ConnectionAbortedException abortReason) {
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
     }
 
-    public override ValueTask DisposeAsync()
-    {
+    public override ValueTask DisposeAsync() {
         // REVIEW: Why doesn't dispose just work?
         Abort();
 
@@ -41,21 +35,17 @@ internal sealed class WebSocketConnectionContext : HttpConnection
     internal static async ValueTask<WebSocketConnectionContext> ConnectAsync(
         Uri uri,
         TunnelWebSocketOptions tunnelWebSocketOptions,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         ClientWebSocket? underlyingWebSocket = null;
-        var options = new HttpConnectionOptions
-        {
+        var options = new HttpConnectionOptions {
             Url = uri,
             Transports = HttpTransportType.WebSockets,
             SkipNegotiation = true,
-            WebSocketFactory = async (context, cancellationToken) =>
-            {
+            WebSocketFactory = async (context, cancellationToken) => {
                 underlyingWebSocket = new ClientWebSocket();
                 underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
-                
-                if (tunnelWebSocketOptions.ConfigureClientWebSocket is { } configureClientWebSocket)
-                {
+
+                if (tunnelWebSocketOptions.ConfigureClientWebSocket is { } configureClientWebSocket) {
                     configureClientWebSocket(uri, underlyingWebSocket);
                 }
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);

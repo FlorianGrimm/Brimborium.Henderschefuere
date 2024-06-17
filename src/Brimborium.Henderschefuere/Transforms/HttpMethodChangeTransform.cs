@@ -6,22 +6,18 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Replaces the HTTP method if it matches.
 /// </summary>
-public class HttpMethodChangeTransform : RequestTransform
-{
+public class HttpMethodChangeTransform : RequestTransform {
     /// <summary>
     /// Creates a new transform.
     /// </summary>
     /// <param name="fromMethod">The method to match.</param>
     /// <param name="toMethod">The method to it change to.</param>
-    public HttpMethodChangeTransform(string fromMethod, string toMethod)
-    {
-        if (string.IsNullOrEmpty(fromMethod))
-        {
+    public HttpMethodChangeTransform(string fromMethod, string toMethod) {
+        if (string.IsNullOrEmpty(fromMethod)) {
             throw new ArgumentException($"'{nameof(fromMethod)}' cannot be null or empty.", nameof(fromMethod));
         }
 
-        if (string.IsNullOrEmpty(toMethod))
-        {
+        if (string.IsNullOrEmpty(toMethod)) {
             throw new ArgumentException($"'{nameof(toMethod)}' cannot be null or empty.", nameof(toMethod));
         }
 
@@ -34,20 +30,16 @@ public class HttpMethodChangeTransform : RequestTransform
     internal HttpMethod ToMethod { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (FromMethod.Equals(context.ProxyRequest.Method))
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (FromMethod.Equals(context.ProxyRequest.Method)) {
             context.ProxyRequest.Method = ToMethod;
         }
 
         return default;
     }
 
-    private static HttpMethod GetCanonicalizedValue(string method)
-    {
-        return method switch
-        {
+    private static HttpMethod GetCanonicalizedValue(string method) {
+        return method switch {
             string _ when HttpMethods.IsGet(method) => HttpMethod.Get,
             string _ when HttpMethods.IsPost(method) => HttpMethod.Post,
             string _ when HttpMethods.IsPut(method) => HttpMethod.Put,

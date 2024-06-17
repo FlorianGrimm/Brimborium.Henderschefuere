@@ -8,28 +8,23 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Removes existing headers and then delegates to the inner propagator.
 /// </summary>
-public sealed class ReverseProxyPropagator : DistributedContextPropagator
-{
+public sealed class ReverseProxyPropagator : DistributedContextPropagator {
     private readonly DistributedContextPropagator _innerPropagator;
     private readonly string[] _headersToRemove;
 
     /// <summary>
     /// ReverseProxyPropagator removes headers pointed out in innerPropagator.
     /// </summary>
-    public ReverseProxyPropagator(DistributedContextPropagator innerPropagator)
-    {
+    public ReverseProxyPropagator(DistributedContextPropagator innerPropagator) {
         _innerPropagator = innerPropagator ?? throw new ArgumentNullException(nameof(innerPropagator));
         _headersToRemove = _innerPropagator.Fields.ToArray();
     }
 
-    public override void Inject(Activity? activity, object? carrier, PropagatorSetterCallback? setter)
-    {
-        if (carrier is HttpRequestMessage message)
-        {
+    public override void Inject(Activity? activity, object? carrier, PropagatorSetterCallback? setter) {
+        if (carrier is HttpRequestMessage message) {
             var headers = message.Headers;
 
-            foreach (var header in _headersToRemove)
-            {
+            foreach (var header in _headersToRemove) {
                 headers.Remove(header);
             }
         }

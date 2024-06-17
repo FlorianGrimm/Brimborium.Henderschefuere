@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Passive health check config.
 /// </summary>
-public sealed record PassiveHealthCheckConfig
-{
+public sealed record PassiveHealthCheckConfig {
     /// <summary>
     /// Whether passive health checks are enabled.
     /// </summary>
@@ -23,10 +22,8 @@ public sealed record PassiveHealthCheckConfig
     /// </summary>
     public TimeSpan? ReactivationPeriod { get; init; }
 
-    public bool Equals(PassiveHealthCheckConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(PassiveHealthCheckConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -35,8 +32,7 @@ public sealed record PassiveHealthCheckConfig
             && ReactivationPeriod == other.ReactivationPeriod;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(Enabled,
             Policy?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             ReactivationPeriod);

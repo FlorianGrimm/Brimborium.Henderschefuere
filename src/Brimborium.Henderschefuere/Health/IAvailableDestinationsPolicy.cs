@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Policy evaluating which destinations should be available for proxying requests to.
 /// </summary>
-public interface IAvailableDestinationsPolicy
-{
+public interface IAvailableDestinationsPolicy {
     /// <summary>
     /// Policy name.
     /// </summary>

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Defines options for the consecutive failures active health check policy.
 /// </summary>
-public class ConsecutiveFailuresHealthPolicyOptions
-{
+public class ConsecutiveFailuresHealthPolicyOptions {
     /// <summary>
     /// Name of the consecutive failure threshold metadata parameter.
     /// It's the number of consecutive failure that needs to happen in order to mark a destination as unhealthy.

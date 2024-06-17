@@ -7,8 +7,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// Updates destinations' health states when it's requested by a health check policy
 /// while taking into account not only the new evaluated value but also the overall current cluster's health state.
 /// </summary>
-public interface IDestinationHealthUpdater
-{
+public interface IDestinationHealthUpdater {
     /// <summary>
     /// Sets the passive health on the given <paramref name="destination"/>.
     /// </summary>

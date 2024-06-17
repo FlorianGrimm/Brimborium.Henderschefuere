@@ -6,18 +6,15 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// A response transform that runs the given Func.
 /// </summary>
-public class ResponseFuncTransform : ResponseTransform
-{
+public class ResponseFuncTransform : ResponseTransform {
     private readonly Func<ResponseTransformContext, ValueTask> _func;
 
-    public ResponseFuncTransform(Func<ResponseTransformContext, ValueTask> func)
-    {
+    public ResponseFuncTransform(Func<ResponseTransformContext, ValueTask> func) {
         _func = func ?? throw new ArgumentNullException(nameof(func));
     }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(ResponseTransformContext context)
-    {
+    public override ValueTask ApplyAsync(ResponseTransformContext context) {
         return _func(context);
     }
 }

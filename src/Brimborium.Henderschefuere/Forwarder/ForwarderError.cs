@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Errors reported when forwarding a request to the destination.
 /// </summary>
-public enum ForwarderError : int
-{
+public enum ForwarderError : int {
     /// <summary>
     /// No error.
     /// </summary>

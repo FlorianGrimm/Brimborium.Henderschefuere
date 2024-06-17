@@ -2,14 +2,12 @@ using System.Threading.Tasks.Sources;
 
 namespace Brimborium.Henderschefuere.Tunnel;
 
-internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable
-{
+internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable {
     private readonly WebSocket _ws;
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();
 
-    public WebSocketStream(WebSocket ws)
-    {
+    public WebSocketStream(WebSocket ws) {
         _ws = ws;
     }
 
@@ -26,54 +24,44 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable
 
     public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-    public override void Flush()
-    {
+    public override void Flush() {
         throw new NotSupportedException();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
+    public override int Read(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
+    public override long Seek(long offset, SeekOrigin origin) {
         throw new NotSupportedException();
     }
 
-    public override void SetLength(long value)
-    {
+    public override void SetLength(long value) {
         throw new NotSupportedException();
     }
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) {
         throw new NotSupportedException();
     }
-    public override Task FlushAsync(CancellationToken cancellationToken)
-    {
+    public override Task FlushAsync(CancellationToken cancellationToken) {
         return Task.CompletedTask;
     }
 
-    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
         return _ws.SendAsync(buffer, WebSocketMessageType.Binary, endOfMessage: false, cancellationToken);
     }
 
-    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
         var result = await _ws.ReceiveAsync(buffer, cancellationToken);
 
-        if (result.MessageType == WebSocketMessageType.Close)
-        {
+        if (result.MessageType == WebSocketMessageType.Close) {
             return 0;
         }
 
         return result.Count;
     }
 
-    public void Abort()
-    {
+    public void Abort() {
         // Debug.Assert(!Thread.CurrentThread.IsThreadPoolThread);
         _ws.Abort();
 
@@ -87,10 +75,8 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable
         //    _ws.Abort();
         //}
 
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -98,12 +84,9 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable
         }
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        lock (_sync)
-        {
-            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending)
-            {
+    protected override void Dispose(bool disposing) {
+        lock (_sync) {
+            if (GetStatus(_tcs.Version) != ValueTaskSourceStatus.Pending) {
                 return;
             }
 
@@ -114,23 +97,19 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable
         }
     }
 
-    public object? GetResult(short token)
-    {
+    public object? GetResult(short token) {
         return _tcs.GetResult(token);
     }
 
-    public void Reset()
-    {
+    public void Reset() {
         _tcs.Reset();
     }
 
-    public ValueTaskSourceStatus GetStatus(short token)
-    {
+    public ValueTaskSourceStatus GetStatus(short token) {
         return _tcs.GetStatus(token);
     }
 
-    public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
-    {
+    public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) {
         _tcs.OnCompleted(continuation, state, token, flags);
     }
 }

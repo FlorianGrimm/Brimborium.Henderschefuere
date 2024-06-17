@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// A configuration filter that will run each time the proxy configuration is loaded.
 /// </summary>
-public interface IProxyConfigFilter
-{
+public interface IProxyConfigFilter {
     /// <summary>
     /// Allows modification of a cluster configuration.
     /// </summary>

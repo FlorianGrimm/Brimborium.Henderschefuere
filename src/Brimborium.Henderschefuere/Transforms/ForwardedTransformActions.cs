@@ -3,8 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Transforms;
 
-public enum ForwardedTransformActions
-{
+public enum ForwardedTransformActions {
     Off = 0,
     Set,
     Append,

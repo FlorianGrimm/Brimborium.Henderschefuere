@@ -13,15 +13,13 @@ namespace Brimborium.Henderschefuere.Model;
 /// Instead, instances of <see cref="ClusterModel"/> are replaced
 /// in their entirety when values need to change.
 /// </remarks>
-public sealed class ClusterModel
-{
+public sealed class ClusterModel {
     /// <summary>
     /// Creates a new Instance.
     /// </summary>
     public ClusterModel(
         ClusterConfig config,
-        HttpMessageInvoker httpClient)
-    {
+        HttpMessageInvoker httpClient) {
         Config = config ?? throw new ArgumentNullException(nameof(config));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
@@ -39,8 +37,7 @@ public sealed class ClusterModel
     // We intentionally do not consider destination changes when updating the cluster Revision.
     // Revision is used to rebuild routing endpoints which should be unrelated to destinations,
     // and destinations are the most likely to change.
-    internal bool HasConfigChanged(ClusterModel newModel)
-    {
+    internal bool HasConfigChanged(ClusterModel newModel) {
         return !Config.EqualsExcludingDestinations(newModel.Config) || newModel.HttpClient != HttpClient;
     }
 }

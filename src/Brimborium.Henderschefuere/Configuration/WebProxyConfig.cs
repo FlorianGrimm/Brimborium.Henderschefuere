@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// <summary>
 /// Config used to construct <seealso cref="System.Net.WebProxy"/> instance.
 /// </summary>
-public sealed record WebProxyConfig : IEquatable<WebProxyConfig>
-{
+public sealed record WebProxyConfig : IEquatable<WebProxyConfig> {
     /// <summary>
     /// The URI of the proxy server.
     /// </summary>
@@ -25,10 +24,8 @@ public sealed record WebProxyConfig : IEquatable<WebProxyConfig>
     /// </summary>
     public bool? UseDefaultCredentials { get; init; }
 
-    public bool Equals(WebProxyConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(WebProxyConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -37,8 +34,7 @@ public sealed record WebProxyConfig : IEquatable<WebProxyConfig>
             && UseDefaultCredentials == other.UseDefaultCredentials;
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         return HashCode.Combine(
             Address,
             BypassOnLocal,

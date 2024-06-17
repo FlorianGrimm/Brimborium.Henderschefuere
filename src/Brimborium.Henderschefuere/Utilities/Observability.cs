@@ -5,27 +5,21 @@ using System.Diagnostics;
 
 namespace Brimborium.Henderschefuere.Utilities;
 
-internal static class Observability
-{
+internal static class Observability {
     public static readonly ActivitySource YarpActivitySource = new ActivitySource("Brimborium.Henderschefuere");
 
-    public static Activity? GetYarpActivity(this HttpContext context)
-    {
+    public static Activity? GetYarpActivity(this HttpContext context) {
         return context.Features[typeof(YarpActivity)] as Activity;
     }
 
-    public static void SetYarpActivity(this HttpContext context, Activity? activity)
-    {
-        if (activity is not null)
-        {
+    public static void SetYarpActivity(this HttpContext context, Activity? activity) {
+        if (activity is not null) {
             context.Features[typeof(YarpActivity)] = activity;
         }
     }
 
-    public static void AddError(this Activity activity, string message, string description)
-    {
-        if (activity is not null)
-        {
+    public static void AddError(this Activity activity, string message, string description) {
+        if (activity is not null) {
             var tagsCollection = new ActivityTagsCollection
             {
                 { "error", message },
@@ -36,7 +30,6 @@ internal static class Observability
         }
     }
 
-    private class YarpActivity
-    {
+    private class YarpActivity {
     }
 }

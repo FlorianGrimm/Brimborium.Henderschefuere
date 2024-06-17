@@ -6,12 +6,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Sets or appends simple response header values.
 /// </summary>
-public class ResponseHeaderValueTransform : ResponseTransform
-{
-    public ResponseHeaderValueTransform(string headerName, string value, bool append, ResponseCondition condition)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+public class ResponseHeaderValueTransform : ResponseTransform {
+    public ResponseHeaderValueTransform(string headerName, string value, bool append, ResponseCondition condition) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -31,24 +28,18 @@ public class ResponseHeaderValueTransform : ResponseTransform
 
     // Assumes the response status code has been set on the HttpContext already.
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(ResponseTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(ResponseTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         if (Condition == ResponseCondition.Always
-            || Success(context) == (Condition == ResponseCondition.Success))
-        {
-            if (Append)
-            {
+            || Success(context) == (Condition == ResponseCondition.Success)) {
+            if (Append) {
                 var existingHeader = TakeHeader(context, HeaderName);
                 var value = StringValues.Concat(existingHeader, Value);
                 SetHeader(context, HeaderName, value);
-            }
-            else
-            {
+            } else {
                 SetHeader(context, HeaderName, Value);
             }
         }

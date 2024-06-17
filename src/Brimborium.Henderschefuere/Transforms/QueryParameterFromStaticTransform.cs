@@ -3,13 +3,10 @@
 
 namespace Brimborium.Henderschefuere.Transforms;
 
-public class QueryParameterFromStaticTransform : QueryParameterTransform
-{
+public class QueryParameterFromStaticTransform : QueryParameterTransform {
     public QueryParameterFromStaticTransform(QueryStringTransformMode mode, string key, string value)
-        : base(mode, key)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
+        : base(mode, key) {
+        if (string.IsNullOrEmpty(key)) {
             throw new ArgumentException($"'{nameof(key)}' cannot be null or empty.", nameof(key));
         }
 
@@ -19,8 +16,7 @@ public class QueryParameterFromStaticTransform : QueryParameterTransform
     internal string Value { get; }
 
     /// <inheritdoc/>
-    protected override string GetValue(RequestTransformContext context)
-    {
+    protected override string GetValue(RequestTransformContext context) {
         return Value;
     }
 }

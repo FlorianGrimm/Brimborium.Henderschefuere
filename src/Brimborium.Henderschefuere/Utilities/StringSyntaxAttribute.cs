@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Diagnostics.CodeAnalysis
-{
+namespace System.Diagnostics.CodeAnalysis {
 #if !NET7_0_OR_GREATER
     /// <summary>Specifies the syntax used in a string.</summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]

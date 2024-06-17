@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Representation of a cluster for use at runtime.
 /// </summary>
-public sealed class ClusterState
-{
+public sealed class ClusterState {
     private volatile ClusterDestinationsState _destinationsState = new ClusterDestinationsState(Array.Empty<DestinationState>(), Array.Empty<DestinationState>());
     private volatile ClusterModel _model = default!; // Initialized right after construction.
 
@@ -15,8 +14,7 @@ public sealed class ClusterState
     /// Creates a new instance. This constructor is for tests and infrastructure, this type is normally constructed by the configuration
     /// loading infrastructure.
     /// </summary>
-    public ClusterState(string clusterId)
-    {
+    public ClusterState(string clusterId) {
         ClusterId = clusterId ?? throw new ArgumentNullException(nameof(clusterId));
     }
 
@@ -25,8 +23,7 @@ public sealed class ClusterState
     /// such as updating the <see cref="ReverseProxyFeature"/> via <see cref="HttpContextFeaturesExtensions"/>
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="model"/> is <see langword="null"/>.</exception>
-    public ClusterState(string clusterId, ClusterModel model) : this(clusterId)
-    {
+    public ClusterState(string clusterId, ClusterModel model) : this(clusterId) {
         Model = model ?? throw new ArgumentNullException(nameof(model));
     }
 
@@ -38,8 +35,7 @@ public sealed class ClusterState
     /// <summary>
     /// Encapsulates parts of a cluster that can change atomically in reaction to config changes.
     /// </summary>
-    public ClusterModel Model
-    {
+    public ClusterModel Model {
         get => _model;
         internal set => _model = value ?? throw new ArgumentNullException(nameof(value));
     }
@@ -55,8 +51,7 @@ public sealed class ClusterState
     /// Stores the state of cluster's destinations that can change atomically
     /// in reaction to runtime state changes (e.g. changes of destinations' health).
     /// </summary>
-    public ClusterDestinationsState DestinationsState
-    {
+    public ClusterDestinationsState DestinationsState {
         get => _destinationsState;
         set => _destinationsState = value ?? throw new ArgumentNullException(nameof(value));
     }
@@ -69,5 +64,5 @@ public sealed class ClusterState
     /// <summary>
     /// Tracks changes to the cluster configuration for use with rebuilding dependent endpoints. Destination changes do not affect this property.
     /// </summary>
-    internal int Revision { get; set; }
+    public int Revision { get; internal set; }
 }

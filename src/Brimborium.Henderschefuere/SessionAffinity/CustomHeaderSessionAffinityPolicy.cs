@@ -5,34 +5,28 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace Brimborium.Henderschefuere.SessionAffinity;
 
-internal sealed class CustomHeaderSessionAffinityPolicy : BaseEncryptedSessionAffinityPolicy<string>
-{
+internal sealed class CustomHeaderSessionAffinityPolicy : BaseEncryptedSessionAffinityPolicy<string> {
     public CustomHeaderSessionAffinityPolicy(
         IDataProtectionProvider dataProtectionProvider,
         ILogger<CustomHeaderSessionAffinityPolicy> logger)
-        : base(dataProtectionProvider, logger)
-    { }
+        : base(dataProtectionProvider, logger) { }
 
     public override string Name => SessionAffinityConstants.Policies.CustomHeader;
 
-    protected override string GetDestinationAffinityKey(DestinationState destination)
-    {
+    protected override string GetDestinationAffinityKey(DestinationState destination) {
         return destination.DestinationId;
     }
 
-    protected override (string? Key, bool ExtractedSuccessfully) GetRequestAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig config)
-    {
+    protected override (string? Key, bool ExtractedSuccessfully) GetRequestAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig config) {
         var customHeaderName = config.AffinityKeyName;
         var keyHeaderValues = context.Request.Headers[customHeaderName];
 
-        if (StringValues.IsNullOrEmpty(keyHeaderValues))
-        {
+        if (StringValues.IsNullOrEmpty(keyHeaderValues)) {
             // It means affinity key is not defined that is a successful case
             return (Key: null, ExtractedSuccessfully: true);
         }
 
-        if (keyHeaderValues.Count > 1)
-        {
+        if (keyHeaderValues.Count > 1) {
             // Multiple values is an ambiguous case which is considered a key extraction failure
             Log.RequestAffinityHeaderHasMultipleValues(Logger, customHeaderName, keyHeaderValues.Count);
             return (Key: null, ExtractedSuccessfully: false);
@@ -41,20 +35,17 @@ internal sealed class CustomHeaderSessionAffinityPolicy : BaseEncryptedSessionAf
         return Unprotect(keyHeaderValues[0]);
     }
 
-    protected override void SetAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig config, string unencryptedKey)
-    {
+    protected override void SetAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig config, string unencryptedKey) {
         context.Response.Headers.Append(config.AffinityKeyName, Protect(unencryptedKey));
     }
 
-    private static class Log
-    {
+    private static class Log {
         private static readonly Action<ILogger, string, int, Exception?> _requestAffinityHeaderHasMultipleValues = LoggerMessage.Define<string, int>(
             LogLevel.Error,
             EventIds.RequestAffinityHeaderHasMultipleValues,
             "The request affinity header `{headerName}` has `{valueCount}` values.");
 
-        public static void RequestAffinityHeaderHasMultipleValues(ILogger logger, string headerName, int valueCount)
-        {
+        public static void RequestAffinityHeaderHasMultipleValues(ILogger logger, string headerName, int valueCount) {
             _requestAffinityHeaderHasMultipleValues(logger, headerName, valueCount, null);
         }
     }

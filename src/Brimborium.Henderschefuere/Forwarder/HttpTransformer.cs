@@ -9,8 +9,7 @@ using Brimborium.Henderschefuere.Transforms.Builder;
 
 namespace Brimborium.Henderschefuere.Forwarder;
 
-public class HttpTransformer
-{
+public class HttpTransformer {
     /// <summary>
     /// A default set of transforms that adds X-Forwarded-* headers, removes the original Host value and
     /// copies all other request and response fields and headers, except for some protocol specific values.
@@ -30,8 +29,7 @@ public class HttpTransformer
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsBodylessStatusCode(HttpStatusCode statusCode) =>
-        statusCode switch
-        {
+        statusCode switch {
             // A 1xx response is terminated by the end of the header section; it cannot contain content
             // or trailers.
             // See https://www.rfc-editor.org/rfc/rfc9110.html#section-15.2-2
@@ -80,14 +78,11 @@ public class HttpTransformer
     /// <param name="proxyRequest">The outgoing proxy request.</param>
     /// <param name="destinationPrefix">The uri prefix for the selected destination server which can be used to create the RequestUri.</param>
     [Obsolete("This overload of TransformRequestAsync is obsolete. Override and use the overload accepting a CancellationToken instead.")]
-    public virtual ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix)
-    {
-        foreach (var header in httpContext.Request.Headers)
-        {
+    public virtual ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix) {
+        foreach (var header in httpContext.Request.Headers) {
             var headerName = header.Key;
             var headerValue = header.Value;
-            if (RequestUtilities.ShouldSkipRequestHeader(headerName))
-            {
+            if (RequestUtilities.ShouldSkipRequestHeader(headerName)) {
                 continue;
             }
 
@@ -103,8 +98,7 @@ public class HttpTransformer
         // remove the received Content-Length field prior to forwarding such
         // a message downstream.
         if (httpContext.Request.Headers.ContainsKey(HeaderNames.TransferEncoding)
-            && httpContext.Request.Headers.ContainsKey(HeaderNames.ContentLength))
-        {
+            && httpContext.Request.Headers.ContainsKey(HeaderNames.ContentLength)) {
             proxyRequest.Content?.Headers.Remove(HeaderNames.ContentLength);
         }
 
@@ -112,15 +106,11 @@ public class HttpTransformer
         // The only exception to this is the TE header field, which MAY be
         // present in an HTTP/2 request; when it is, it MUST NOT contain any
         // value other than "trailers".
-        if (ProtocolHelper.IsHttp2OrGreater(httpContext.Request.Protocol))
-        {
+        if (ProtocolHelper.IsHttp2OrGreater(httpContext.Request.Protocol)) {
             var te = httpContext.Request.Headers.GetCommaSeparatedValues(HeaderNames.TE);
-            if (te is not null)
-            {
-                for (var i = 0; i < te.Length; i++)
-                {
-                    if (string.Equals(te[i], "trailers", StringComparison.OrdinalIgnoreCase))
-                    {
+            if (te is not null) {
+                for (var i = 0; i < te.Length; i++) {
+                    if (string.Equals(te[i], "trailers", StringComparison.OrdinalIgnoreCase)) {
                         var added = proxyRequest.Headers.TryAddWithoutValidation(HeaderNames.TE, te[i]);
                         Debug.Assert(added);
                         break;
@@ -161,17 +151,14 @@ public class HttpTransformer
     /// that returns false may send an alternate response inline or return control to the caller for it to retry, respond,
     /// etc.</returns>
     [Obsolete("This overload of TransformResponseAsync is obsolete. Override and use the overload accepting a CancellationToken instead.")]
-    public virtual ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage? proxyResponse)
-    {
-        if (proxyResponse is null)
-        {
+    public virtual ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage? proxyResponse) {
+        if (proxyResponse is null) {
             return new ValueTask<bool>(false);
         }
 
         var responseHeaders = httpContext.Response.Headers;
         CopyResponseHeaders(proxyResponse.Headers, responseHeaders);
-        if (proxyResponse.Content is not null)
-        {
+        if (proxyResponse.Content is not null) {
             CopyResponseHeaders(proxyResponse.Content.Headers, responseHeaders);
         }
 
@@ -185,8 +172,7 @@ public class HttpTransformer
         // a message downstream.
         if (proxyResponse.Content is not null
             && proxyResponse.Headers.NonValidated.Contains(HeaderNames.TransferEncoding)
-            && proxyResponse.Content.Headers.NonValidated.Contains(HeaderNames.ContentLength))
-        {
+            && proxyResponse.Content.Headers.NonValidated.Contains(HeaderNames.ContentLength)) {
             httpContext.Response.Headers.Remove(HeaderNames.ContentLength);
         }
 
@@ -195,8 +181,7 @@ public class HttpTransformer
         if (proxyResponse.Content is not null
             && IsBodylessStatusCode(proxyResponse.StatusCode)
             && proxyResponse.Content.Headers.NonValidated.TryGetValues(HeaderNames.ContentLength, out var contentLengthValue)
-            && contentLengthValue.ToString() == "0")
-        {
+            && contentLengthValue.ToString() == "0") {
             httpContext.Response.Headers.Remove(HeaderNames.ContentLength);
         }
 
@@ -222,14 +207,12 @@ public class HttpTransformer
     /// <param name="httpContext">The incoming request.</param>
     /// <param name="proxyResponse">The response from the destination.</param>
     [Obsolete("This overload of TransformResponseTrailersAsync is obsolete. Override and use the overload accepting a CancellationToken instead.")]
-    public virtual ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
-    {
+    public virtual ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse) {
         // NOTE: Deliberately not using `context.Response.SupportsTrailers()`, `context.Response.AppendTrailer(...)`
         // because they lookup `IHttpResponseTrailersFeature` for every call. Here we do it just once instead.
         var responseTrailersFeature = httpContext.Features.Get<IHttpResponseTrailersFeature>();
         var outgoingTrailers = responseTrailersFeature?.Trailers;
-        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly)
-        {
+        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly) {
             // Note that trailers, if any, should already have been declared in Proxy's response
             // by virtue of us having proxied all response headers in step 6.
             CopyResponseHeaders(proxyResponse.TrailingHeaders, outgoingTrailers);
@@ -239,15 +222,12 @@ public class HttpTransformer
     }
 
 
-    private static void CopyResponseHeaders(HttpHeaders source, IHeaderDictionary destination)
-    {
+    private static void CopyResponseHeaders(HttpHeaders source, IHeaderDictionary destination) {
         // We want to append to any prior values, if any.
         // Not using Append here because it skips empty headers.
-        foreach (var header in source.NonValidated)
-        {
+        foreach (var header in source.NonValidated) {
             var headerName = header.Key;
-            if (RequestUtilities.ShouldSkipResponseHeader(headerName))
-            {
+            if (RequestUtilities.ShouldSkipResponseHeader(headerName)) {
                 continue;
             }
 
@@ -257,8 +237,7 @@ public class HttpTransformer
             // The Strict-Transport-Security may be added by the proxy before forwarding. Only copy the header
             // if it's not already present.
             if (!StringValues.IsNullOrEmpty(currentValue)
-                && string.Equals(headerName, HeaderNames.StrictTransportSecurity, StringComparison.OrdinalIgnoreCase))
-            {
+                && string.Equals(headerName, HeaderNames.StrictTransportSecurity, StringComparison.OrdinalIgnoreCase)) {
                 continue;
             }
 

@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Health;
 /// <summary>
 /// Actively monitors destinations health.
 /// </summary>
-public interface IActiveHealthCheckMonitor
-{
+public interface IActiveHealthCheckMonitor {
     /// <summary>
     /// Gets a value that determines whether the initial round of active health checks have run, regardless of the results.
     /// </summary>

@@ -8,17 +8,14 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Sets or appends the X-Forwarded-Proto header with the request's original url scheme.
 /// </summary>
-public class RequestHeaderXForwardedProtoTransform : RequestTransform
-{
+public class RequestHeaderXForwardedProtoTransform : RequestTransform {
     /// <summary>
     /// Creates a new transform.
     /// </summary>
     /// <param name="headerName">The header name.</param>
     /// <param name="action">Action to applied to the header.</param>
-    public RequestHeaderXForwardedProtoTransform(string headerName, ForwardedTransformActions action)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+    public RequestHeaderXForwardedProtoTransform(string headerName, ForwardedTransformActions action) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -31,17 +28,14 @@ public class RequestHeaderXForwardedProtoTransform : RequestTransform
     internal ForwardedTransformActions TransformAction { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 
         var scheme = context.HttpContext.Request.Scheme;
 
-        switch (TransformAction)
-        {
+        switch (TransformAction) {
             case ForwardedTransformActions.Set:
                 RemoveHeader(context, HeaderName);
                 AddHeader(context, HeaderName, scheme);

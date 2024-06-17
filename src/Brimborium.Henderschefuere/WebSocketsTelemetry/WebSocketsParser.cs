@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
-
 namespace Brimborium.Henderschefuere.WebSocketsTelemetry;
 
-internal unsafe struct WebSocketsParser
-{
+public unsafe struct WebSocketsParser {
     private const int MaskLength = 4;
     private const int MinHeaderSize = 2;
     private const int MaxHeaderSize = MinHeaderSize + MaskLength + sizeof(ulong);
@@ -22,8 +19,7 @@ internal unsafe struct WebSocketsParser
 
     public DateTime? CloseTime => _closeTime == 0 ? null : new DateTime(_closeTime, DateTimeKind.Utc);
 
-    public WebSocketsParser(TimeProvider timeProvider, bool isServer)
-    {
+    public WebSocketsParser(TimeProvider timeProvider, bool isServer) {
         _minHeaderSize = (byte)(MinHeaderSize + (isServer ? MaskLength : 0));
         _leftover = 0;
         _bytesToSkip = 0;
@@ -56,13 +52,11 @@ internal unsafe struct WebSocketsParser
     // where we store leftover bytes that don't represent a complete frame header.
     // On the next call to Consume, we interpret the leftover bytes as the beginning of the frame.
     // As we are not interested in the actual payload data, we skip over (payload length + mask length) bytes after each header.
-    public void Consume(ReadOnlySpan<byte> buffer)
-    {
+    public void Consume(ReadOnlySpan<byte> buffer) {
         int leftover = _leftover;
         var bytesToSkip = _bytesToSkip;
 
-        while (true)
-        {
+        while (true) {
             var toSkip = Math.Min(bytesToSkip, (ulong)buffer.Length);
             buffer = buffer.Slice((int)toSkip);
             bytesToSkip -= toSkip;
@@ -70,30 +64,26 @@ internal unsafe struct WebSocketsParser
             var available = leftover + buffer.Length;
             int headerSize = _minHeaderSize;
 
-            if (available < headerSize)
-            {
+            if (available < headerSize) {
                 break;
             }
 
             var length = (leftover > 1 ? _leftoverBuffer[1] : buffer[1 - leftover]) & 0x7FUL;
 
-            if (length > 125)
-            {
+            if (length > 125) {
                 // The actual length will be encoded in 2 or 8 bytes, based on whether the length was 126 or 127
                 var lengthBytes = 2 << (((int)length & 1) << 1);
                 headerSize += lengthBytes;
                 Debug.Assert(leftover < headerSize);
 
-                if (available < headerSize)
-                {
+                if (available < headerSize) {
                     break;
                 }
 
                 lengthBytes += MinHeaderSize;
 
                 length = 0;
-                for (var i = MinHeaderSize; i < lengthBytes; i++)
-                {
+                for (var i = MinHeaderSize; i < lengthBytes; i++) {
                     length <<= 8;
                     length |= i < leftover ? _leftoverBuffer[i] : buffer[i - leftover];
                 }
@@ -106,15 +96,12 @@ internal unsafe struct WebSocketsParser
             var header = (leftover > 0 ? _leftoverBuffer[0] : buffer[0]) & NonReservedBitsMask;
 
             // Don't count control frames under MessageCount
-            if ((uint)(header - 0x80) <= 0x02)
-            {
+            if ((uint)(header - 0x80) <= 0x02) {
                 // Has FIN (0x80) and is a Continuation (0x00) / Text (0x01) / Binary (0x02) opcode
                 MessageCount++;
-            }
-            else if ((header & 0xF) == 0x8) // CLOSE
-            {
-                if (_closeTime == 0)
-                {
+            } else if ((header & 0xF) == 0x8) // CLOSE
+              {
+                if (_closeTime == 0) {
                     _closeTime = _timeProvider.GetUtcNow().Ticks;
                 }
             }
@@ -129,8 +116,7 @@ internal unsafe struct WebSocketsParser
         _bytesToSkip = bytesToSkip;
 
         Debug.Assert(leftover + buffer.Length < MaxHeaderSize);
-        for (var i = 0; i < buffer.Length; i++, leftover++)
-        {
+        for (var i = 0; i < buffer.Length; i++, leftover++) {
             _leftoverBuffer[leftover] = buffer[i];
         }
 

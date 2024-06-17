@@ -7,8 +7,7 @@ namespace Brimborium.Henderschefuere.Configuration;
 /// Describes a route that matches incoming requests based on the <see cref="Match"/> criteria
 /// and proxies matching requests to the cluster identified by its <see cref="ClusterId"/>.
 /// </summary>
-public sealed record RouteConfig
-{
+public sealed record RouteConfig {
     /// <summary>
     /// Globally unique identifier of the route.
     /// This field is required.
@@ -95,10 +94,8 @@ public sealed record RouteConfig
     /// </summary>
     public IReadOnlyList<IReadOnlyDictionary<string, string>>? Transforms { get; init; }
 
-    public bool Equals(RouteConfig? other)
-    {
-        if (other is null)
-        {
+    public bool Equals(RouteConfig? other) {
+        if (other is null) {
             return false;
         }
 
@@ -120,8 +117,7 @@ public sealed record RouteConfig
             && CaseSensitiveEqualHelper.Equals(Transforms, other.Transforms);
     }
 
-    public override int GetHashCode()
-    {
+    public override int GetHashCode() {
         // HashCode.Combine(...) takes only 8 arguments
         var hash = new HashCode();
         hash.Add(Order);

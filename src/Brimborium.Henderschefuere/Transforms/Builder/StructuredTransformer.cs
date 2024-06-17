@@ -6,16 +6,14 @@ namespace Brimborium.Henderschefuere.Transforms.Builder;
 /// <summary>
 /// Transforms for a given route.
 /// </summary>
-internal sealed class StructuredTransformer : HttpTransformer
-{
+internal sealed class StructuredTransformer : HttpTransformer {
     /// <summary>
     /// Creates a new <see cref="StructuredTransformer"/> instance.
     /// </summary>
     internal StructuredTransformer(bool? copyRequestHeaders, bool? copyResponseHeaders, bool? copyResponseTrailers,
         IList<RequestTransform> requestTransforms,
         IList<ResponseTransform> responseTransforms,
-        IList<ResponseTrailersTransform> responseTrailerTransforms)
-    {
+        IList<ResponseTrailersTransform> responseTrailerTransforms) {
         ShouldCopyRequestHeaders = copyRequestHeaders;
         ShouldCopyResponseHeaders = copyResponseHeaders;
         ShouldCopyResponseTrailers = copyResponseTrailers;
@@ -65,10 +63,8 @@ internal sealed class StructuredTransformer : HttpTransformer
         TransformResponseTrailersAsync(httpContext, proxyResponse, CancellationToken.None);
 #pragma warning restore
 
-    public override async ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix, CancellationToken cancellationToken)
-    {
-        if (ShouldCopyRequestHeaders.GetValueOrDefault(true))
-        {
+    public override async ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix, CancellationToken cancellationToken) {
+        if (ShouldCopyRequestHeaders.GetValueOrDefault(true)) {
             // We own the base implementation and know it doesn't make use of the cancellation token.
             // We're intentionally calling the overload without it to avoid it calling back into this derived implementation, causing a stack overflow.
 
@@ -79,13 +75,11 @@ internal sealed class StructuredTransformer : HttpTransformer
 #pragma warning restore CA2016
         }
 
-        if (RequestTransforms.Length == 0)
-        {
+        if (RequestTransforms.Length == 0) {
             return;
         }
 
-        var transformContext = new RequestTransformContext()
-        {
+        var transformContext = new RequestTransformContext() {
             DestinationPrefix = destinationPrefix,
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
@@ -94,20 +88,17 @@ internal sealed class StructuredTransformer : HttpTransformer
             CancellationToken = cancellationToken,
         };
 
-        foreach (var requestTransform in RequestTransforms)
-        {
+        foreach (var requestTransform in RequestTransforms) {
             await requestTransform.ApplyAsync(transformContext);
 
             // The transform generated a response, do not apply further transforms and do not forward.
-            if (RequestUtilities.IsResponseSet(httpContext.Response))
-            {
+            if (RequestUtilities.IsResponseSet(httpContext.Response)) {
                 return;
             }
         }
 
         // Allow a transform to directly set a custom RequestUri.
-        if (proxyRequest.RequestUri is null)
-        {
+        if (proxyRequest.RequestUri is null) {
             var queryString = transformContext.MaybeQuery?.QueryString ?? httpContext.Request.QueryString;
 
             proxyRequest.RequestUri = RequestUtilities.MakeDestinationAddress(
@@ -115,10 +106,8 @@ internal sealed class StructuredTransformer : HttpTransformer
         }
     }
 
-    public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage? proxyResponse, CancellationToken cancellationToken)
-    {
-        if (ShouldCopyResponseHeaders.GetValueOrDefault(true))
-        {
+    public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage? proxyResponse, CancellationToken cancellationToken) {
+        if (ShouldCopyResponseHeaders.GetValueOrDefault(true)) {
             // We own the base implementation and know it doesn't make use of the cancellation token.
             // We're intentionally calling the overload without it to avoid it calling back into this derived implementation, causing a stack overflow.
 
@@ -129,31 +118,26 @@ internal sealed class StructuredTransformer : HttpTransformer
 #pragma warning restore CA2016
         }
 
-        if (ResponseTransforms.Length == 0)
-        {
+        if (ResponseTransforms.Length == 0) {
             return true;
         }
 
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = ShouldCopyResponseHeaders.GetValueOrDefault(true),
             CancellationToken = cancellationToken,
         };
 
-        foreach (var responseTransform in ResponseTransforms)
-        {
+        foreach (var responseTransform in ResponseTransforms) {
             await responseTransform.ApplyAsync(transformContext);
         }
 
         return !transformContext.SuppressResponseBody;
     }
 
-    public override async ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken)
-    {
-        if (ShouldCopyResponseTrailers.GetValueOrDefault(true))
-        {
+    public override async ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken) {
+        if (ShouldCopyResponseTrailers.GetValueOrDefault(true)) {
             // We own the base implementation and know it doesn't make use of the cancellation token.
             // We're intentionally calling the overload without it to avoid it calling back into this derived implementation, causing a stack overflow.
 
@@ -164,26 +148,22 @@ internal sealed class StructuredTransformer : HttpTransformer
 #pragma warning restore CA2016
         }
 
-        if (ResponseTrailerTransforms.Length == 0)
-        {
+        if (ResponseTrailerTransforms.Length == 0) {
             return;
         }
 
         // Only run the transforms if trailers are actually supported by the client response.
         var responseTrailersFeature = httpContext.Features.Get<IHttpResponseTrailersFeature>();
         var outgoingTrailers = responseTrailersFeature?.Trailers;
-        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly)
-        {
-            var transformContext = new ResponseTrailersTransformContext()
-            {
+        if (outgoingTrailers is not null && !outgoingTrailers.IsReadOnly) {
+            var transformContext = new ResponseTrailersTransformContext() {
                 HttpContext = httpContext,
                 ProxyResponse = proxyResponse,
                 HeadersCopied = ShouldCopyResponseTrailers.GetValueOrDefault(true),
                 CancellationToken = cancellationToken,
             };
 
-            foreach (var responseTrailerTransform in ResponseTrailerTransforms)
-            {
+            foreach (var responseTrailerTransform in ResponseTrailerTransforms) {
                 await responseTrailerTransform.ApplyAsync(transformContext);
             }
         }

@@ -6,12 +6,9 @@ namespace Brimborium.Henderschefuere.Transforms;
 /// <summary>
 /// Removes a request header.
 /// </summary>
-public class RequestHeaderRemoveTransform : RequestTransform
-{
-    public RequestHeaderRemoveTransform(string headerName)
-    {
-        if (string.IsNullOrEmpty(headerName))
-        {
+public class RequestHeaderRemoveTransform : RequestTransform {
+    public RequestHeaderRemoveTransform(string headerName) {
+        if (string.IsNullOrEmpty(headerName)) {
             throw new ArgumentException($"'{nameof(headerName)}' cannot be null or empty.", nameof(headerName));
         }
 
@@ -21,10 +18,8 @@ public class RequestHeaderRemoveTransform : RequestTransform
     internal string HeaderName { get; }
 
     /// <inheritdoc/>
-    public override ValueTask ApplyAsync(RequestTransformContext context)
-    {
-        if (context is null)
-        {
+    public override ValueTask ApplyAsync(RequestTransformContext context) {
+        if (context is null) {
             throw new ArgumentNullException(nameof(context));
         }
 

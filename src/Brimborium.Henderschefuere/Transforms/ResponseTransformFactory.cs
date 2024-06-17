@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Brimborium.Henderschefuere.Transforms.Builder;
-
 namespace Brimborium.Henderschefuere.Transforms;
 
-internal sealed class ResponseTransformFactory : ITransformFactory
-{
+public sealed class ResponseTransformFactory : ITransformFactory {
     internal static readonly string ResponseHeadersCopyKey = "ResponseHeadersCopy";
     internal static readonly string ResponseTrailersCopyKey = "ResponseTrailersCopy";
     internal static readonly string ResponseHeaderKey = "ResponseHeader";
@@ -19,218 +16,140 @@ internal sealed class ResponseTransformFactory : ITransformFactory
     internal static readonly string AppendKey = "Append";
     internal static readonly string SetKey = "Set";
 
-    public bool Validate(TransformRouteValidationContext context, IReadOnlyDictionary<string, string> transformValues)
-    {
-        if (transformValues.TryGetValue(ResponseHeadersCopyKey, out var copyHeaders))
-        {
+    public bool Validate(TransformRouteValidationContext context, IReadOnlyDictionary<string, string> transformValues) {
+        if (transformValues.TryGetValue(ResponseHeadersCopyKey, out var copyHeaders)) {
             TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
-            if (!bool.TryParse(copyHeaders, out var _))
-            {
+            if (!bool.TryParse(copyHeaders, out var _)) {
                 context.Errors.Add(new ArgumentException($"Unexpected value for ResponseHeadersCopy: {copyHeaders}. Expected 'true' or 'false'"));
             }
-        }
-        else if (transformValues.TryGetValue(ResponseTrailersCopyKey, out copyHeaders))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailersCopyKey, out copyHeaders)) {
             TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
-            if (!bool.TryParse(copyHeaders, out var _))
-            {
+            if (!bool.TryParse(copyHeaders, out var _)) {
                 context.Errors.Add(new ArgumentException($"Unexpected value for ResponseTrailersCopy: {copyHeaders}. Expected 'true' or 'false'"));
             }
-        }
-        else if (transformValues.TryGetValue(ResponseHeaderKey, out var _))
-        {
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+        } else if (transformValues.TryGetValue(ResponseHeaderKey, out var _)) {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 3);
-                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _))
-                {
+                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _)) {
                     context.Errors.Add(new ArgumentException($"Unexpected value for ResponseHeader:When: {whenValue}. Expected 'Always', 'Success', or 'Failure'"));
                 }
-            }
-            else
-            {
+            } else {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 2);
             }
 
-            if (!transformValues.TryGetValue(SetKey, out var _) && !transformValues.TryGetValue(AppendKey, out var _))
-            {
+            if (!transformValues.TryGetValue(SetKey, out var _) && !transformValues.TryGetValue(AppendKey, out var _)) {
                 context.Errors.Add(new ArgumentException($"Unexpected parameters for ResponseHeader: {string.Join(';', transformValues.Keys)}. Expected 'Set' or 'Append'"));
             }
-        }
-        else if (transformValues.TryGetValue(ResponseTrailerKey, out var _))
-        {
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+        } else if (transformValues.TryGetValue(ResponseTrailerKey, out var _)) {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 3);
-                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _))
-                {
+                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _)) {
                     context.Errors.Add(new ArgumentException($"Unexpected value for ResponseTrailer:When: {whenValue}. Expected 'Always', 'Success', or 'Failure'"));
                 }
-            }
-            else
-            {
+            } else {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 2);
             }
 
-            if (!transformValues.TryGetValue(SetKey, out var _) && !transformValues.TryGetValue(AppendKey, out var _))
-            {
+            if (!transformValues.TryGetValue(SetKey, out var _) && !transformValues.TryGetValue(AppendKey, out var _)) {
                 context.Errors.Add(new ArgumentException($"Unexpected parameters for ResponseTrailer: {string.Join(';', transformValues.Keys)}. Expected 'Set' or 'Append'"));
             }
-        }
-        else if (transformValues.TryGetValue(ResponseHeaderRemoveKey, out var _))
-        {
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+        } else if (transformValues.TryGetValue(ResponseHeaderRemoveKey, out var _)) {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 2);
-                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _))
-                {
+                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _)) {
                     context.Errors.Add(new ArgumentException($"Unexpected value for ResponseHeaderRemove:When: {whenValue}. Expected 'Always', 'Success', or 'Failure'"));
                 }
-            }
-            else
-            {
+            } else {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
             }
-        }
-        else if (transformValues.TryGetValue(ResponseTrailerRemoveKey, out var _))
-        {
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+        } else if (transformValues.TryGetValue(ResponseTrailerRemoveKey, out var _)) {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 2);
-                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _))
-                {
+                if (!Enum.TryParse<ResponseCondition>(whenValue, ignoreCase: true, out var _)) {
                     context.Errors.Add(new ArgumentException($"Unexpected value for ResponseTrailerRemove:When: {whenValue}. Expected 'Always', 'Success', or 'Failure'"));
                 }
-            }
-            else
-            {
+            } else {
                 TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
             }
-        }
-        else if (transformValues.TryGetValue(ResponseHeadersAllowedKey, out var _))
-        {
+        } else if (transformValues.TryGetValue(ResponseHeadersAllowedKey, out var _)) {
             TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
-        }
-        else if (transformValues.TryGetValue(ResponseTrailersAllowedKey, out var _))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailersAllowedKey, out var _)) {
             TransformHelpers.TryCheckTooManyParameters(context, transformValues, expected: 1);
-        }
-        else
-        {
+        } else {
             return false;
         }
 
         return true;
     }
 
-    public bool Build(TransformBuilderContext context, IReadOnlyDictionary<string, string> transformValues)
-    {
-        if (transformValues.TryGetValue(ResponseHeadersCopyKey, out var copyHeaders))
-        {
+    public bool Build(TransformBuilderContext context, IReadOnlyDictionary<string, string> transformValues) {
+        if (transformValues.TryGetValue(ResponseHeadersCopyKey, out var copyHeaders)) {
             TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             context.CopyResponseHeaders = bool.Parse(copyHeaders);
-        }
-        else if (transformValues.TryGetValue(ResponseTrailersCopyKey, out copyHeaders))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailersCopyKey, out copyHeaders)) {
             TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             context.CopyResponseTrailers = bool.Parse(copyHeaders);
-        }
-        else if (transformValues.TryGetValue(ResponseHeaderKey, out var responseHeaderName))
-        {
+        } else if (transformValues.TryGetValue(ResponseHeaderKey, out var responseHeaderName)) {
             var condition = ResponseCondition.Success;
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 3);
                 condition = Enum.Parse<ResponseCondition>(whenValue, ignoreCase: true);
-            }
-            else
-            {
+            } else {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 2);
             }
 
-            if (transformValues.TryGetValue(SetKey, out var setValue))
-            {
+            if (transformValues.TryGetValue(SetKey, out var setValue)) {
                 context.AddResponseHeader(responseHeaderName, setValue, append: false, condition);
-            }
-            else if (transformValues.TryGetValue(AppendKey, out var appendValue))
-            {
+            } else if (transformValues.TryGetValue(AppendKey, out var appendValue)) {
                 context.AddResponseHeader(responseHeaderName, appendValue, append: true, condition);
-            }
-            else
-            {
+            } else {
                 throw new ArgumentException($"Unexpected parameters for ResponseHeader: {string.Join(';', transformValues.Keys)}. Expected 'Set' or 'Append'");
             }
-        }
-        else if (transformValues.TryGetValue(ResponseTrailerKey, out var responseTrailerName))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailerKey, out var responseTrailerName)) {
             var condition = ResponseCondition.Success;
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 3);
                 condition = Enum.Parse<ResponseCondition>(whenValue, ignoreCase: true);
-            }
-            else
-            {
+            } else {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 2);
             }
 
-            if (transformValues.TryGetValue(SetKey, out var setValue))
-            {
+            if (transformValues.TryGetValue(SetKey, out var setValue)) {
                 context.AddResponseTrailer(responseTrailerName, setValue, append: false, condition);
-            }
-            else if (transformValues.TryGetValue(AppendKey, out var appendValue))
-            {
+            } else if (transformValues.TryGetValue(AppendKey, out var appendValue)) {
                 context.AddResponseTrailer(responseTrailerName, appendValue, append: true, condition);
-            }
-            else
-            {
+            } else {
                 throw new ArgumentException($"Unexpected parameters for ResponseTrailer: {string.Join(';', transformValues.Keys)}. Expected 'Set' or 'Append'");
             }
-        }
-        else if (transformValues.TryGetValue(ResponseHeaderRemoveKey, out var removeResponseHeaderName))
-        {
+        } else if (transformValues.TryGetValue(ResponseHeaderRemoveKey, out var removeResponseHeaderName)) {
             var condition = ResponseCondition.Success;
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 2);
                 condition = Enum.Parse<ResponseCondition>(whenValue, ignoreCase: true);
-            }
-            else
-            {
+            } else {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             }
 
             context.AddResponseHeaderRemove(removeResponseHeaderName, condition);
-        }
-        else if (transformValues.TryGetValue(ResponseTrailerRemoveKey, out var removeResponseTrailerName))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailerRemoveKey, out var removeResponseTrailerName)) {
             var condition = ResponseCondition.Success;
-            if (transformValues.TryGetValue(WhenKey, out var whenValue))
-            {
+            if (transformValues.TryGetValue(WhenKey, out var whenValue)) {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 2);
                 condition = Enum.Parse<ResponseCondition>(whenValue, ignoreCase: true);
-            }
-            else
-            {
+            } else {
                 TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             }
 
             context.AddResponseTrailerRemove(removeResponseTrailerName, condition);
-        }
-        else if (transformValues.TryGetValue(ResponseHeadersAllowedKey, out var allowedHeaders))
-        {
+        } else if (transformValues.TryGetValue(ResponseHeadersAllowedKey, out var allowedHeaders)) {
             TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             var headersList = allowedHeaders.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             context.AddResponseHeadersAllowed(headersList);
-        }
-        else if (transformValues.TryGetValue(ResponseTrailersAllowedKey, out var allowedTrailers))
-        {
+        } else if (transformValues.TryGetValue(ResponseTrailersAllowedKey, out var allowedTrailers)) {
             TransformHelpers.CheckTooManyParameters(transformValues, expected: 1);
             var headersList = allowedTrailers.Split(';', options: StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             context.AddResponseTrailersAllowed(headersList);
-        }
-        else
-        {
+        } else {
             return false;
         }
 

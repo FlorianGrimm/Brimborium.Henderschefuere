@@ -5,16 +5,13 @@ using System.Runtime.CompilerServices;
 
 namespace Brimborium.Henderschefuere.LoadBalancing;
 
-internal sealed class RoundRobinLoadBalancingPolicy : ILoadBalancingPolicy
-{
+internal sealed class RoundRobinLoadBalancingPolicy : ILoadBalancingPolicy {
     private readonly ConditionalWeakTable<ClusterState, AtomicCounter> _counters = new();
 
     public string Name => LoadBalancingPolicies.RoundRobin;
 
-    public DestinationState? PickDestination(HttpContext context, ClusterState cluster, IReadOnlyList<DestinationState> availableDestinations)
-    {
-        if (availableDestinations.Count == 0)
-        {
+    public DestinationState? PickDestination(HttpContext context, ClusterState cluster, IReadOnlyList<DestinationState> availableDestinations) {
+        if (availableDestinations.Count == 0) {
             return null;
         }
 

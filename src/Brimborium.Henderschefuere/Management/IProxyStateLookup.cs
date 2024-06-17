@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere;
 /// <summary>
 /// Allows access to the proxy's current set of routes and clusters.
 /// </summary>
-public interface IProxyStateLookup
-{
+public interface IProxyStateLookup {
     /// <summary>
     /// Retrieves a specific route by id, if present.
     /// </summary>

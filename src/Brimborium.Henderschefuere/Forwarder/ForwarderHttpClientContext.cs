@@ -6,8 +6,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// <summary>
 /// Contains the old and the new HTTP client configurations.
 /// </summary>
-public class ForwarderHttpClientContext
-{
+public class ForwarderHttpClientContext {
     /// <summary>
     /// Id of a <see cref="ClusterModel"/> HTTP client belongs to.
     /// </summary>

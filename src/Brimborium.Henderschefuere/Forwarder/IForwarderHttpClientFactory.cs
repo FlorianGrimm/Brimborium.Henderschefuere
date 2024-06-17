@@ -12,8 +12,7 @@ namespace Brimborium.Henderschefuere.Forwarder;
 /// except that this factory class is meant for direct use,
 /// which the forwarder requires in order to keep separate pools for each cluster.
 /// </remarks>
-public interface IForwarderHttpClientFactory
-{
+public interface IForwarderHttpClientFactory {
     /// <summary>
     /// Creates and configures an <see cref="HttpMessageInvoker"/> instance
     /// that can be used for forwarding requests to an upstream server.
