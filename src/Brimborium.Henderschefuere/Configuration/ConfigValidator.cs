@@ -5,15 +5,27 @@ namespace Brimborium.Henderschefuere.Configuration;
 
 internal sealed class ConfigValidator : IConfigValidator {
     private readonly ITransformBuilder _transformBuilder;
+    private readonly ITunnelValidator[] _tunnelValidators;
     private readonly IRouteValidator[] _routeValidators;
     private readonly IClusterValidator[] _clusterValidators;
 
     public ConfigValidator(ITransformBuilder transformBuilder,
+        IEnumerable<ITunnelValidator> tunnelValidators,
         IEnumerable<IRouteValidator> routeValidators,
         IEnumerable<IClusterValidator> clusterValidators) {
         _transformBuilder = transformBuilder ?? throw new ArgumentNullException(nameof(transformBuilder));
+        _tunnelValidators = tunnelValidators?.ToArray() ?? throw new ArgumentNullException(nameof(tunnelValidators));
         _routeValidators = routeValidators?.ToArray() ?? throw new ArgumentNullException(nameof(routeValidators));
         _clusterValidators = clusterValidators?.ToArray() ?? throw new ArgumentNullException(nameof(clusterValidators));
+    }
+
+    public async ValueTask<IList<Exception>> ValidateTunnelAsync(TunnelConfig tunnel) {
+        _ = tunnel ?? throw new ArgumentNullException(nameof(tunnel));
+        var errors = new List<Exception>();
+        foreach (var tunnelValidator in _tunnelValidators) {
+            await tunnelValidator.ValidateAsync(tunnel, errors);
+        }
+        return errors;
     }
 
     // Note this performs all validation steps without short circuiting in order to report all possible errors.

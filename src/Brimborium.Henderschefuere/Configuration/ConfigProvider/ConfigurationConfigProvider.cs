@@ -51,6 +51,10 @@ public sealed class ConfigurationConfigProvider : IProxyConfigProvider, IDisposa
             try {
                 newSnapshot = new ConfigurationSnapshot();
 
+                foreach (var section in _configuration.GetSection("Tunnels").GetChildren()) {
+                    newSnapshot.Tunnels.Add(CreateTunnel(section));
+                }
+
                 foreach (var section in _configuration.GetSection("Clusters").GetChildren()) {
                     newSnapshot.Clusters.Add(CreateCluster(section));
                 }
@@ -80,6 +84,20 @@ public sealed class ConfigurationConfigProvider : IProxyConfigProvider, IDisposa
                 Log.ErrorSignalingChange(_logger, ex);
             }
         }
+    }
+
+    private TunnelConfig CreateTunnel(IConfigurationSection section) {
+        return new TunnelConfig {
+            TunnelId = section.Key,
+            Url = section[nameof(TunnelConfig.Url)] ?? string.Empty,
+            RemoteTunnelId = section[nameof(TunnelConfig.RemoteTunnelId)] ?? string.Empty,
+            Transport = section[nameof(TunnelConfig.Transport)] ?? string.Empty,
+            Authentication = CreateTunnelAuthentication(section.GetSection(nameof(TunnelConfig.Authentication)))
+        };
+    }
+
+    private TunnelAuthenticationConfig CreateTunnelAuthentication(IConfigurationSection section) {
+        return new TunnelAuthenticationConfig { };
     }
 
     private ClusterConfig CreateCluster(IConfigurationSection section) {

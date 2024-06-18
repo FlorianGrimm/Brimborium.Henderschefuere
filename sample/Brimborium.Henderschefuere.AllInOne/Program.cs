@@ -101,18 +101,22 @@ public sealed class ServerFrontend : ServerBase {
     public override void ConfigureBuilder(WebApplicationBuilder builder) {
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddHenderschefuere()
-            .LoadFromConfigurationDefault(builder.Configuration)
+        builder.Services.AddReverseProxy()
+            .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
             ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
-        app.MapHenderschefuere();
-        app.MapGet("/", (HfConfigurationManager hfConfigurationManager) => {
-            return string.Join(
-                ",",
-                hfConfigurationManager.GetSnapshot().Clusters.Values.Select(cluster => cluster.Id)
-                );
+        app.MapReverseProxy();
+
+        //app.MapGet("/", (HfConfigurationManager hfConfigurationManager) => {
+        //    return string.Join(
+        //        ",",
+        //        hfConfigurationManager.GetSnapshot().Clusters.Values.Select(cluster => cluster.Id)
+        //        );
+        //});
+        app.MapGet("/", () => {
+            return "Hello";
         });
     }
 }
@@ -126,16 +130,16 @@ public sealed class ServerBackend : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddHenderschefuere()
-            .LoadFromConfigurationDefault(builder.Configuration)
-            .EnableTunnel(builder)
+        builder.Services.AddReverseProxy()
+            .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
+            //.EnableTunnel(builder)
             ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
         app.UseWebSockets();
         app.MapControllers();
-        app.MapHenderschefuere();
+        app.MapReverseProxy();
     }
 }
 
@@ -148,9 +152,8 @@ public sealed class ServerAPI : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddHenderschefuere()
-            .LoadFromConfigurationDefault(builder.Configuration)
-            ;
+        builder.Services.AddReverseProxy()
+            .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {

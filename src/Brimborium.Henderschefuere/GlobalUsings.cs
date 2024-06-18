@@ -46,6 +46,7 @@ global using Brimborium.Henderschefuere;
 global using Brimborium.Henderschefuere.Configuration;
 global using Brimborium.Henderschefuere.Configuration.ClusterValidators;
 global using Brimborium.Henderschefuere.Configuration.RouteValidators;
+global using Brimborium.Henderschefuere.Configuration.TunnelValidators;
 global using Brimborium.Henderschefuere.Delegation;
 global using Brimborium.Henderschefuere.Forwarder;
 global using Brimborium.Henderschefuere.Health;

@@ -15,6 +15,11 @@ public interface IProxyConfig {
     string RevisionId => _revisionIdsTable.GetValue(this, static _ => Guid.NewGuid().ToString());
 
     /// <summary>
+    /// Tunnels that can be used to connect to remote servers.
+    /// </summary>
+    IReadOnlyList<TunnelConfig> Tunnels { get; }
+
+    /// <summary>
     /// Routes matching requests to clusters.
     /// </summary>
     IReadOnlyList<RouteConfig> Routes { get; }
