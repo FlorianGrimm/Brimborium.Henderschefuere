@@ -30,35 +30,30 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Management.Tests;
 
-public class ProxyConfigManagerTests
-{
+public class ProxyConfigManagerTests {
     private static IServiceProvider CreateServices(
         List<RouteConfig> routes,
         List<ClusterConfig> clusters,
         Action<IReverseProxyBuilder> configureProxy = null,
         IEnumerable<IConfigChangeListener> configListeners = null,
-        IDestinationResolver destinationResolver = null)
-    {
+        IDestinationResolver destinationResolver = null) {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging();
         serviceCollection.AddRouting();
-        var proxyBuilder = serviceCollection.AddReverseProxy().LoadFromMemory(routes, clusters);
+        var proxyBuilder = serviceCollection.AddReverseProxy().LoadFromMemory([], routes, clusters);
         serviceCollection.TryAddSingleton(new Mock<IServer>().Object);
         serviceCollection.TryAddSingleton(new Mock<IWebHostEnvironment>().Object);
         var activeHealthPolicy = new Mock<IActiveHealthCheckPolicy>();
         activeHealthPolicy.SetupGet(p => p.Name).Returns("activePolicyA");
         serviceCollection.AddSingleton(activeHealthPolicy.Object);
         configureProxy?.Invoke(proxyBuilder);
-        if (configListeners is not null)
-        {
-            foreach (var configListener in configListeners)
-            {
+        if (configListeners is not null) {
+            foreach (var configListener in configListeners) {
                 serviceCollection.AddSingleton(configListener);
             }
         }
 
-        if (destinationResolver is not null)
-        {
+        if (destinationResolver is not null) {
             serviceCollection.AddSingleton(destinationResolver);
         }
 
@@ -71,14 +66,12 @@ public class ProxyConfigManagerTests
     private static IServiceProvider CreateServices(
         IEnumerable<IProxyConfigProvider> configProviders,
         Action<IReverseProxyBuilder> configureProxy = null,
-        IEnumerable<IConfigChangeListener> configListeners = null)
-    {
+        IEnumerable<IConfigChangeListener> configListeners = null) {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging();
         serviceCollection.AddRouting();
         var proxyBuilder = serviceCollection.AddReverseProxy();
-        foreach (var configProvider in configProviders)
-        {
+        foreach (var configProvider in configProviders) {
             serviceCollection.AddSingleton(configProvider);
         }
         serviceCollection.TryAddSingleton(new Mock<IServer>().Object);
@@ -87,10 +80,8 @@ public class ProxyConfigManagerTests
         activeHealthPolicy.SetupGet(p => p.Name).Returns("activePolicyA");
         serviceCollection.AddSingleton(activeHealthPolicy.Object);
         configureProxy?.Invoke(proxyBuilder);
-        if (configListeners is not null)
-        {
-            foreach (var configListener in configListeners)
-            {
+        if (configListeners is not null) {
+            foreach (var configListener in configListeners) {
                 serviceCollection.AddSingleton(configListener);
             }
         }
@@ -101,15 +92,13 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>());
         _ = services.GetRequiredService<ProxyConfigManager>();
     }
 
     [Fact]
-    public async Task NullRoutes_StartsEmpty()
-    {
+    public async Task NullRoutes_StartsEmpty() {
         var services = CreateServices(null, new List<ClusterConfig>());
         var manager = services.GetRequiredService<ProxyConfigManager>();
         var dataSource = await manager.InitialLoadAsync();
@@ -119,8 +108,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task NullClusters_StartsEmpty()
-    {
+    public async Task NullClusters_StartsEmpty() {
         var services = CreateServices(new List<RouteConfig>(), null);
         var manager = services.GetRequiredService<ProxyConfigManager>();
         var dataSource = await manager.InitialLoadAsync();
@@ -130,8 +118,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task Endpoints_StartsEmpty()
-    {
+    public async Task Endpoints_StartsEmpty() {
         var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>());
         var manager = services.GetRequiredService<ProxyConfigManager>();
         var dataSource = await manager.InitialLoadAsync();
@@ -141,8 +128,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task Lookup_StartsEmpty()
-    {
+    public async Task Lookup_StartsEmpty() {
         var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>());
         var manager = services.GetRequiredService<ProxyConfigManager>();
         var lookup = services.GetRequiredService<IProxyStateLookup>();
@@ -155,8 +141,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task GetChangeToken_InitialValue()
-    {
+    public async Task GetChangeToken_InitialValue() {
         var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>());
         var manager = services.GetRequiredService<ProxyConfigManager>();
         var dataSource = await manager.InitialLoadAsync();
@@ -168,20 +153,17 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_OneClusterOneDestinationOneRoute_Works()
-    {
+    public async Task BuildConfig_OneClusterOneDestinationOneRoute_Works() {
         const string TestAddress = "https://localhost:123/";
 
-        var cluster = new ClusterConfig
-        {
+        var cluster = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
@@ -225,10 +207,8 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_DuplicateRouteIds_Throws()
-    {
-        var route = new RouteConfig
-        {
+    public async Task BuildConfig_DuplicateRouteIds_Throws() {
+        var route = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
@@ -243,14 +223,11 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_DuplicateClusterIds_Throws()
-    {
-        var cluster = new ClusterConfig
-        {
+    public async Task BuildConfig_DuplicateClusterIds_Throws() {
+        var cluster = new ClusterConfig {
             ClusterId = "cluster1"
         };
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
@@ -265,42 +242,37 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_TwoDistinctConfigs_Works()
-    {
+    public async Task BuildConfig_TwoDistinctConfigs_Works() {
         const string TestAddress = "https://localhost:123/";
 
-        var cluster1 = new ClusterConfig
-        {
+        var cluster1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var route1 = new RouteConfig
-        {
+        var route1 = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
         };
 
-        var cluster2 = new ClusterConfig
-        {
+        var cluster2 = new ClusterConfig {
             ClusterId = "cluster2",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d2", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var route2 = new RouteConfig
-        {
+        var route2 = new RouteConfig {
             RouteId = "route2",
             ClusterId = "cluster2",
             Match = new RouteMatch { Path = "/" }
         };
 
-        var config1 = new InMemoryConfigProvider(new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster1 });
-        var config2 = new InMemoryConfigProvider(new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 });
+        var config1 = new InMemoryConfigProvider([], new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster1 });
+        var config2 = new InMemoryConfigProvider([], new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 });
 
         var services = CreateServices(new[] { config1, config2 });
 
@@ -352,20 +324,17 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_TwoOverlappingConfigs_Works()
-    {
+    public async Task BuildConfig_TwoOverlappingConfigs_Works() {
         const string TestAddress = "https://localhost:123/";
 
-        var cluster1 = new ClusterConfig
-        {
+        var cluster1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var cluster2 = new ClusterConfig
-        {
+        var cluster2 = new ClusterConfig {
             ClusterId = "cluster2",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -373,21 +342,19 @@ public class ProxyConfigManagerTests
             }
         };
 
-        var route1 = new RouteConfig
-        {
+        var route1 = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
         };
-        var route2 = new RouteConfig
-        {
+        var route2 = new RouteConfig {
             RouteId = "route2",
             ClusterId = "cluster2",
             Match = new RouteMatch { Path = "/" }
         };
 
-        var config1 = new InMemoryConfigProvider(new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster1 });
-        var config2 = new InMemoryConfigProvider(new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster2 });
+        var config1 = new InMemoryConfigProvider([], new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster1 });
+        var config2 = new InMemoryConfigProvider([], new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster2 });
 
         var services = CreateServices(new[] { config1, config2 });
 
@@ -438,21 +405,18 @@ public class ProxyConfigManagerTests
         Assert.Equal(TestAddress, destination.Model.Config.Address);
     }
 
-    private class FakeConfigChangeListener : IConfigChangeListener
-    {
+    private class FakeConfigChangeListener : IConfigChangeListener {
         public bool? HasApplyingSucceeded { get; private set; }
         public bool DidAtLeastOneErrorOccurWhileLoading { get; private set; }
         public string[] EventuallyLoaded;
         public string[] SuccessfullyApplied;
         public string[] FailedApplied;
 
-        public FakeConfigChangeListener()
-        {
+        public FakeConfigChangeListener() {
             Reset();
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             DidAtLeastOneErrorOccurWhileLoading = false;
             HasApplyingSucceeded = null;
             EventuallyLoaded = Array.Empty<string>();
@@ -460,130 +424,110 @@ public class ProxyConfigManagerTests
             FailedApplied = Array.Empty<string>();
         }
 
-        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception ex)
-        {
+        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception ex) {
             DidAtLeastOneErrorOccurWhileLoading = true;
         }
 
-        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
+        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs) {
             EventuallyLoaded = proxyConfigs.Select(c => c.RevisionId).ToArray();
         }
 
-        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception ex)
-        {
+        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception ex) {
             HasApplyingSucceeded = false;
             FailedApplied = proxyConfigs.Select(c => c.RevisionId).ToArray();
         }
 
-        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
+        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs) {
             HasApplyingSucceeded = true;
             SuccessfullyApplied = proxyConfigs.Select(c => c.RevisionId).ToArray();
         }
     }
 
-    private class ConfigChangeListenerCounter : IConfigChangeListener
-    {
+    private class ConfigChangeListenerCounter : IConfigChangeListener {
         public int NumberOfLoadedConfigurations { get; private set; }
         public int NumberOfFailedConfigurationLoads { get; private set; }
         public int NumberOfAppliedConfigurations { get; private set; }
         public int NumberOfFailedConfigurationApplications { get; private set; }
 
-        public ConfigChangeListenerCounter()
-        {
+        public ConfigChangeListenerCounter() {
             Reset();
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             NumberOfLoadedConfigurations = 0;
             NumberOfFailedConfigurationLoads = 0;
             NumberOfAppliedConfigurations = 0;
             NumberOfFailedConfigurationApplications = 0;
         }
 
-        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception ex)
-        {
+        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception ex) {
             NumberOfFailedConfigurationLoads++;
         }
 
-        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
+        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs) {
             NumberOfLoadedConfigurations += proxyConfigs.Count;
         }
 
-        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception ex)
-        {
+        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception ex) {
             NumberOfFailedConfigurationApplications += proxyConfigs.Count;
         }
 
-        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
+        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs) {
             NumberOfAppliedConfigurations += proxyConfigs.Count;
         }
     }
 
-    private class InMemoryConfig : IProxyConfig
-    {
+    private class InMemoryConfig : IProxyConfig {
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public InMemoryConfig(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId)
-        {
+        public InMemoryConfig(IReadOnlyList<TunnelConfig> tunnels, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId) {
             RevisionId = revisionId;
+            this.Tunnels = tunnels;
             Routes = routes;
             Clusters = clusters;
             ChangeToken = new CancellationChangeToken(_cts.Token);
         }
 
         public string RevisionId { get; }
-
+        public IReadOnlyList<TunnelConfig> Tunnels { get; }
         public IReadOnlyList<RouteConfig> Routes { get; }
 
         public IReadOnlyList<ClusterConfig> Clusters { get; }
 
         public IChangeToken ChangeToken { get; }
 
-        internal void SignalChange()
-        {
+        internal void SignalChange() {
             _cts.Cancel();
         }
     }
 
-    private class OnDemandFailingInMemoryConfigProvider : IProxyConfigProvider
-    {
+    private class OnDemandFailingInMemoryConfigProvider : IProxyConfigProvider {
         private volatile InMemoryConfig _config;
 
         public OnDemandFailingInMemoryConfigProvider(
-            InMemoryConfig config)
-        {
+            InMemoryConfig config) {
             _config = config;
         }
 
         public OnDemandFailingInMemoryConfigProvider(
             IReadOnlyList<RouteConfig> routes,
             IReadOnlyList<ClusterConfig> clusters,
-            string revisionId) : this(new InMemoryConfig(routes, clusters, revisionId))
-        {
+            string revisionId) : this(new InMemoryConfig([], routes, clusters, revisionId)) {
         }
 
-        public IProxyConfig GetConfig()
-        {
-            if (ShouldConfigLoadingFail)
-            {
+        public IProxyConfig GetConfig() {
+            if (ShouldConfigLoadingFail) {
                 return null;
             }
 
             return _config;
         }
 
-        public void Update(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId)
-        {
-            Update(new InMemoryConfig(routes, clusters, revisionId));
+        public void Update(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId) {
+            Update(new InMemoryConfig([], routes, clusters, revisionId));
         }
 
-        public void Update(InMemoryConfig config)
-        {
+        public void Update(InMemoryConfig config) {
             var oldConfig = Interlocked.Exchange(ref _config, config);
             oldConfig.SignalChange();
         }
@@ -592,8 +536,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_CanBeNotifiedOfProxyConfigSuccessfulAndFailedLoading()
-    {
+    public async Task BuildConfig_CanBeNotifiedOfProxyConfigSuccessfulAndFailedLoading() {
         var configProviderA = new OnDemandFailingInMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "A1");
         var configProviderB = new OnDemandFailingInMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "B1");
 
@@ -618,16 +561,14 @@ public class ProxyConfigManagerTests
 
         const string TestAddress = "https://localhost:123/";
 
-        var cluster1 = new ClusterConfig
-        {
+        var cluster1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var cluster2 = new ClusterConfig
-        {
+        var cluster2 = new ClusterConfig {
             ClusterId = "cluster2",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -635,14 +576,12 @@ public class ProxyConfigManagerTests
             }
         };
 
-        var route1 = new RouteConfig
-        {
+        var route1 = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
         };
-        var route2 = new RouteConfig
-        {
+        var route2 = new RouteConfig {
             RouteId = "route2",
             ClusterId = "cluster2",
             Match = new RouteMatch { Path = "/" }
@@ -684,10 +623,9 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task BuildConfig_CanBeNotifiedOfProxyConfigSuccessfulAndFailedUpdating()
-    {
-        var configProviderA = new InMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "A1");
-        var configProviderB = new InMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "B1");
+    public async Task BuildConfig_CanBeNotifiedOfProxyConfigSuccessfulAndFailedUpdating() {
+        var configProviderA = new InMemoryConfigProvider([], new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "A1");
+        var configProviderB = new InMemoryConfigProvider([], new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "B1");
 
         var configChangeListenerCounter = new ConfigChangeListenerCounter();
         var fakeConfigChangeListener = new FakeConfigChangeListener();
@@ -710,16 +648,14 @@ public class ProxyConfigManagerTests
 
         const string TestAddress = "https://localhost:123/";
 
-        var cluster1 = new ClusterConfig
-        {
+        var cluster1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             }
         };
-        var cluster2 = new ClusterConfig
-        {
+        var cluster2 = new ClusterConfig {
             ClusterId = "cluster2",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -727,14 +663,12 @@ public class ProxyConfigManagerTests
             }
         };
 
-        var route1 = new RouteConfig
-        {
+        var route1 = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
         };
-        var route2 = new RouteConfig
-        {
+        var route2 = new RouteConfig {
             RouteId = "route2",
             ClusterId = "cluster2",
             // Missing Match here will be caught by the analysis
@@ -759,7 +693,7 @@ public class ProxyConfigManagerTests
         fakeConfigChangeListener.Reset();
         configChangeListenerCounter.Reset();
 
-        configProviderB.Update(new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 }, "B2");
+        configProviderB.Update([], new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 }, "B2");
 
         Assert.Equal(2, configChangeListenerCounter.NumberOfLoadedConfigurations);
         Assert.Equal(0, configChangeListenerCounter.NumberOfFailedConfigurationLoads);
@@ -773,16 +707,15 @@ public class ProxyConfigManagerTests
         Assert.Equal(new[] { "A2", "B2" }, fakeConfigChangeListener.FailedApplied);
     }
 
-    public class DummyProxyConfig : IProxyConfig
-    {
+    public class DummyProxyConfig : IProxyConfig {
+        public IReadOnlyList<TunnelConfig> Tunnels => throw new NotImplementedException();
         public IReadOnlyList<RouteConfig> Routes => throw new NotImplementedException();
         public IReadOnlyList<ClusterConfig> Clusters => throw new NotImplementedException();
         public IChangeToken ChangeToken => throw new NotImplementedException();
     }
 
     [Fact]
-    public void IProxyConfigDerivedTypes_RevisionIdIsAutomaticallySet()
-    {
+    public void IProxyConfigDerivedTypes_RevisionIdIsAutomaticallySet() {
         IProxyConfig config = new DummyProxyConfig();
         Assert.NotNull(config.RevisionId);
         Assert.NotEmpty(config.RevisionId);
@@ -790,31 +723,26 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task InitialLoadAsync_ProxyHttpClientOptionsSet_CreateAndSetHttpClient()
-    {
+    public async Task InitialLoadAsync_ProxyHttpClientOptionsSet_CreateAndSetHttpClient() {
         const string TestAddress = "https://localhost:123/";
 
-        var cluster = new ClusterConfig
-        {
+        var cluster = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig { Address = TestAddress } }
             },
-            HttpClient = new HttpClientConfig
-            {
+            HttpClient = new HttpClientConfig {
                 SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 RequestHeaderEncoding = Encoding.UTF8.WebName,
                 ResponseHeaderEncoding = Encoding.UTF8.WebName,
             },
-            HealthCheck = new HealthCheckConfig
-            {
+            HealthCheck = new HealthCheckConfig {
                 Active = new ActiveHealthCheckConfig { Enabled = true }
             }
         };
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
@@ -846,8 +774,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task GetChangeToken_SignalsChange()
-    {
+    public async Task GetChangeToken_SignalsChange() {
         var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>());
         var inMemoryConfig = (InMemoryConfigProvider)services.GetRequiredService<IProxyConfigProvider>();
         var configManager = services.GetRequiredService<ProxyConfigManager>();
@@ -861,8 +788,7 @@ public class ProxyConfigManagerTests
 
         var changeToken1 = dataSource.GetChangeToken();
         changeToken1.RegisterChangeCallback(
-            _ =>
-            {
+            _ => {
                 readEndpoints1 = dataSource.Endpoints;
                 signaled1.SetResult(1);
             }, null);
@@ -874,8 +800,7 @@ public class ProxyConfigManagerTests
 
         var changeToken2 = dataSource.GetChangeToken();
         changeToken2.RegisterChangeCallback(
-            _ =>
-            {
+            _ => {
                 readEndpoints2 = dataSource.Endpoints;
                 signaled2.SetResult(1);
             }, null);
@@ -890,8 +815,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task GetChangeToken_MultipleConfigs_SignalsChange()
-    {
+    public async Task GetChangeToken_MultipleConfigs_SignalsChange() {
         var config1 = new InMemoryConfigProvider(new List<RouteConfig>(), new List<ClusterConfig>());
         var config2 = new InMemoryConfigProvider(new List<RouteConfig>(), new List<ClusterConfig>());
         var services = CreateServices(new[] { config1, config2 });
@@ -906,8 +830,7 @@ public class ProxyConfigManagerTests
 
         var changeToken1 = dataSource.GetChangeToken();
         changeToken1.RegisterChangeCallback(
-            _ =>
-            {
+            _ => {
                 readEndpoints1 = dataSource.Endpoints;
                 signaled1.SetResult(1);
             }, null);
@@ -919,8 +842,7 @@ public class ProxyConfigManagerTests
 
         var changeToken2 = dataSource.GetChangeToken();
         changeToken2.RegisterChangeCallback(
-            _ =>
-            {
+            _ => {
                 readEndpoints2 = dataSource.Endpoints;
                 signaled2.SetResult(1);
             }, null);
@@ -941,8 +863,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task ChangeConfig_ActiveHealthCheckIsEnabled_RunInitialCheck()
-    {
+    public async Task ChangeConfig_ActiveHealthCheckIsEnabled_RunInitialCheck() {
         var endpoints = new List<RouteConfig>() { new RouteConfig() { RouteId = "r1", ClusterId = "c1", Match = new RouteMatch { Path = "/" } } };
         var clusters = new List<ClusterConfig>() { new ClusterConfig { ClusterId = "c1" } };
         var services = CreateServices(endpoints, clusters);
@@ -960,8 +881,7 @@ public class ProxyConfigManagerTests
 
         var changeToken = dataSource.GetChangeToken();
         changeToken.RegisterChangeCallback(
-            _ =>
-            {
+            _ => {
                 signaled.SetResult(1);
             }, null);
 
@@ -983,8 +903,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task ChangeConfig_DestinationChange_IsReflectedOnRouteConfiguration()
-    {
+    public async Task ChangeConfig_DestinationChange_IsReflectedOnRouteConfiguration() {
         var endpoints = new List<RouteConfig>() { new RouteConfig() { RouteId = "r1", ClusterId = "c1", Match = new RouteMatch { Path = "/" } } };
         var clusters = new List<ClusterConfig>()
         {
@@ -1032,12 +951,10 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_RequestVersionValidationError_Throws()
-    {
+    public async Task LoadAsync_RequestVersionValidationError_Throws() {
         const string TestAddress = "https://localhost:123/";
 
-        var cluster = new ClusterConfig
-        {
+        var cluster = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -1059,8 +976,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_RouteValidationError_Throws()
-    {
+    public async Task LoadAsync_RouteValidationError_Throws() {
         var routeName = "route1";
         var route1 = new RouteConfig { RouteId = routeName, Match = new RouteMatch { Hosts = null }, ClusterId = "cluster1" };
         var services = CreateServices(new List<RouteConfig>() { route1 }, new List<ClusterConfig>());
@@ -1076,8 +992,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_MultipleSourcesWithValidationErrors_Throws()
-    {
+    public async Task LoadAsync_MultipleSourcesWithValidationErrors_Throws() {
         var route1 = new RouteConfig { RouteId = "route1", Match = new RouteMatch { Hosts = null }, ClusterId = "cluster1" };
         var provider1 = new InMemoryConfigProvider(new List<RouteConfig>() { route1 }, new List<ClusterConfig>());
         var cluster1 = new ClusterConfig { ClusterId = "cluster1", HttpClient = new HttpClientConfig { MaxConnectionsPerServer = -1 } };
@@ -1097,11 +1012,9 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_ConfigFilterRouteActions_CanFixBrokenRoute()
-    {
+    public async Task LoadAsync_ConfigFilterRouteActions_CanFixBrokenRoute() {
         var route1 = new RouteConfig { RouteId = "route1", Match = new RouteMatch { Hosts = null }, Order = 1, ClusterId = "cluster1" };
-        var services = CreateServices(new List<RouteConfig>() { route1 }, new List<ClusterConfig>(), proxyBuilder =>
-        {
+        var services = CreateServices(new List<RouteConfig>() { route1 }, new List<ClusterConfig>(), proxyBuilder => {
             proxyBuilder.AddConfigFilter<FixRouteHostFilter>();
         });
         var configManager = services.GetRequiredService<ProxyConfigManager>();
@@ -1118,44 +1031,32 @@ public class ProxyConfigManagerTests
         Assert.Equal("example.com", host);
     }
 
-    private class FixRouteHostFilter : IProxyConfigFilter
-    {
-        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel)
-        {
+    private class FixRouteHostFilter : IProxyConfigFilter {
+        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel) {
             return new ValueTask<ClusterConfig>(cluster);
         }
 
-        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel)
-        {
-            return new ValueTask<RouteConfig>(route with
-            {
+        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel) {
+            return new ValueTask<RouteConfig>(route with {
                 Match = route.Match with { Hosts = new[] { "example.com" } }
             });
         }
     }
 
-    private class ClusterAndRouteFilter : IProxyConfigFilter
-    {
-        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel)
-        {
-            return new ValueTask<ClusterConfig>(cluster with
-            {
-                HealthCheck = new HealthCheckConfig()
-                {
+    private class ClusterAndRouteFilter : IProxyConfigFilter {
+        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel) {
+            return new ValueTask<ClusterConfig>(cluster with {
+                HealthCheck = new HealthCheckConfig() {
                     Active = new ActiveHealthCheckConfig { Enabled = true, Interval = TimeSpan.FromSeconds(12), Policy = "activePolicyA" }
                 }
             });
         }
 
-        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel)
-        {
+        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel) {
             string order;
-            if (cluster is not null)
-            {
+            if (cluster is not null) {
                 order = cluster.Metadata["Order"];
-            }
-            else
-            {
+            } else {
                 order = "12";
             }
 
@@ -1164,34 +1065,28 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_ConfigFilterConfiguresCluster_Works()
-    {
-        var route1 = new RouteConfig
-        {
+    public async Task LoadAsync_ConfigFilterConfiguresCluster_Works() {
+        var route1 = new RouteConfig {
             RouteId = "route1",
             ClusterId = "cluster1",
             Match = new RouteMatch { Path = "/" }
         };
-        var route2 = new RouteConfig
-        {
+        var route2 = new RouteConfig {
             RouteId = "route2",
             ClusterId = "cluster2",
             Match = new RouteMatch { Path = "/" }
         };
-        var cluster = new ClusterConfig()
-        {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig() { Address = "http://localhost" } }
             },
-            Metadata = new Dictionary<string, string>
-            {
+            Metadata = new Dictionary<string, string> {
                 ["Order"] = "47"
             }
         };
-        var services = CreateServices(new List<RouteConfig>() { route1, route2 }, new List<ClusterConfig>() { cluster }, proxyBuilder =>
-        {
+        var services = CreateServices(new List<RouteConfig>() { route1, route2 }, new List<ClusterConfig>() { cluster }, proxyBuilder => {
             proxyBuilder.AddConfigFilter<ClusterAndRouteFilter>();
         });
         var manager = services.GetRequiredService<ProxyConfigManager>();
@@ -1215,32 +1110,26 @@ public class ProxyConfigManagerTests
         Assert.Equal(12, routeConfig2.Config.Order);
     }
 
-    private class ClusterAndRouteThrows : IProxyConfigFilter
-    {
-        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel)
-        {
+    private class ClusterAndRouteThrows : IProxyConfigFilter {
+        public ValueTask<ClusterConfig> ConfigureClusterAsync(ClusterConfig cluster, CancellationToken cancel) {
             throw new NotFiniteNumberException("Test exception");
         }
 
-        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel)
-        {
+        public ValueTask<RouteConfig> ConfigureRouteAsync(RouteConfig route, ClusterConfig cluster, CancellationToken cancel) {
             throw new NotFiniteNumberException("Test exception");
         }
     }
 
     [Fact]
-    public async Task LoadAsync_ConfigFilterClusterActionThrows_Throws()
-    {
-        var cluster = new ClusterConfig()
-        {
+    public async Task LoadAsync_ConfigFilterClusterActionThrows_Throws() {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
                 { "d1", new DestinationConfig() { Address = "http://localhost" } }
             }
         };
-        var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>() { cluster }, proxyBuilder =>
-        {
+        var services = CreateServices(new List<RouteConfig>(), new List<ClusterConfig>() { cluster }, proxyBuilder => {
             proxyBuilder.AddConfigFilter<ClusterAndRouteThrows>();
             proxyBuilder.AddConfigFilter<ClusterAndRouteThrows>();
         });
@@ -1255,12 +1144,10 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_ConfigFilterRouteActionThrows_Throws()
-    {
+    public async Task LoadAsync_ConfigFilterRouteActionThrows_Throws() {
         var route1 = new RouteConfig { RouteId = "route1", Match = new RouteMatch { Hosts = new[] { "example.com" } }, Order = 1, ClusterId = "cluster1" };
         var route2 = new RouteConfig { RouteId = "route2", Match = new RouteMatch { Hosts = new[] { "example2.com" } }, Order = 1, ClusterId = "cluster2" };
-        var services = CreateServices(new List<RouteConfig>() { route1, route2 }, new List<ClusterConfig>(), proxyBuilder =>
-        {
+        var services = CreateServices(new List<RouteConfig>() { route1, route2 }, new List<ClusterConfig>(), proxyBuilder => {
             proxyBuilder.AddConfigFilter<ClusterAndRouteThrows>();
             proxyBuilder.AddConfigFilter<ClusterAndRouteThrows>();
         });
@@ -1275,13 +1162,11 @@ public class ProxyConfigManagerTests
         Assert.IsType<NotFiniteNumberException>(agex.InnerExceptions.Skip(1).First().InnerException);
     }
 
-    private class FakeDestinationResolver : IDestinationResolver
-    {
+    private class FakeDestinationResolver : IDestinationResolver {
         private readonly Func<IReadOnlyDictionary<string, DestinationConfig>, CancellationToken, ValueTask<ResolvedDestinationCollection>> _delegate;
 
         public FakeDestinationResolver(
-            Func<IReadOnlyDictionary<string, DestinationConfig>, CancellationToken, ValueTask<ResolvedDestinationCollection>> @delegate)
-        {
+            Func<IReadOnlyDictionary<string, DestinationConfig>, CancellationToken, ValueTask<ResolvedDestinationCollection>> @delegate) {
             _delegate = @delegate;
         }
 
@@ -1289,53 +1174,43 @@ public class ProxyConfigManagerTests
             => _delegate(destinations, cancellationToken);
     }
 
-    private class TestConfigChangeListener : IConfigChangeListener
-    {
+    private class TestConfigChangeListener : IConfigChangeListener {
         private readonly bool _includeLoad;
         private readonly bool _includeApply;
 
         public Channel<ConfigChangeListenerEvent> Events { get; } = Channel.CreateUnbounded<ConfigChangeListenerEvent>();
 
-        public TestConfigChangeListener(bool includeLoad = true, bool includeApply = true)
-        {
+        public TestConfigChangeListener(bool includeLoad = true, bool includeApply = true) {
             _includeLoad = includeLoad;
             _includeApply = includeApply;
         }
 
-        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
-            if (!_includeApply)
-            {
+        public void ConfigurationApplied(IReadOnlyList<IProxyConfig> proxyConfigs) {
+            if (!_includeApply) {
                 return;
             }
 
             Assert.True(Events.Writer.TryWrite(new ConfigurationAppliedEvent(proxyConfigs)));
         }
 
-        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception exception)
-        {
-            if (!_includeApply)
-            {
+        public void ConfigurationApplyingFailed(IReadOnlyList<IProxyConfig> proxyConfigs, Exception exception) {
+            if (!_includeApply) {
                 return;
             }
 
             Assert.True(Events.Writer.TryWrite(new ConfigurationApplyingFailedEvent(proxyConfigs, exception)));
         }
 
-        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs)
-        {
-            if (!_includeLoad)
-            {
+        public void ConfigurationLoaded(IReadOnlyList<IProxyConfig> proxyConfigs) {
+            if (!_includeLoad) {
                 return;
             }
 
             Assert.True(Events.Writer.TryWrite(new ConfigurationLoadedEvent(proxyConfigs)));
         }
 
-        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception exception)
-        {
-            if (!_includeLoad)
-            {
+        public void ConfigurationLoadingFailed(IProxyConfigProvider configProvider, Exception exception) {
+            if (!_includeLoad) {
                 return;
             }
 
@@ -1350,12 +1225,10 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Initial_ThrowsSync()
-    {
+    public async Task LoadAsync_DestinationResolver_Initial_ThrowsSync() {
         var throwResolver = new FakeDestinationResolver((destinations, cancellation) => throw new InvalidOperationException("Throwing!"));
 
-        var cluster = new ClusterConfig()
-        {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -1376,12 +1249,10 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Initial_ThrowsAsync()
-    {
+    public async Task LoadAsync_DestinationResolver_Initial_ThrowsAsync() {
         var throwResolver = new FakeDestinationResolver((destinations, cancellation) => ValueTask.FromException<ResolvedDestinationCollection>(new InvalidOperationException("Throwing!")));
 
-        var cluster = new ClusterConfig()
-        {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -1401,19 +1272,16 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Successful()
-    {
+    public async Task LoadAsync_DestinationResolver_Successful() {
         var destinationsToExpand = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
         {
             { "d1", new DestinationConfig() { Address = "http://localhost" } }
         };
 
-        var syncExpandResolver = new FakeDestinationResolver((destinations, cancellation) =>
-        {
+        var syncExpandResolver = new FakeDestinationResolver((destinations, cancellation) => {
             var expandedDestinations = new Dictionary<string, DestinationConfig>();
 
-            foreach (var destKvp in destinations)
-            {
+            foreach (var destKvp in destinations) {
                 expandedDestinations[$"{destKvp.Key}-1"] = new DestinationConfig { Address = "http://127.0.0.1:8080" };
                 expandedDestinations[$"{destKvp.Key}-2"] = new DestinationConfig { Address = "http://127.1.1.1:8080" };
             }
@@ -1422,8 +1290,7 @@ public class ProxyConfigManagerTests
             return new(result);
         });
 
-        var cluster1 = new ClusterConfig()
-        {
+        var cluster1 = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = destinationsToExpand
         };
@@ -1446,8 +1313,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Dns()
-    {
+    public async Task LoadAsync_DestinationResolver_Dns() {
         var destinationsToExpand = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
         {
             { "d1", new DestinationConfig() { Address = "http://localhost/a/b/c", Health = "http://localhost/healthz" } },
@@ -1456,8 +1322,7 @@ public class ProxyConfigManagerTests
             { "d4", new DestinationConfig() { Address = "https://localhost:8443/a/b/c", Health = "https://localhost:8443/healthz", Host = "overriddenhost" } }
         };
 
-        var cluster1 = new ClusterConfig()
-        {
+        var cluster1 = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = destinationsToExpand
         };
@@ -1485,8 +1350,7 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_ReloadResolution()
-    {
+    public async Task LoadAsync_DestinationResolver_ReloadResolution() {
         var configListener = new TestConfigChangeListener(includeApply: false);
         var destinationsToExpand = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
         {
@@ -1495,13 +1359,11 @@ public class ProxyConfigManagerTests
 
         var cts = new[] { new CancellationTokenSource() };
         var signaled = new[] { 0 };
-        var syncExpandResolver = new FakeDestinationResolver((destinations, cancellation) =>
-        {
+        var syncExpandResolver = new FakeDestinationResolver((destinations, cancellation) => {
             signaled[0]++;
             var expandedDestinations = new Dictionary<string, DestinationConfig>();
 
-            foreach (var destKvp in destinations)
-            {
+            foreach (var destKvp in destinations) {
                 expandedDestinations[$"{destKvp.Key}-1"] = new DestinationConfig { Address = $"http://127.0.0.1:8080/{signaled[0]}" };
                 expandedDestinations[$"{destKvp.Key}-2"] = new DestinationConfig { Address = $"http://127.1.1.1:8080/{signaled[0]}" };
             }
@@ -1510,8 +1372,7 @@ public class ProxyConfigManagerTests
             return new(result);
         });
 
-        var cluster1 = new ClusterConfig()
-        {
+        var cluster1 = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = destinationsToExpand
         };
@@ -1559,23 +1420,17 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Reload_ThrowsSync()
-    {
+    public async Task LoadAsync_DestinationResolver_Reload_ThrowsSync() {
         var configListener = new TestConfigChangeListener(includeApply: false);
         var cts = new CancellationTokenSource();
-        var syncThrowResolver = new FakeDestinationResolver((destinations, cancellation) =>
-        {
-            if (cts.IsCancellationRequested)
-            {
+        var syncThrowResolver = new FakeDestinationResolver((destinations, cancellation) => {
+            if (cts.IsCancellationRequested) {
                 throw new InvalidOperationException("Throwing!");
-            }
-            else
-            {
+            } else {
                 return new(new ResolvedDestinationCollection(destinations, new CancellationChangeToken(cts.Token)));
             }
         });
-        var cluster = new ClusterConfig()
-        {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -1603,25 +1458,19 @@ public class ProxyConfigManagerTests
     }
 
     [Fact]
-    public async Task LoadAsync_DestinationResolver_Reload_ThrowsAsync()
-    {
+    public async Task LoadAsync_DestinationResolver_Reload_ThrowsAsync() {
         var configListener = new TestConfigChangeListener(includeApply: false);
         var cts = new CancellationTokenSource();
-        var syncThrowResolver = new FakeDestinationResolver(async (destinations, cancellation) =>
-        {
+        var syncThrowResolver = new FakeDestinationResolver(async (destinations, cancellation) => {
             await Task.Yield();
 
-            if (cts.IsCancellationRequested)
-            {
+            if (cts.IsCancellationRequested) {
                 throw new InvalidOperationException("Throwing!");
-            }
-            else
-            {
+            } else {
                 return new ResolvedDestinationCollection(destinations, new CancellationChangeToken(cts.Token));
             }
         });
-        var cluster = new ClusterConfig()
-        {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {

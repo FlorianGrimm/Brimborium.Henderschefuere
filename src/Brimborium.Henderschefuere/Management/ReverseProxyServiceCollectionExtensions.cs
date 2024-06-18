@@ -5,6 +5,8 @@ using Brimborium.Henderschefuere.Configuration.ConfigProvider;
 using Brimborium.Henderschefuere.Routing;
 using Brimborium.Henderschefuere.Transforms.Builder;
 
+using Microsoft.AspNetCore.Hosting;
+
 namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
@@ -149,6 +151,14 @@ public static class ReverseProxyServiceCollectionExtensions {
             builder.Services.Configure(configureOptions);
         }
 
+        return builder;
+    }
+
+    public static IReverseProxyBuilder EnableTunnel(this IReverseProxyBuilder builder, WebApplicationBuilder webApplicationBuilder) {
+        webApplicationBuilder.WebHost.ConfigureKestrel(options => {
+            var proxyConfigManager = options.ApplicationServices.GetService<ProxyConfigManager>();
+            var tunnels = proxyConfigManager.Tunnels;
+        });
         return builder;
     }
 }

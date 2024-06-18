@@ -22,6 +22,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     private readonly ILogger<ProxyConfigManager> _logger;
     private readonly IProxyConfigProvider[] _providers;
     private readonly ConfigState[] _configs;
+    private readonly ConcurrentDictionary<string, TunnelState> _tunnels = new(StringComparer.OrdinalIgnoreCase);
     private readonly IClusterChangeListener[] _clusterChangeListeners;
     private readonly ConcurrentDictionary<string, ClusterState> _clusters = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, RouteState> _routes = new(StringComparer.OrdinalIgnoreCase);
@@ -30,7 +31,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     private readonly IForwarderHttpClientFactory _httpClientFactory;
     private readonly ProxyEndpointFactory _proxyEndpointFactory;
     private readonly ITransformBuilder _transformBuilder;
-    private readonly List<Action<EndpointBuilder>> _conventions;
+    private readonly List<Action<EndpointBuilder>> _conventions = new();
     private readonly IActiveHealthCheckMonitor _activeHealthCheckMonitor;
     private readonly IClusterDestinationsUpdater _clusterDestinationsUpdater;
     private readonly IDestinationResolver _destinationResolver;
@@ -40,6 +41,8 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     private IChangeToken _endpointsChangeToken;
 
     private CancellationTokenSource _configChangeSource = new();
+
+    private PreloadOnce? _preloadOnce = new();
 
     public ProxyConfigManager(
         ILogger<ProxyConfigManager> logger,
@@ -74,7 +77,6 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
 
         _configs = new ConfigState[_providers.Length];
 
-        _conventions = new List<Action<EndpointBuilder>>();
         DefaultBuilder = new ReverseProxyConventionBuilder(_conventions);
 
         _endpointsChangeToken = new CancellationChangeToken(_endpointsChangeSource.Token);
@@ -117,6 +119,19 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         UpdateEndpoints(endpoints);
     }
 
+    public IReadOnlyList<TunnelConfig> Tunnels {
+        get {
+            if (_preloadOnce is { loaded: false }) {
+                try {
+                    InitialPreloadAsync().GetAwaiter().GetResult();
+                } catch (Exception ex) {
+                    throw new InvalidOperationException("Unable to load or apply the proxy configuration.", ex);
+                }
+            }
+            return [];
+        }
+    }
+
     /// <inheritdoc/>
     public override IChangeToken GetChangeToken() => Volatile.Read(ref _endpointsChangeToken);
 
@@ -124,10 +139,57 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         return configStates.Select(state => state.LatestConfig).ToList().AsReadOnly();
     }
 
+    class PreloadOnce {
+        public bool loaded = false;
+        public IReadOnlyList<IProxyConfig> proxyConfigs = [];
+    }
+
+    private async Task InitialPreloadAsync() {
+        if (this._preloadOnce is { } preloadOnce) {
+            if (!preloadOnce.loaded) {
+                preloadOnce.loaded = true;
+                var tunnels = new List<TunnelConfig>();
+                var routes = new List<RouteConfig>();
+                var clusters = new List<ClusterConfig>();
+                // Begin resolving config providers concurrently.
+                var resolvedConfigs = new List<(int Index, IProxyConfigProvider Provider, ValueTask<IProxyConfig> Config)>(_providers.Length);
+                for (var i = 0; i < _providers.Length; i++) {
+                    var provider = _providers[i];
+                    var configLoadTask = LoadConfigAsync(provider, cancellationToken: default);
+                    resolvedConfigs.Add((i, provider, configLoadTask));
+                }
+
+                // Wait for all configs to be resolved.
+                foreach (var (i, provider, configLoadTask) in resolvedConfigs) {
+                    var config = await configLoadTask;
+                    _configs[i] = new ConfigState(provider, config);
+                    if (config.Tunnels is { Count: > 0 } updatedTunnels) {
+                        tunnels.AddRange(updatedTunnels);
+                    }
+                    if (config.Routes is { Count: > 0 } updatedRoutes) {
+                        routes.AddRange(updatedRoutes);
+                    }
+                    if (config.Clusters is { Count: > 0 } updatedClusters) {
+                        clusters.AddRange(updatedClusters);
+                    }
+                }
+
+                var proxyConfigs = preloadOnce.proxyConfigs = ExtractListOfProxyConfigs(_configs);
+
+                foreach (var configChangeListener in _configChangeListeners) {
+                    configChangeListener.ConfigurationLoaded(proxyConfigs);
+                }
+                await ApplyConfigAsync(tunnels, routes, clusters);
+            }
+        }
+    }
+
     internal async Task<EndpointDataSource> InitialLoadAsync() {
         // Trigger the first load immediately and throw if it fails.
         // We intend this to crash the app so we don't try listening for further changes.
         try {
+
+#if false
             var routes = new List<RouteConfig>();
             var clusters = new List<ClusterConfig>();
 
@@ -152,14 +214,20 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
             foreach (var configChangeListener in _configChangeListeners) {
                 configChangeListener.ConfigurationLoaded(proxyConfigs);
             }
+#endif
+            // moved to InitialPreloadAsync since the tunnel Config is needed earlier than the route
+            await this.InitialPreloadAsync();
+            if (this._preloadOnce is { } preloadOnce) {
+                this._preloadOnce = null;
 
-            await ApplyConfigAsync(routes, clusters);
+                foreach (var configChangeListener in _configChangeListeners) {
+                    configChangeListener.ConfigurationApplied(preloadOnce.proxyConfigs);
+                }
 
-            foreach (var configChangeListener in _configChangeListeners) {
-                configChangeListener.ConfigurationApplied(proxyConfigs);
+                ListenForConfigChanges();
             }
 
-            ListenForConfigChanges();
+
         } catch (Exception ex) {
             throw new InvalidOperationException("Unable to load or apply the proxy configuration.", ex);
         }
@@ -174,6 +242,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         _configChangeSource.Dispose();
 
         var sourcesChanged = false;
+        var tunnels = new List<TunnelConfig>();
         var routes = new List<RouteConfig>();
         var clusters = new List<ClusterConfig>();
         var reloadedConfigs = new List<(ConfigState Config, ValueTask<IProxyConfig> ResolveTask)>();
@@ -210,6 +279,10 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
             if (instance.LatestConfig.Clusters is { Count: > 0 } updatedClusters) {
                 clusters.AddRange(updatedClusters);
             }
+
+            if (instance.LatestConfig.Tunnels is { Count: > 0 } updatedTunnels) {
+                tunnels.AddRange(updatedTunnels);
+            }
         }
 
         var proxyConfigs = ExtractListOfProxyConfigs(_configs);
@@ -220,7 +293,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         try {
             // Only reload if at least one provider changed.
             if (sourcesChanged) {
-                var hasChanged = await ApplyConfigAsync(routes, clusters);
+                var hasChanged = await ApplyConfigAsync(tunnels, routes, clusters);
                 lock (_syncRoot) {
                     // Skip if changes are signaled before the endpoints are initialized for the first time.
                     // The endpoint conventions might not be ready yet.
@@ -320,18 +393,13 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         return config;
     }
 
-    private sealed class ResolvedProxyConfig : IProxyConfig {
-        private readonly IProxyConfig _innerConfig;
+    private sealed class ResolvedProxyConfig(IProxyConfig innerConfig, IReadOnlyList<ClusterConfig> clusters, IChangeToken changeToken) : IProxyConfig {
+        private readonly IProxyConfig _innerConfig = innerConfig;
 
-        public ResolvedProxyConfig(IProxyConfig innerConfig, IReadOnlyList<ClusterConfig> clusters, IChangeToken changeToken) {
-            _innerConfig = innerConfig;
-            Clusters = clusters;
-            ChangeToken = changeToken;
-        }
-
+        public IReadOnlyList<TunnelConfig> Tunnels => this._innerConfig.Tunnels;
         public IReadOnlyList<RouteConfig> Routes => _innerConfig.Routes;
-        public IReadOnlyList<ClusterConfig> Clusters { get; }
-        public IChangeToken ChangeToken { get; }
+        public IReadOnlyList<ClusterConfig> Clusters { get; } = clusters;
+        public IChangeToken ChangeToken { get; } = changeToken;
     }
 
     private void ListenForConfigChanges() {
@@ -379,19 +447,23 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     }
 
     // Throws for validation failures
-    private async Task<bool> ApplyConfigAsync(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
+    private async Task<bool> ApplyConfigAsync(IReadOnlyList<TunnelConfig> tunnels, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
+        var (configuredTunnels, tunnelErrors) = await VerifyTunnelsAsync(tunnels, cancellation: default);
         var (configuredClusters, clusterErrors) = await VerifyClustersAsync(clusters, cancellation: default);
         var (configuredRoutes, routeErrors) = await VerifyRoutesAsync(routes, configuredClusters, cancellation: default);
 
-        if (routeErrors.Count > 0 || clusterErrors.Count > 0) {
-            throw new AggregateException("The proxy config is invalid.", routeErrors.Concat(clusterErrors));
+        if (routeErrors.Count > 0 || clusterErrors.Count > 0 || tunnelErrors.Count > 0) {
+            throw new AggregateException("The proxy config is invalid.", routeErrors.Concat(clusterErrors).Concat(tunnelErrors));
         }
+
+        UpdateRuntimeTunnels(configuredTunnels);
 
         // Update clusters first because routes need to reference them.
         UpdateRuntimeClusters(configuredClusters.Values);
         var routesChanged = UpdateRuntimeRoutes(configuredRoutes);
         return routesChanged;
     }
+
 
     private async Task<(IList<RouteConfig>, IList<Exception>)> VerifyRoutesAsync(IReadOnlyList<RouteConfig> routes, IReadOnlyDictionary<string, ClusterConfig> clusters, CancellationToken cancellation) {
         if (routes is null) {
@@ -482,6 +554,25 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         }
 
         return (configuredClusters, errors);
+    }
+
+    private async Task<(IList<TunnelConfig>, IList<Exception>)> VerifyTunnelsAsync(IReadOnlyList<TunnelConfig> tunnels, CancellationToken cancellation) {
+        if (tunnels is null) {
+            return (Array.Empty<TunnelConfig>(), Array.Empty<Exception>());
+        }
+        await Task.CompletedTask;
+        return ([.. tunnels], Array.Empty<Exception>());
+    }
+
+    private void UpdateRuntimeTunnels(IEnumerable<TunnelConfig> incomingTunnels) {
+        foreach (var incomingTunnel in incomingTunnels) {
+            if (_tunnels.TryGetValue(incomingTunnel.TunnelId, out var currentTunnel)) {
+#warning TODO
+            } else {
+                currentTunnel = new TunnelState(incomingTunnel.TunnelId);
+                _tunnels.TryAdd(currentTunnel.TunnelId, currentTunnel);
+            }
+        }
     }
 
     private void UpdateRuntimeClusters(IEnumerable<ClusterConfig> incomingClusters) {

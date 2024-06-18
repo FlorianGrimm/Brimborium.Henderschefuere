@@ -26,6 +26,7 @@ global using Microsoft.AspNetCore.Connections.Features;
 global using Microsoft.AspNetCore.Cors.Infrastructure;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Http.Connections.Client;
+global using Microsoft.AspNetCore.Http.Extensions;
 global using Microsoft.AspNetCore.Http.Features;
 global using Microsoft.AspNetCore.Routing;
 global using Microsoft.AspNetCore.Routing.Patterns;

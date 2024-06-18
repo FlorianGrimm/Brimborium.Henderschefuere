@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
-using System.Runtime.CompilerServices;
-
 namespace Brimborium.Henderschefuere.Health;
 
 internal sealed class ClusterDestinationsUpdater : IClusterDestinationsUpdater {

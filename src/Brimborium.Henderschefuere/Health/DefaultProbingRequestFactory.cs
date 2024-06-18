@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Net.Http.Headers;
-
 namespace Brimborium.Henderschefuere.Health;
 
 internal sealed class DefaultProbingRequestFactory : IProbingRequestFactory {

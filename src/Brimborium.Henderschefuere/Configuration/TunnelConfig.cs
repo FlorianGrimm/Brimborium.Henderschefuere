@@ -1,4 +1,7 @@
-﻿namespace Brimborium.Henderschefuere.Configuration;
+﻿// Licensed under the MIT License.
+
+namespace Brimborium.Henderschefuere.Configuration;
+
 public sealed record TunnelConfig {
     public string TunnelId { get; init; } = default!;
     public string Url { get; init; } = default!;

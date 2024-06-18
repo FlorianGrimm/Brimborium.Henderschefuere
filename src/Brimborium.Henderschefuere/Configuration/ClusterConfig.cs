@@ -48,6 +48,10 @@ public sealed record ClusterConfig {
     /// </summary>
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
 
+    public string Transport { get; init; } = TransportConstants.ForwardHttp;
+
+    public TransportAuthentication Authentication { get; init; } = new();
+
     public bool Equals(ClusterConfig? other) {
         if (other is null) {
             return false;
@@ -69,18 +73,23 @@ public sealed record ClusterConfig {
             && HealthCheck == other.HealthCheck
             && HttpClient == other.HttpClient
             && HttpRequest == other.HttpRequest
+            && string.Equals(Transport, other.Transport, StringComparison.OrdinalIgnoreCase)
+            && Authentication == other.Authentication
             && CaseSensitiveEqualHelper.Equals(Metadata, other.Metadata);
     }
 
     public override int GetHashCode() {
-        return HashCode.Combine(
-            ClusterId?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            LoadBalancingPolicy?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            SessionAffinity,
-            HealthCheck,
-            HttpClient,
-            HttpRequest,
-            CollectionEqualityHelper.GetHashCode(Destinations),
-            CaseSensitiveEqualHelper.GetHashCode(Metadata));
+        HashCode hashCode = new HashCode();
+        hashCode.Add(ClusterId, StringComparer.OrdinalIgnoreCase);
+        hashCode.Add(LoadBalancingPolicy, StringComparer.OrdinalIgnoreCase);
+        hashCode.Add(SessionAffinity);
+        hashCode.Add(HealthCheck);
+        hashCode.Add(HttpClient);
+        hashCode.Add(HttpRequest);
+        hashCode.Add(Transport, StringComparer.OrdinalIgnoreCase);
+        hashCode.Add(Authentication);
+        hashCode.Add(CollectionEqualityHelper.GetHashCode(Destinations));
+        hashCode.Add(CaseSensitiveEqualHelper.GetHashCode(Metadata));
+        return hashCode.ToHashCode();
     }
 }

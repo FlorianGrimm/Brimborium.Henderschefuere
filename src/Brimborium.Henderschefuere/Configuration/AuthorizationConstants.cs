@@ -3,7 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Configuration;
 
-internal static class AuthorizationConstants {
-    internal const string Default = "Default";
-    internal const string Anonymous = "Anonymous";
+public static class AuthorizationConstants {
+    public const string Default = nameof(Default);
+    public const string Anonymous = nameof(Anonymous);
 }

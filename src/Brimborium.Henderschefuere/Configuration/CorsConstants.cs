@@ -3,7 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Configuration;
 
-internal static class CorsConstants {
-    internal const string Default = "Default";
-    internal const string Disable = "Disable";
+public static class CorsConstants {
+    public const string Default = nameof(Default);
+    public const string Disable = nameof(Disable);
 }

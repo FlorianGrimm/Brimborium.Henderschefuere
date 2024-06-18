@@ -11,25 +11,33 @@ namespace Brimborium.Henderschefuere.Delegation;
 internal sealed class HttpSysDelegator : IHttpSysDelegator, IClusterChangeListener {
     private const int ERROR_OBJECT_NO_LONGER_EXISTS = 0x1A97;
 
-    private readonly IServerDelegationFeature? _serverDelegationFeature;
+    private bool _serverDelegationFeatureResolved;
+    private IServerDelegationFeature? _serverDelegationFeature;
+    private readonly IServiceProvider _ServiceProvider;
     private readonly ILogger<HttpSysDelegator> _logger;
     private readonly ConcurrentDictionary<QueueKey, WeakReference<DelegationQueue>> _queues;
     private readonly ConditionalWeakTable<DestinationState, DelegationQueue> _queuesPerDestination;
 
     public HttpSysDelegator(
-            IServer server,
+            //IServer server,
+            IServiceProvider serviceProvider,
             ILogger<HttpSysDelegator> logger) {
+        this._ServiceProvider = serviceProvider;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // IServerDelegationFeature isn't added to DI https://github.com/dotnet/aspnetcore/issues/40043
         // IServerDelegationFeature may not be set if not http.sys server or the OS doesn't support delegation
-        _serverDelegationFeature = server.Features?.Get<IServerDelegationFeature>();
+        //_serverDelegationFeature = server.Features?.Get<IServerDelegationFeature>();
 
         _queues = new ConcurrentDictionary<QueueKey, WeakReference<DelegationQueue>>();
         _queuesPerDestination = new ConditionalWeakTable<DestinationState, DelegationQueue>();
     }
 
     public void ResetQueue(string queueName, string urlPrefix) {
+        if (!_serverDelegationFeatureResolved) {
+            _serverDelegationFeatureResolved = true;
+            _serverDelegationFeature = _ServiceProvider.GetRequiredService<IServer>().Features?.Get<IServerDelegationFeature>();
+        }
         if (_serverDelegationFeature is not null) {
             var key = new QueueKey(queueName, urlPrefix);
             if (_queues.TryGetValue(key, out var queueWeakRef) && queueWeakRef.TryGetTarget(out var queue)) {
