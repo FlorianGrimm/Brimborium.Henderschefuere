@@ -1,6 +1,6 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-internal class HttpClientConnectionContext : ConnectionContext,
+internal class TransportTunnelHttp2ConnectionContext : ConnectionContext,
                 IConnectionLifetimeFeature,
                 IConnectionEndPointFeature,
                 IConnectionItemsFeature,
@@ -9,7 +9,7 @@ internal class HttpClientConnectionContext : ConnectionContext,
                 IDuplexPipe {
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    private HttpClientConnectionContext() {
+    private TransportTunnelHttp2ConnectionContext() {
         Transport = this;
 
         Features.Set<IConnectionIdFeature>(this);
@@ -63,7 +63,7 @@ internal class HttpClientConnectionContext : ConnectionContext,
         var request = new HttpRequestMessage(HttpMethod.Post, uri) {
             Version = new Version(2, 0)
         };
-        var connection = new HttpClientConnectionContext();
+        var connection = new TransportTunnelHttp2ConnectionContext();
         request.Content = new HttpClientConnectionContextContent(connection);
         var response = await invoker.SendAsync(request, cancellationToken).ConfigureAwait(false);
         connection.HttpResponseMessage = response;
@@ -74,9 +74,9 @@ internal class HttpClientConnectionContext : ConnectionContext,
     }
 
     private class HttpClientConnectionContextContent : HttpContent {
-        private readonly HttpClientConnectionContext _connectionContext;
+        private readonly TransportTunnelHttp2ConnectionContext _connectionContext;
 
-        public HttpClientConnectionContextContent(HttpClientConnectionContext connectionContext) {
+        public HttpClientConnectionContextContent(TransportTunnelHttp2ConnectionContext connectionContext) {
             _connectionContext = connectionContext;
         }
 

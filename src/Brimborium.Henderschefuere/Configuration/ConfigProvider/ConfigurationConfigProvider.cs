@@ -91,7 +91,7 @@ public sealed class ConfigurationConfigProvider : IProxyConfigProvider, IDisposa
             TunnelId = section.Key,
             Url = section[nameof(TunnelConfig.Url)] ?? string.Empty,
             RemoteTunnelId = section[nameof(TunnelConfig.RemoteTunnelId)] ?? string.Empty,
-            Transport = section[nameof(TunnelConfig.Transport)] ?? string.Empty,
+            Transport = ConvertTransportMode(section[nameof(TunnelConfig.Transport)]),
             Authentication = CreateTunnelAuthentication(section.GetSection(nameof(TunnelConfig.Authentication)))
         };
     }
@@ -113,9 +113,25 @@ public sealed class ConfigurationConfigProvider : IProxyConfigProvider, IDisposa
             HealthCheck = CreateHealthCheckConfig(section.GetSection(nameof(ClusterConfig.HealthCheck))),
             HttpClient = CreateHttpClientConfig(section.GetSection(nameof(ClusterConfig.HttpClient))),
             HttpRequest = CreateProxyRequestConfig(section.GetSection(nameof(ClusterConfig.HttpRequest))),
+            Transport = ConvertTransportMode(section[nameof(ClusterConfig.Transport)]),
+            Authentication = CreateTransportAuthentication(section.GetSection(nameof(ClusterConfig.Authentication))),
             Metadata = section.GetSection(nameof(ClusterConfig.Metadata)).ReadStringDictionary(),
             Destinations = destinations,
         };
+    }
+
+    private TransportMode ConvertTransportMode(string? value) {
+        if (string.IsNullOrEmpty(value)) { return TransportMode.Forwarder; }
+
+        if (string.Equals(value, nameof(TransportMode.TunnelHTTP2), StringComparison.InvariantCultureIgnoreCase)) { return TransportMode.TunnelHTTP2; }
+        if (string.Equals(value, nameof(TransportMode.TunnelWebSocket), StringComparison.InvariantCultureIgnoreCase)) { return TransportMode.TunnelWebSocket; }
+        if (string.Equals(value, nameof(TransportMode.Forwarder), StringComparison.InvariantCultureIgnoreCase)) { return TransportMode.Forwarder; }
+
+        return TransportMode.Invalid;
+    }
+
+    private TransportAuthentication CreateTransportAuthentication(IConfigurationSection section) {
+        return new TransportAuthentication();
     }
 
     private static RouteConfig CreateRoute(IConfigurationSection section) {

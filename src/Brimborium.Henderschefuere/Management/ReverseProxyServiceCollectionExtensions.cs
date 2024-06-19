@@ -1,12 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Brimborium.Henderschefuere.Configuration.ConfigProvider;
-using Brimborium.Henderschefuere.Routing;
-using Brimborium.Henderschefuere.Transforms.Builder;
-
-using Microsoft.AspNetCore.Hosting;
-
 namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
@@ -154,10 +148,50 @@ public static class ReverseProxyServiceCollectionExtensions {
         return builder;
     }
 
-    public static IReverseProxyBuilder EnableTunnel(this IReverseProxyBuilder builder, WebApplicationBuilder webApplicationBuilder) {
+    // frontend
+    public static IReverseProxyBuilder AddTunnelServices(
+        this IReverseProxyBuilder builder) {
+        builder.Services.AddTunnelServices();
+        return builder;
+    }
+
+    // backend
+    public static IReverseProxyBuilder UseTunnelTransport(
+        this IReverseProxyBuilder builder,
+        WebApplicationBuilder webApplicationBuilder,
+        Action<TransportTunnelHttp2Options>? configureTunnelHttp2 = null,
+        Action<TransportTunnelWebSocketOptions>? configureTunnelWebSocket = null
+        ) {
+        builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelHttp2ConnectionListenerFactory>();
+        builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelWebSocketConnectionListenerFactory>();
+
+        if (configureTunnelHttp2 is not null) {
+            builder.Services.Configure(configureTunnelHttp2);
+        }
+
+        if (configureTunnelWebSocket is not null) {
+            builder.Services.Configure(configureTunnelWebSocket);
+        }
+
         webApplicationBuilder.WebHost.ConfigureKestrel(options => {
-            var proxyConfigManager = options.ApplicationServices.GetService<ProxyConfigManager>();
-            var tunnels = proxyConfigManager.Tunnels;
+            var proxyConfigManager = options.ApplicationServices.GetRequiredService<ProxyConfigManager>();
+            var tunnels = proxyConfigManager.GetTransportTunnels();
+            foreach (var tunnel in tunnels) {
+                var cfg = tunnel.Model.Config;
+                var remoteTunnelId = cfg.GetRemoteTunnelId();
+                var host = cfg.Url.TrimEnd('/');
+
+                var uriTunnel = new Uri($"{host}/_Tunnel/{remoteTunnelId}");
+                var transport = cfg.Transport;
+                if (transport == TransportMode.TunnelHTTP2) {
+                    options.Listen(new UriEndPointHttp2(uriTunnel, tunnel.TunnelId));
+                    continue;
+                }
+                if (transport == TransportMode.TunnelWebSocket) {
+                    options.Listen(new UriWebSocketEndPoint(uriTunnel, tunnel.TunnelId));
+                    continue;
+                }
+            }
         });
         return builder;
     }

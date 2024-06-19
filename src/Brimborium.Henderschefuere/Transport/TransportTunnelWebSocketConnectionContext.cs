@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Http.Connections;
 
 namespace Brimborium.Henderschefuere.Transport;
 
-internal sealed class WebSocketConnectionContext : HttpConnection {
+internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
 
-    private WebSocketConnectionContext(HttpConnectionOptions options)
+    private TransportTunnelWebSocketConnectionContext(HttpConnectionOptions options)
         : base(options, null) {
     }
 
@@ -32,9 +32,9 @@ internal sealed class WebSocketConnectionContext : HttpConnection {
         return base.DisposeAsync();
     }
 
-    internal static async ValueTask<WebSocketConnectionContext> ConnectAsync(
+    internal static async ValueTask<TransportTunnelWebSocketConnectionContext> ConnectAsync(
         Uri uri,
-        TunnelWebSocketOptions tunnelWebSocketOptions,
+        TransportTunnelWebSocketOptions tunnelWebSocketOptions,
         CancellationToken cancellationToken) {
         ClientWebSocket? underlyingWebSocket = null;
         var options = new HttpConnectionOptions {
@@ -53,7 +53,7 @@ internal sealed class WebSocketConnectionContext : HttpConnection {
             }
         };
 
-        var connection = new WebSocketConnectionContext(options);
+        var connection = new TransportTunnelWebSocketConnectionContext(options);
         await connection.StartAsync(TransferFormat.Binary, cancellationToken);
         connection._underlyingWebSocket = underlyingWebSocket;
         return connection;

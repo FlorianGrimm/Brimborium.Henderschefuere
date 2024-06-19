@@ -1,5 +1,3 @@
-using Brimborium.Henderschefuere.Configuration;
-
 namespace Brimborium.Henderschefuere.AllInOne;
 
 public class Program {
@@ -10,12 +8,14 @@ public class Program {
     public static async Task StartServers() {
         CancellationTokenSource cts = new();
         List<ServerBase> listServer = new();
+
         listServer.Add(new ServerFrontend("appsettings.server1FE.json"));
-        //listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
-        //listServer.Add(new ServerBackend("appsettings.server3BE.json"));
-        //listServer.Add(new ServerBackend("appsettings.server4BE.json"));
-        //listServer.Add(new ServerAPI("appsettings.server5API.json"));
-        //listServer.Add(new ServerAPI("appsettings.server6API.json"));
+        listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
+        listServer.Add(new ServerBackend("appsettings.server3BE.json"));
+        listServer.Add(new ServerBackend("appsettings.server4BE.json"));
+        listServer.Add(new ServerAPI("appsettings.server5API.json"));
+        listServer.Add(new ServerAPI("appsettings.server6API.json"));
+
         foreach (var server in listServer) {
             server.Build();
         }
@@ -103,6 +103,8 @@ public sealed class ServerFrontend : ServerBase {
         builder.Services.AddSwaggerGen();
         builder.Services.AddReverseProxy()
             .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
+            .AddTunnelServices()
+            .UseTunnelTransport(builder)
             ;
     }
 
@@ -132,7 +134,8 @@ public sealed class ServerBackend : ServerBase {
         builder.Services.AddSwaggerGen();
         builder.Services.AddReverseProxy()
             .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
-            .EnableTunnel(builder)
+            .AddTunnelServices()
+            .UseTunnelTransport(builder)
             ;
 
     }
@@ -153,9 +156,9 @@ public sealed class ServerAPI : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddReverseProxy()
-            .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
-            ;
+        //builder.Services.AddReverseProxy()
+        //    .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
+        //    ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {

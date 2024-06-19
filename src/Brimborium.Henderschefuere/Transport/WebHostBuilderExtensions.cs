@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Hosting;
-
 namespace Brimborium.Henderschefuere.Transport;
+
+#warning WEICHEI??
+
 public static class WebHostBuilderExtensions {
-    public static IWebHostBuilder UseTunnelTransportHttp2(this IWebHostBuilder hostBuilder, UriEndPointHttp2 endPoint, Action<TunnelHttp2Options>? configure = null) {
+    public static IWebHostBuilder UseTunnelTransportHttp2(this IWebHostBuilder hostBuilder, UriEndPointHttp2 endPoint, Action<TransportTunnelHttp2Options>? configure = null) {
         ArgumentNullException.ThrowIfNull(endPoint);
 
         hostBuilder.ConfigureKestrel(options => {
@@ -10,7 +11,7 @@ public static class WebHostBuilderExtensions {
         });
 
         return hostBuilder.ConfigureServices(services => {
-            services.AddSingleton<IConnectionListenerFactory, TunnelHttp2ConnectionListenerFactory>();
+            services.AddSingleton<IConnectionListenerFactory, TransportTunnelHttp2ConnectionListenerFactory>();
 
             if (configure is not null) {
                 services.Configure(configure);
@@ -18,7 +19,7 @@ public static class WebHostBuilderExtensions {
         });
     }
 
-    public static IWebHostBuilder UseTunnelTransportWebSocket(this IWebHostBuilder hostBuilder, UriEndpointWebSocket endPoint, Action<TunnelWebSocketOptions>? configure = null) {
+    public static IWebHostBuilder UseTunnelTransportWebSocket(this IWebHostBuilder hostBuilder, UriWebSocketEndPoint endPoint, Action<TransportTunnelWebSocketOptions>? configure = null) {
         ArgumentNullException.ThrowIfNull(endPoint);
 
         hostBuilder.ConfigureKestrel(options => {
@@ -26,7 +27,7 @@ public static class WebHostBuilderExtensions {
         });
 
         return hostBuilder.ConfigureServices(services => {
-            services.AddSingleton<IConnectionListenerFactory, TunnelWebSocketConnectionListenerFactory>();
+            services.AddSingleton<IConnectionListenerFactory, TransportTunnelWebSocketConnectionListenerFactory>();
 
             if (configure is not null) {
                 services.Configure(configure);

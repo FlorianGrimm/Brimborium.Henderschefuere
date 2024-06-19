@@ -48,9 +48,11 @@ public sealed record ClusterConfig {
     /// </summary>
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
 
-    public string Transport { get; init; } = TransportConstants.ForwardHttp;
+    public TransportMode Transport { get; init; }
 
     public TransportAuthentication Authentication { get; init; } = new();
+
+    public bool IsTunnelTransport => Transport == TransportMode.TunnelHTTP2 || Transport == TransportMode.TunnelWebSocket;
 
     public bool Equals(ClusterConfig? other) {
         if (other is null) {
@@ -73,7 +75,7 @@ public sealed record ClusterConfig {
             && HealthCheck == other.HealthCheck
             && HttpClient == other.HttpClient
             && HttpRequest == other.HttpRequest
-            && string.Equals(Transport, other.Transport, StringComparison.OrdinalIgnoreCase)
+            && Transport == other.Transport
             && Authentication == other.Authentication
             && CaseSensitiveEqualHelper.Equals(Metadata, other.Metadata);
     }
@@ -86,7 +88,7 @@ public sealed record ClusterConfig {
         hashCode.Add(HealthCheck);
         hashCode.Add(HttpClient);
         hashCode.Add(HttpRequest);
-        hashCode.Add(Transport, StringComparer.OrdinalIgnoreCase);
+        hashCode.Add(Transport);
         hashCode.Add(Authentication);
         hashCode.Add(CollectionEqualityHelper.GetHashCode(Destinations));
         hashCode.Add(CaseSensitiveEqualHelper.GetHashCode(Metadata));

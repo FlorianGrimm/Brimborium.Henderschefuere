@@ -1,14 +1,39 @@
-using Microsoft.Extensions.Hosting;
-
 namespace Brimborium.Henderschefuere.Tunnel;
 public static class TunnelExensions {
     public static IServiceCollection AddTunnelServices(this IServiceCollection services) {
-        var tunnelFactory = new TunnelClientFactory();
-        services.AddSingleton(tunnelFactory);
-        services.AddSingleton<IForwarderHttpClientFactory>(tunnelFactory);
+        //var tunnelFactory = new TunnelClientFactory();
+        //services.AddSingleton(tunnelFactory);
+        //services.AddSingleton<IForwarderHttpClientFactory>(tunnelFactory);
+        services.TryAddSingleton<TunnelConnectionChannelManager>();
+        services.TryAddSingleton<TransportHttpClientFactorySelector>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelHTTP2HttpClientFactory>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelWebSocketHttpClientFactory>());
         return services;
     }
 
+    public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
+        var cfg = clusterState.Model.Config;
+        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
+        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
+            throw new Exception("ClusterId already exists.");
+        }
+        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
+        var route = new TunnelHTTP2Route(tunnelConnectionChannels, clusterState, lifetime);
+        var result = route.Map(routes);
+        return result;
+    }
+
+    public static IEndpointConventionBuilder MapWebSocketTunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
+        var cfg = clusterState.Model.Config;
+        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
+        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
+            throw new Exception("ClusterId already exists.");
+        }
+        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
+        var route = new TunnelWebSocketRoute(tunnelConnectionChannels, clusterState, lifetime);
+        return route.Map(routes);
+    }
+#if weichei
     [RequiresUnreferencedCode("i dont know how")]
     public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, string path) {
         return routes.MapPost(path, static async (HttpContext context, string host, TunnelClientFactory tunnelFactory, IHostApplicationLifetime lifetime) => {
@@ -27,7 +52,7 @@ public static class TunnelExensions {
 
             await requests.Reader.ReadAsync(context.RequestAborted);
 
-            var stream = new DuplexHttpStream(context);
+            var stream = new TunnelDuplexHttpStream(context);
 
             using var reg = lifetime.ApplicationStopping.Register(() => stream.Abort());
 
@@ -58,7 +83,7 @@ public static class TunnelExensions {
 
             var ws = await context.WebSockets.AcceptWebSocketAsync();
 
-            var stream = new WebSocketStream(ws);
+            var stream = new TunnelWebSocketStream(ws);
 
             // We should make this more graceful
             using var reg = lifetime.ApplicationStopping.Register(() => stream.Abort());
@@ -94,4 +119,5 @@ public static class TunnelExensions {
             return Task.CompletedTask;
         }
     }
+#endif
 }

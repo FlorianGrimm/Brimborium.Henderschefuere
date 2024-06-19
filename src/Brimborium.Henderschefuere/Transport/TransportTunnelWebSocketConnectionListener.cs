@@ -3,15 +3,15 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
-internal sealed class TunnelWebSocketConnectionListener : IConnectionListener {
+internal sealed class TransportTunnelWebSocketConnectionListener : IConnectionListener {
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
-    private readonly TunnelWebSocketOptions _options;
+    private readonly TransportTunnelWebSocketOptions _options;
     private readonly CancellationTokenSource _closedCts = new();
-    private readonly UriEndpointWebSocket _endPoint;
+    private readonly UriWebSocketEndPoint _endPoint;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
 
-    public TunnelWebSocketConnectionListener(TunnelWebSocketOptions options, UriEndpointWebSocket endpoint) {
+    public TransportTunnelWebSocketConnectionListener(TransportTunnelWebSocketOptions options, UriWebSocketEndPoint endpoint) {
         if (endpoint.Uri is null) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
@@ -38,7 +38,7 @@ internal sealed class TunnelWebSocketConnectionListener : IConnectionListener {
                 int delay = 0;
 
                 try {
-                    var innerConnection = await WebSocketConnectionContext.ConnectAsync(
+                    var innerConnection = await TransportTunnelWebSocketConnectionContext.ConnectAsync(
                         Uri, _options, cancellationToken);
                     delay = 0;
                     return _connectionCollection.AddInnerConnection(innerConnection);

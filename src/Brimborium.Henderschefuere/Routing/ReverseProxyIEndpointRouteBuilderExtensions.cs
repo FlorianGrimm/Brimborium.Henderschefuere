@@ -43,21 +43,37 @@ public static class ReverseProxyIEndpointRouteBuilderExtensions {
         var proxyEndpointFactory = endpoints.ServiceProvider.GetRequiredService<ProxyEndpointFactory>();
         proxyEndpointFactory.SetProxyPipeline(app);
 
-        return GetOrCreateDataSource(endpoints).DefaultBuilder;
+        var proxyConfigManager = GetOrCreateDataSource(endpoints);
+
+        var tunnelClusters = proxyConfigManager.GetTransportTunnelClusters();
+        foreach (var cluster in tunnelClusters) {
+            var transport = cluster.Model.Config.Transport;
+            if (transport == TransportMode.TunnelHTTP2) {
+                endpoints.MapHttp2Tunnel(cluster);
+                continue;
+            }
+            if (transport == TransportMode.TunnelWebSocket) {
+                //endpoints.MapWebSocketTunnel
+                continue;
+            }
+        }
+
+
+        return proxyConfigManager.DefaultBuilder;
     }
 
     private static ProxyConfigManager GetOrCreateDataSource(IEndpointRouteBuilder endpoints) {
-        var dataSource = endpoints.DataSources.OfType<ProxyConfigManager>().FirstOrDefault();
-        if (dataSource is null) {
-            dataSource = endpoints.ServiceProvider.GetRequiredService<ProxyConfigManager>();
-            endpoints.DataSources.Add(dataSource);
+        var proxyConfigManager = endpoints.DataSources.OfType<ProxyConfigManager>().FirstOrDefault();
+        if (proxyConfigManager is null) {
+            proxyConfigManager = endpoints.ServiceProvider.GetRequiredService<ProxyConfigManager>();
+            endpoints.DataSources.Add(proxyConfigManager);
 
             // Config validation is async but startup is sync. We want this to block so that A) any validation errors can prevent
             // the app from starting, and B) so that all the config is ready before the server starts accepting requests.
             // Reloads will be async.
-            dataSource.InitialLoadAsync().GetAwaiter().GetResult();
+            proxyConfigManager.InitialLoadAsync().GetAwaiter().GetResult();
         }
 
-        return dataSource;
+        return proxyConfigManager;
     }
 }

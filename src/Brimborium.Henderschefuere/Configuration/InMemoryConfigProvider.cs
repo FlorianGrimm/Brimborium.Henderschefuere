@@ -13,8 +13,21 @@ public sealed class InMemoryConfigProvider : IProxyConfigProvider {
     /// <summary>
     /// Creates a new instance.
     /// </summary>
+    public InMemoryConfigProvider(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters)
+        : this([], routes, clusters, Guid.NewGuid().ToString()) { }
+
+    /// <summary>
+    /// Creates a new instance.
+    /// </summary>
     public InMemoryConfigProvider(IReadOnlyList<TunnelConfig> tunnels, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters)
         : this(tunnels, routes, clusters, Guid.NewGuid().ToString()) { }
+
+    /// <summary>
+    /// Creates a new instance, specifying a revision id of the configuration.
+    /// </summary>
+    public InMemoryConfigProvider(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId) {
+        _config = new InMemoryConfig([], routes, clusters, revisionId);
+    }
 
     /// <summary>
     /// Creates a new instance, specifying a revision id of the configuration.
@@ -37,8 +50,7 @@ public sealed class InMemoryConfigProvider : IProxyConfigProvider {
         UpdateInternal(newConfig);
     }
 
-    [Obsolete()]
-    public void Update(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) => this.Update([], routes, clusters);
+    public void Update(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) => Update([], routes, clusters);
 
     /// <summary>
     /// Swaps the config state with a new snapshot of the configuration, then signals that the old one is outdated.
@@ -47,6 +59,8 @@ public sealed class InMemoryConfigProvider : IProxyConfigProvider {
         var newConfig = new InMemoryConfig(tunnels, routes, clusters, revisionId);
         UpdateInternal(newConfig);
     }
+
+    public void Update(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, string revisionId) => Update([], routes, clusters);
 
     private void UpdateInternal(InMemoryConfig newConfig) {
         var oldConfig = Interlocked.Exchange(ref _config, newConfig);

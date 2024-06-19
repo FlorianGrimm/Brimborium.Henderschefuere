@@ -1,13 +1,11 @@
-using System.Threading.Tasks.Sources;
-
 namespace Brimborium.Henderschefuere.Tunnel;
-internal class DuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable {
+internal class TunnelDuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable {
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();
 
     private readonly HttpContext _context;
 
-    public DuplexHttpStream(HttpContext context) {
+    public TunnelDuplexHttpStream(HttpContext context) {
         _context = context;
     }
 

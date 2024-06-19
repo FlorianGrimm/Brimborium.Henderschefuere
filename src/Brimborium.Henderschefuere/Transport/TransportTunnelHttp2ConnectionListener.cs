@@ -3,17 +3,17 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
-internal sealed class TunnelHttp2ConnectionListener : IConnectionListener {
+internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListener {
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
-    private readonly TunnelHttp2Options _options;
+    private readonly TransportTunnelHttp2Options _options;
     private readonly CancellationTokenSource _closedCts = new();
     private readonly UriEndPointHttp2 _endPoint;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
 
     private HttpMessageInvoker? _httpMessageInvoker;
 
-    public TunnelHttp2ConnectionListener(TunnelHttp2Options options, UriEndPointHttp2 endpoint) {
+    public TransportTunnelHttp2ConnectionListener(TransportTunnelHttp2Options options, UriEndPointHttp2 endpoint) {
         if (string.IsNullOrEmpty(endpoint.Uri?.ToString())) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
@@ -42,7 +42,7 @@ internal sealed class TunnelHttp2ConnectionListener : IConnectionListener {
 
                 int delay = 0;
                 try {
-                    var innerConnection = await HttpClientConnectionContext.ConnectAsync(
+                    var innerConnection = await TransportTunnelHttp2ConnectionContext.ConnectAsync(
                         _httpMessageInvoker, _endPoint.Uri!, cancellationToken);
                     delay = 0;
                     return _connectionCollection.AddInnerConnection(innerConnection);
@@ -83,8 +83,10 @@ internal sealed class TunnelHttp2ConnectionListener : IConnectionListener {
         var socketsHttpHandler = new SocketsHttpHandler {
             EnableMultipleHttp2Connections = true,
             PooledConnectionLifetime = Timeout.InfiniteTimeSpan,
-            PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan
+            PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
         };
+#warning hack
+        socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
         if (_options.ConfigureSocketsHttpHandler is { } configure) {
             configure(_endPoint.Uri!, socketsHttpHandler);
         }

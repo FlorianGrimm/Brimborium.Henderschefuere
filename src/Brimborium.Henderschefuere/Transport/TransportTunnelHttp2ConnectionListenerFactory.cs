@@ -1,8 +1,9 @@
 namespace Brimborium.Henderschefuere.Transport;
-public class TunnelHttp2ConnectionListenerFactory : IConnectionListenerFactory, IConnectionListenerFactorySelector {
-    private readonly TunnelHttp2Options _options;
 
-    public TunnelHttp2ConnectionListenerFactory(IOptions<TunnelHttp2Options> options) {
+public class TransportTunnelHttp2ConnectionListenerFactory : IConnectionListenerFactory, IConnectionListenerFactorySelector {
+    private readonly TransportTunnelHttp2Options _options;
+
+    public TransportTunnelHttp2ConnectionListenerFactory(IOptions<TransportTunnelHttp2Options> options) {
         _options = options.Value;
     }
 
@@ -14,7 +15,7 @@ public class TunnelHttp2ConnectionListenerFactory : IConnectionListenerFactory, 
         if (endpoint is not UriEndPointHttp2 uriEndPointHttp2) {
             throw new ArgumentException("Invalid endpoint type", nameof(endpoint));
         } else {
-            return new(new TunnelHttp2ConnectionListener(_options, uriEndPointHttp2));
+            return new(new TransportTunnelHttp2ConnectionListener(_options, uriEndPointHttp2));
         }
     }
 }
