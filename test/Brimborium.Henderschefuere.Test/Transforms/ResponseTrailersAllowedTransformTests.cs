@@ -13,16 +13,14 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseTrailersAllowedTransformTests
-{
+public class ResponseTrailersAllowedTransformTests {
     [Theory]
     [InlineData("", 0)]
     [InlineData("header1", 1)]
     [InlineData("header1;header2", 2)]
     [InlineData("header1;header2;header3", 3)]
     [InlineData("header1;header2;header2;header3", 3)]
-    public async Task AllowedHeaders_Copied(string names, int expected)
-    {
+    public async Task AllowedHeaders_Copied(string names, int expected) {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
@@ -35,8 +33,7 @@ public class ResponseTrailersAllowedTransformTests
 
         var allowed = names.Split(';');
         var transform = new ResponseTrailersAllowedTransform(allowed);
-        var transformContext = new ResponseTrailersTransformContext()
-        {
+        var transformContext = new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -46,8 +43,7 @@ public class ResponseTrailersAllowedTransformTests
         Assert.True(transformContext.HeadersCopied);
 
         Assert.Equal(expected, trailerFeature.Trailers.Count());
-        foreach (var header in trailerFeature.Trailers)
-        {
+        foreach (var header in trailerFeature.Trailers) {
             Assert.Contains(header.Key, allowed, StringComparer.OrdinalIgnoreCase);
         }
     }
@@ -57,8 +53,7 @@ public class ResponseTrailersAllowedTransformTests
     [InlineData("connection", 1)]
     [InlineData("Transfer-Encoding;Keep-Alive", 2)]
     // See https://github.com/microsoft/reverse-proxy/blob/51d797986b1fea03500a1ad173d13a1176fb5552/src/ReverseProxy/Forwarder/RequestUtilities.cs#L61-L83
-    public async Task RestrictedHeaders_CopiedIfAllowed(string names, int expected)
-    {
+    public async Task RestrictedHeaders_CopiedIfAllowed(string names, int expected) {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
@@ -69,8 +64,7 @@ public class ResponseTrailersAllowedTransformTests
 
         var allowed = names.Split(';');
         var transform = new ResponseTrailersAllowedTransform(allowed);
-        var transformContext = new ResponseTrailersTransformContext()
-        {
+        var transformContext = new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -80,8 +74,7 @@ public class ResponseTrailersAllowedTransformTests
         Assert.True(transformContext.HeadersCopied);
 
         Assert.Equal(expected, trailerFeature.Trailers.Count());
-        foreach (var header in trailerFeature.Trailers)
-        {
+        foreach (var header in trailerFeature.Trailers) {
             Assert.Contains(header.Key, allowed, StringComparer.OrdinalIgnoreCase);
         }
     }

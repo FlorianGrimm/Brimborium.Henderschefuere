@@ -13,10 +13,8 @@ using Brimborium.Henderschefuere.Utilities;
 
 namespace Brimborium.Henderschefuere.LoadBalancing.Tests;
 
-public class LoadBalancingPoliciesTests : TestAutoMockBase
-{
-    public LoadBalancingPoliciesTests()
-    {
+public class LoadBalancingPoliciesTests : TestAutoMockBase {
+    public LoadBalancingPoliciesTests() {
         RandomFactory = new TestRandomFactory() { Instance = RandomInstance };
         Provide<IRandomFactory>(RandomFactory);
     }
@@ -26,8 +24,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
     private TestRandomFactory RandomFactory { get; set; }
 
     [Fact]
-    public void PickDestination_FirstWithDestinations_Works()
-    {
+    public void PickDestination_FirstWithDestinations_Works() {
         var destinations = new[]
         {
             new DestinationState("d1"),
@@ -38,8 +35,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
         var context = new DefaultHttpContext();
         var loadBalancer = Create<FirstLoadBalancingPolicy>();
 
-        for (var i = 0; i < 10; i++)
-        {
+        for (var i = 0; i < 10; i++) {
             var result = loadBalancer.PickDestination(context, cluster: null, availableDestinations: destinations);
             Assert.Same(destinations[0], result);
             result.ConcurrentRequestCount++;
@@ -47,8 +43,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
     }
 
     [Fact]
-    public void PickDestination_Random_Works()
-    {
+    public void PickDestination_Random_Works() {
         var destinations = new[]
         {
             new DestinationState("d1"),
@@ -63,8 +58,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
         var context = new DefaultHttpContext();
         var loadBalancer = Create<RandomLoadBalancingPolicy>();
 
-        for (var i = 0; i < Iterations; i++)
-        {
+        for (var i = 0; i < Iterations; i++) {
             var result = loadBalancer.PickDestination(context, cluster: null, availableDestinations: destinations);
             Assert.Same(destinations[RandomInstance.Sequence[i]], result);
             result.ConcurrentRequestCount++;
@@ -72,8 +66,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
     }
 
     [Fact]
-    public void PickDestination_PowerOfTwoChoices_SkipBusiestConnection()
-    {
+    public void PickDestination_PowerOfTwoChoices_SkipBusiestConnection() {
         var destinations = new[]
         {
             new DestinationState("d1"),
@@ -89,14 +82,12 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
         var context = new DefaultHttpContext();
         var loadBalancer = Create<PowerOfTwoChoicesLoadBalancingPolicy>();
 
-        for (var i = 0; i < Iterations; i++)
-        {
+        for (var i = 0; i < Iterations; i++) {
             var result = loadBalancer.PickDestination(context, cluster: null, availableDestinations: destinations);
 
             var groupByLoad = destinations.GroupBy(d => d.ConcurrentRequestCount);
             var busiestGroup = groupByLoad.OrderByDescending(g => g.Key).First();
-            if (busiestGroup.Count() == 1)
-            {
+            if (busiestGroup.Count() == 1) {
                 Assert.True(result.ConcurrentRequestCount < busiestGroup.Key);
             }
 
@@ -105,8 +96,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
     }
 
     [Fact]
-    public void PickDestination_PowerOfTwoChoices_LeastLoaded()
-    {
+    public void PickDestination_PowerOfTwoChoices_LeastLoaded() {
         var destinations = new[]
         {
             new DestinationState("d1") {ConcurrentRequestCount = 1000},
@@ -120,16 +110,14 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
         var context = new DefaultHttpContext();
         var loadBalancer = Create<PowerOfTwoChoicesLoadBalancingPolicy>();
 
-        for (var i = 0; i < Iterations; i++)
-        {
+        for (var i = 0; i < Iterations; i++) {
             var result = loadBalancer.PickDestination(context, cluster: null, availableDestinations: destinations);
             Assert.Same(destinations[1], result);
         }
     }
 
     [Fact]
-    public void PickDestination_LeastRequests_Works()
-    {
+    public void PickDestination_LeastRequests_Works() {
         var destinations = new[]
         {
             new DestinationState("d1"),
@@ -141,8 +129,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
         var context = new DefaultHttpContext();
         var loadBalancer = Create<LeastRequestsLoadBalancingPolicy>();
 
-        for (var i = 0; i < 10; i++)
-        {
+        for (var i = 0; i < 10; i++) {
             var result = loadBalancer.PickDestination(context, cluster: null, availableDestinations: destinations);
             Assert.Same(destinations.OrderBy(d => d.ConcurrentRequestCount).First(), result);
             result.ConcurrentRequestCount++;
@@ -150,8 +137,7 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
     }
 
     [Fact]
-    public void PickDestination_RoundRobin_Works()
-    {
+    public void PickDestination_RoundRobin_Works() {
         var destinations = new[]
         {
             new DestinationState("d1"),
@@ -164,16 +150,14 @@ public class LoadBalancingPoliciesTests : TestAutoMockBase
 
         var cluster = new ClusterState("cluster1");
         var routeConfig = new RouteModel(new RouteConfig(), cluster, HttpTransformer.Default);
-        var feature = new ReverseProxyFeature()
-        {
+        var feature = new ReverseProxyFeature() {
             Route = routeConfig,
         };
         context.Features.Set<IReverseProxyFeature>(feature);
 
         var loadBalancer = Create<RoundRobinLoadBalancingPolicy>();
 
-        for (var i = 0; i < 10; i++)
-        {
+        for (var i = 0; i < 10; i++) {
             var result = loadBalancer.PickDestination(context, cluster, availableDestinations: destinations);
             Assert.Same(destinations[i % destinations.Length], result);
             result.ConcurrentRequestCount++;

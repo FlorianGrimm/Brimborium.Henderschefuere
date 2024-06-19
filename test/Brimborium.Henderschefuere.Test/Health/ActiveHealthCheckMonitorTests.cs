@@ -19,14 +19,12 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class ActiveHealthCheckMonitorTests
-{
+public class ActiveHealthCheckMonitorTests {
     private readonly TimeSpan Interval0 = TimeSpan.FromSeconds(10);
     private readonly TimeSpan Interval1 = TimeSpan.FromSeconds(20);
 
     [Fact]
-    public async Task CheckHealthAsync_ActiveHealthCheckIsEnabledForCluster_SendProbe()
-    {
+    public async Task CheckHealthAsync_ActiveHealthCheckIsEnabledForCluster_SendProbe() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -59,15 +57,13 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task CheckHealthAsync_CustomUserAgentSpecified_UserAgentUnchanged()
-    {
+    public async Task CheckHealthAsync_CustomUserAgentSpecified_UserAgentUnchanged() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy");
 
         var requestFactory = new Mock<IProbingRequestFactory>();
         requestFactory.Setup(p => p.CreateRequest(It.IsAny<ClusterModel>(), It.IsAny<DestinationModel>()))
-            .Returns((ClusterModel cluster, DestinationModel destination) =>
-            {
+            .Returns((ClusterModel cluster, DestinationModel destination) => {
                 var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:20000/cluster/api/health/");
                 request.Headers.UserAgent.ParseAdd("FooBar/9001");
                 return request;
@@ -85,8 +81,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_ProbingTimerFired_SendProbesAndReceiveResponses()
-    {
+    public async Task ProbeCluster_ProbingTimerFired_SendProbesAndReceiveResponses() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -120,8 +115,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_ClusterRemoved_StopSendingProbes()
-    {
+    public async Task ProbeCluster_ClusterRemoved_StopSendingProbes() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -164,8 +158,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_ClusterAdded_StartSendingProbes()
-    {
+    public async Task ProbeCluster_ClusterAdded_StartSendingProbes() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -206,8 +199,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_ClusterChanged_SendProbesToNewHealthEndpoint()
-    {
+    public async Task ProbeCluster_ClusterChanged_SendProbesToNewHealthEndpoint() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -237,8 +229,7 @@ public class ActiveHealthCheckMonitorTests
         VerifySentProbeAndResult(cluster0, httpClient0, policy0, new[] { ("https://localhost:20000/cluster0/api/health/", 1), ("https://localhost:20001/cluster0/api/health/", 1) }, policyCallTimes: 1);
         VerifySentProbeAndResult(cluster2, httpClient2, policy1, new[] { ("https://localhost:20000/cluster2/api/health/", 1), ("https://localhost:20001/cluster2/api/health/", 1) }, policyCallTimes: 1);
 
-        foreach (var destination in cluster2.Destinations.Values)
-        {
+        foreach (var destination in cluster2.Destinations.Values) {
             var d = cluster2.Destinations.GetOrAdd(destination.DestinationId, id => new DestinationState(id));
             d.Model = new DestinationModel(new DestinationConfig { Address = destination.Model.Config.Address });
         }
@@ -257,8 +248,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_ClusterChanged_StopSendingProbes()
-    {
+    public async Task ProbeCluster_ClusterChanged_StopSendingProbes() {
         var policy0 = new Mock<IActiveHealthCheckPolicy>();
         policy0.SetupGet(p => p.Name).Returns("policy0");
         var policy1 = new Mock<IActiveHealthCheckPolicy>();
@@ -285,15 +275,12 @@ public class ActiveHealthCheckMonitorTests
         VerifySentProbeAndResult(cluster0, httpClient0, policy0, new[] { ("https://localhost:20000/cluster0/api/health/", 1), ("https://localhost:20001/cluster0/api/health/", 1) }, policyCallTimes: 1);
         VerifySentProbeAndResult(cluster2, httpClient2, policy1, new[] { ("https://localhost:20000/cluster2/api/health/", 1), ("https://localhost:20001/cluster2/api/health/", 1) }, policyCallTimes: 1);
 
-        var healthCheckConfig = new HealthCheckConfig
-        {
-            Passive = new PassiveHealthCheckConfig
-            {
+        var healthCheckConfig = new HealthCheckConfig {
+            Passive = new PassiveHealthCheckConfig {
                 Enabled = true,
                 Policy = "passive0",
             },
-            Active = new ActiveHealthCheckConfig
-            {
+            Active = new ActiveHealthCheckConfig {
                 Policy = cluster2.Model.Config.HealthCheck.Active.Policy,
             }
         };
@@ -311,8 +298,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ProbeCluster_UnsuccessfulResponseReceivedOrExceptionThrown_ReportItToPolicy()
-    {
+    public async Task ProbeCluster_UnsuccessfulResponseReceivedOrExceptionThrown_ReportItToPolicy() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = TimeSpan.FromSeconds(5) });
@@ -348,12 +334,9 @@ public class ActiveHealthCheckMonitorTests
 
         GC.KeepAlive(monitor); // The timer does not keep a strong reference to the scheduler
 
-        async Task<HttpResponseMessage> GetResponse(HttpRequestMessage m, CancellationToken t)
-        {
-            return await Task.Run(() =>
-            {
-                switch (m.RequestUri.AbsoluteUri)
-                {
+        async Task<HttpResponseMessage> GetResponse(HttpRequestMessage m, CancellationToken t) {
+            return await Task.Run(() => {
+                switch (m.RequestUri.AbsoluteUri) {
                     case "https://localhost:20000/cluster0/api/health/":
                         return new HttpResponseMessage(HttpStatusCode.InternalServerError) { Version = m.Version };
                     case "https://localhost:20001/cluster0/api/health/":
@@ -366,8 +349,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task ForceCheckAll_PolicyThrowsException_SkipItAndSetIsFullyInitializedFlag()
-    {
+    public async Task ForceCheckAll_PolicyThrowsException_SkipItAndSetIsFullyInitializedFlag() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         policy.Setup(p => p.ProbingCompleted(It.IsAny<ClusterState>(), It.IsAny<IReadOnlyList<DestinationProbingResult>>())).Throws<InvalidOperationException>();
@@ -397,8 +379,7 @@ public class ActiveHealthCheckMonitorTests
     [InlineData(HttpStatusCode.OK, HttpStatusCode.InternalServerError, HttpStatusCode.OK)]
     [InlineData(HttpStatusCode.BadRequest, HttpStatusCode.OK, HttpStatusCode.OK)]
     [InlineData(HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.BadRequest)]
-    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllReturns(HttpStatusCode firstResult, HttpStatusCode secondResult, HttpStatusCode thirdResult)
-    {
+    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllReturns(HttpStatusCode firstResult, HttpStatusCode secondResult, HttpStatusCode thirdResult) {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = Timeout.InfiniteTimeSpan });
@@ -447,8 +428,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_OneTimesOut()
-    {
+    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_OneTimesOut() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = TimeSpan.FromMilliseconds(1) });
@@ -462,8 +442,7 @@ public class ActiveHealthCheckMonitorTests
         var cluster0 = GetClusterInfo("cluster0", "policy0", true, httpClient0.Object, destinationCount: 1);
         clusters.Add(cluster0);
         var tcs1 = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var httpClient1 = GetHttpClient(tcs1.Task, () =>
-        {
+        var httpClient1 = GetHttpClient(tcs1.Task, () => {
             assertsCompletedMre.Wait();
             tcs1.SetCanceled();
         });
@@ -496,8 +475,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllTimeOut()
-    {
+    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllTimeOut() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = TimeSpan.FromMilliseconds(1) });
@@ -529,8 +507,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_OneThrows()
-    {
+    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_OneThrows() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = Timeout.InfiniteTimeSpan });
@@ -570,8 +547,7 @@ public class ActiveHealthCheckMonitorTests
     }
 
     [Fact]
-    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllThrow()
-    {
+    public async Task InitialDestinationsProbed_TrueAfterTheFirstProbe_AllThrow() {
         var policy = new Mock<IActiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns("policy0");
         var options = Options.Create(new ActiveHealthCheckMonitorOptions { DefaultInterval = TimeSpan.FromSeconds(60), DefaultTimeout = Timeout.InfiniteTimeSpan });
@@ -610,10 +586,8 @@ public class ActiveHealthCheckMonitorTests
         policy.VerifyNoOtherCalls();
     }
 
-    private static void VerifySentProbeAndResult(ClusterState cluster, Mock<HttpMessageInvoker> httpClient, Mock<IActiveHealthCheckPolicy> policy, (string RequestUri, int Times)[] probes, int policyCallTimes = 1, string userAgent = @"^YARP\/\S+? \([^\)]+?\)$")
-    {
-        foreach (var probe in probes)
-        {
+    private static void VerifySentProbeAndResult(ClusterState cluster, Mock<HttpMessageInvoker> httpClient, Mock<IActiveHealthCheckPolicy> policy, (string RequestUri, int Times)[] probes, int policyCallTimes = 1, string userAgent = @"^YARP\/\S+? \([^\)]+?\)$") {
+        foreach (var probe in probes) {
             httpClient.Verify(
                 c => c.SendAsync(
                     It.Is<HttpRequestMessage>(m => m.RequestUri.AbsoluteUri == probe.RequestUri && Regex.IsMatch(m.Headers.UserAgent.ToString(), userAgent)),
@@ -630,16 +604,12 @@ public class ActiveHealthCheckMonitorTests
         policy.VerifyNoOtherCalls();
     }
 
-    private ClusterState GetClusterInfo(string id, string policy, bool activeCheckEnabled, HttpMessageInvoker httpClient, TimeSpan? interval = null, TimeSpan? timeout = null, int destinationCount = 2)
-    {
+    private ClusterState GetClusterInfo(string id, string policy, bool activeCheckEnabled, HttpMessageInvoker httpClient, TimeSpan? interval = null, TimeSpan? timeout = null, int destinationCount = 2) {
         var clusterModel = new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = id,
-                HealthCheck = new HealthCheckConfig
-                {
-                    Active = new ActiveHealthCheckConfig
-                    {
+                HealthCheck = new HealthCheckConfig {
+                    Active = new ActiveHealthCheckConfig {
                         Enabled = activeCheckEnabled,
                         Interval = interval,
                         Timeout = timeout,
@@ -651,12 +621,10 @@ public class ActiveHealthCheckMonitorTests
             httpClient);
         var clusterState = new ClusterState(id);
         clusterState.Model = clusterModel;
-        for (var i = 0; i < destinationCount; i++)
-        {
+        for (var i = 0; i < destinationCount; i++) {
             var destinationModel = new DestinationModel(new DestinationConfig { Address = $"https://localhost:1000{i}/{id}/", Health = $"https://localhost:2000{i}/{id}/" });
             var destinationId = $"destination{i}";
-            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id)
-            {
+            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id) {
                 Model = destinationModel
             });
         }
@@ -665,14 +633,11 @@ public class ActiveHealthCheckMonitorTests
         return clusterState;
     }
 
-    private Mock<HttpMessageInvoker> GetHttpClient(Task<HttpResponseMessage> task = null, Action cancellation = null)
-    {
+    private Mock<HttpMessageInvoker> GetHttpClient(Task<HttpResponseMessage> task = null, Action cancellation = null) {
         var httpClient = new Mock<HttpMessageInvoker>(() => new HttpMessageInvoker(new Mock<HttpMessageHandler>().Object));
         httpClient.Setup(c => c.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
-            .Returns((HttpRequestMessage m, CancellationToken c) =>
-            {
-                if (cancellation is not null)
-                {
+            .Returns((HttpRequestMessage m, CancellationToken c) => {
+                if (cancellation is not null) {
                     c.Register(_ => cancellation(), null);
                 }
 
@@ -681,8 +646,7 @@ public class ActiveHealthCheckMonitorTests
         return httpClient;
     }
 
-    private static ILogger<ActiveHealthCheckMonitor> GetLogger()
-    {
+    private static ILogger<ActiveHealthCheckMonitor> GetLogger() {
         return new Mock<ILogger<ActiveHealthCheckMonitor>>().Object;
     }
 }

@@ -4,13 +4,14 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class RequestHeaderXForwardedPrefixTransformTests
-{
+public class RequestHeaderXForwardedPrefixTransformTests {
     [Theory]
     // Using ";" to represent multi-line headers
     [InlineData("", "", ForwardedTransformActions.Set, "")]
@@ -34,25 +35,20 @@ public class RequestHeaderXForwardedPrefixTransformTests
     [InlineData("existing,Header", "/base", ForwardedTransformActions.Append, "existing,Header;/base")]
     [InlineData("existing;Header", "/base", ForwardedTransformActions.Append, "existing;Header;/base")]
     [InlineData("existing;Header", "/base", ForwardedTransformActions.Remove, "")]
-    public async Task PathBase_Added(string startValue, string pathBase, ForwardedTransformActions action, string expected)
-    {
+    public async Task PathBase_Added(string startValue, string pathBase, ForwardedTransformActions action, string expected) {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.PathBase = string.IsNullOrEmpty(pathBase) ? new PathString() : new PathString(pathBase);
         var proxyRequest = new HttpRequestMessage();
         proxyRequest.Headers.Add("name", startValue.Split(";", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderXForwardedPrefixTransform("name", action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
         });
-        if (string.IsNullOrEmpty(expected))
-        {
+        if (string.IsNullOrEmpty(expected)) {
             Assert.False(proxyRequest.Headers.TryGetValues("name", out var _));
-        }
-        else
-        {
+        } else {
             Assert.Equal(expected.Split(";", StringSplitOptions.RemoveEmptyEntries), proxyRequest.Headers.GetValues("name"));
         }
     }

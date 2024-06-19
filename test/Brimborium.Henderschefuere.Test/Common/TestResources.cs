@@ -8,57 +8,47 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+
 using Xunit;
 
 namespace Brimborium.Tests.Common;
 
-public static class TestResources
-{
+public static class TestResources {
     private const int MutexTimeout = 120 * 1000;
     private static readonly Mutex importPfxMutex = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
         new Mutex(initiallyOwned: false, "Global\\Brimborium.Henderschefuere.Tests.Certificates.LoadPfxCertificate") :
         null;
 
-    public static X509Certificate2 GetTestCertificate(string certName = "testCert.pfx")
-    {
+    public static X509Certificate2 GetTestCertificate(string certName = "testCert.pfx") {
         // On Windows, applications should not import PFX files in parallel to avoid a known system-level
         // race condition bug in native code which can cause crashes/corruption of the certificate state.
-        if (importPfxMutex is not null)
-        {
+        if (importPfxMutex is not null) {
             Assert.True(importPfxMutex.WaitOne(MutexTimeout), "Cannot acquire the global certificate mutex.");
         }
 
-        try
-        {
+        try {
             return new X509Certificate2(GetCertPath(certName), "testPassword");
-        }
-        finally
-        {
+        } finally {
             importPfxMutex?.ReleaseMutex();
         }
     }
 
-    public static IWebProxy GetTestWebProxy(string address = "http://localhost:8080", bool? bypassOnLocal = null, bool? useDefaultCredentials = null)
-    {
+    public static IWebProxy GetTestWebProxy(string address = "http://localhost:8080", bool? bypassOnLocal = null, bool? useDefaultCredentials = null) {
         var webProxy = new WebProxy(new System.Uri(address));
 
-        if (bypassOnLocal is not null)
-        {
+        if (bypassOnLocal is not null) {
             webProxy.BypassProxyOnLocal = bypassOnLocal.Value;
         }
 
-        if (useDefaultCredentials is not null)
-        {
+        if (useDefaultCredentials is not null) {
             webProxy.UseDefaultCredentials = useDefaultCredentials.Value;
         }
 
         return webProxy;
     }
 
-    public static string GetCertPath(string fileName)
-    {
-        if (fileName is null)
-        {
+    public static string GetCertPath(string fileName) {
+        if (fileName is null) {
             return null;
         }
 

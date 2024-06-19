@@ -9,11 +9,9 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class CustomHeaderSessionAffinityPolicyTests
-{
+public class CustomHeaderSessionAffinityPolicyTests {
     private const string AffinityHeaderName = "X-MyAffinity";
-    private readonly SessionAffinityConfig _defaultOptions = new SessionAffinityConfig
-    {
+    private readonly SessionAffinityConfig _defaultOptions = new SessionAffinityConfig {
         Enabled = true,
         Policy = "Cookie",
         FailurePolicy = "Return503Error",
@@ -22,8 +20,7 @@ public class CustomHeaderSessionAffinityPolicyTests
     private readonly IReadOnlyList<DestinationState> _destinations = new[] { new DestinationState("dest-A"), new DestinationState("dest-B"), new DestinationState("dest-C") };
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet() {
         var policy = new CustomHeaderSessionAffinityPolicy(AffinityTestHelper.GetDataProtector().Object, AffinityTestHelper.GetLogger<CustomHeaderSessionAffinityPolicy>().Object);
 
         Assert.Equal(SessionAffinityConstants.Policies.CustomHeader, policy.Name);
@@ -39,8 +36,7 @@ public class CustomHeaderSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success() {
         var policy = new CustomHeaderSessionAffinityPolicy(AffinityTestHelper.GetDataProtector().Object, AffinityTestHelper.GetLogger<CustomHeaderSessionAffinityPolicy>().Object);
         var context = new DefaultHttpContext();
         context.Request.Headers["SomeHeader"] = new[] { "SomeValue" };
@@ -56,8 +52,7 @@ public class CustomHeaderSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_AffinityKeyIsNotExtracted_SetKeyOnResponse()
-    {
+    public void AffinitizedRequest_AffinityKeyIsNotExtracted_SetKeyOnResponse() {
         var policy = new CustomHeaderSessionAffinityPolicy(AffinityTestHelper.GetDataProtector().Object, AffinityTestHelper.GetLogger<CustomHeaderSessionAffinityPolicy>().Object);
         var context = new DefaultHttpContext();
         var chosenDestination = _destinations[1];
@@ -70,8 +65,7 @@ public class CustomHeaderSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing()
-    {
+    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing() {
         var policy = new CustomHeaderSessionAffinityPolicy(AffinityTestHelper.GetDataProtector().Object, AffinityTestHelper.GetLogger<CustomHeaderSessionAffinityPolicy>().Object);
         var context = new DefaultHttpContext();
         context.Request.Headers["SomeHeader"] = new[] { "SomeValue" };

@@ -13,11 +13,9 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class ConsecutiveFailuresHealthPolicyTests
-{
+public class ConsecutiveFailuresHealthPolicyTests {
     [Fact]
-    public void ProbingCompleted_FailureThresholdExceeded_MarkDestinationUnhealthy()
-    {
+    public void ProbingCompleted_FailureThresholdExceeded_MarkDestinationUnhealthy() {
         var options = Options.Create(new ConsecutiveFailuresHealthPolicyOptions { DefaultThreshold = 2 });
         var policy = new ConsecutiveFailuresHealthPolicy(options, new DestinationHealthUpdaterStub());
         var cluster0 = GetClusterInfo("cluster0", destinationCount: 2);
@@ -67,8 +65,7 @@ public class ConsecutiveFailuresHealthPolicyTests
     }
 
     [Fact]
-    public void ProbingCompleted_SuccessfulResponse_MarkDestinationHealthy()
-    {
+    public void ProbingCompleted_SuccessfulResponse_MarkDestinationHealthy() {
         var options = Options.Create(new ConsecutiveFailuresHealthPolicyOptions { DefaultThreshold = 2 });
         var policy = new ConsecutiveFailuresHealthPolicy(options, new DestinationHealthUpdaterStub());
         var cluster = GetClusterInfo("cluster0", destinationCount: 2);
@@ -78,8 +75,7 @@ public class ConsecutiveFailuresHealthPolicyTests
             new DestinationProbingResult(cluster.Destinations.Values.Skip(1).First(), new HttpResponseMessage(HttpStatusCode.OK), null)
         };
 
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.ProbingCompleted(cluster, probingResults);
         }
 
@@ -95,8 +91,7 @@ public class ConsecutiveFailuresHealthPolicyTests
     }
 
     [Fact]
-    public void ProbingCompleted_EmptyProbingResultList_DoNothing()
-    {
+    public void ProbingCompleted_EmptyProbingResultList_DoNothing() {
         var options = Options.Create(new ConsecutiveFailuresHealthPolicyOptions { DefaultThreshold = 2 });
         var policy = new ConsecutiveFailuresHealthPolicy(options, new DestinationHealthUpdaterStub());
         var cluster = GetClusterInfo("cluster0", destinationCount: 2);
@@ -106,8 +101,7 @@ public class ConsecutiveFailuresHealthPolicyTests
             new DestinationProbingResult(cluster.Destinations.Values.Skip(1).First(), new HttpResponseMessage(HttpStatusCode.OK), null)
         };
 
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.ProbingCompleted(cluster, probingResults);
         }
 
@@ -120,19 +114,15 @@ public class ConsecutiveFailuresHealthPolicyTests
         Assert.Equal(DestinationHealth.Healthy, cluster.Destinations.Values.Skip(1).First().Health.Active);
     }
 
-    private ClusterState GetClusterInfo(string id, int destinationCount, int? failureThreshold = null)
-    {
+    private ClusterState GetClusterInfo(string id, int destinationCount, int? failureThreshold = null) {
         var metadata = failureThreshold is not null
             ? new Dictionary<string, string> { { ConsecutiveFailuresHealthPolicyOptions.ThresholdMetadataName, failureThreshold.ToString() } }
             : null;
         var clusterModel = new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = id,
-                HealthCheck = new HealthCheckConfig()
-                {
-                    Active = new ActiveHealthCheckConfig
-                    {
+                HealthCheck = new HealthCheckConfig() {
+                    Active = new ActiveHealthCheckConfig {
                         Enabled = true,
                         Policy = "policy",
                         Path = "/api/health/",
@@ -143,12 +133,10 @@ public class ConsecutiveFailuresHealthPolicyTests
             new HttpMessageInvoker(new HttpClientHandler()));
         var clusterState = new ClusterState(id);
         clusterState.Model = clusterModel;
-        for (var i = 0; i < destinationCount; i++)
-        {
+        for (var i = 0; i < destinationCount; i++) {
             var destinationModel = new DestinationModel(new DestinationConfig { Address = $"https://localhost:1000{i}/{id}/", Health = $"https://localhost:2000{i}/{id}/" });
             var destinationId = $"destination{i}";
-            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id)
-            {
+            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id) {
                 Model = destinationModel
             });
         }
@@ -158,12 +146,9 @@ public class ConsecutiveFailuresHealthPolicyTests
         return clusterState;
     }
 
-    private class DestinationHealthUpdaterStub : IDestinationHealthUpdater
-    {
-        public void SetActive(ClusterState cluster, IEnumerable<NewActiveDestinationHealth> newHealthStates)
-        {
-            foreach (var newHealthState in newHealthStates)
-            {
+    private class DestinationHealthUpdaterStub : IDestinationHealthUpdater {
+        public void SetActive(ClusterState cluster, IEnumerable<NewActiveDestinationHealth> newHealthStates) {
+            foreach (var newHealthState in newHealthStates) {
                 newHealthState.Destination.Health.Active = newHealthState.NewActiveHealth;
             }
 
@@ -171,8 +156,7 @@ public class ConsecutiveFailuresHealthPolicyTests
             cluster.DestinationsState = new ClusterDestinationsState(destinations, destinations);
         }
 
-        public void SetPassive(ClusterState cluster, DestinationState destination, DestinationHealth newHealth, TimeSpan reactivationPeriod)
-        {
+        public void SetPassive(ClusterState cluster, DestinationState destination, DestinationHealth newHealth, TimeSpan reactivationPeriod) {
             throw new NotImplementedException();
         }
     }

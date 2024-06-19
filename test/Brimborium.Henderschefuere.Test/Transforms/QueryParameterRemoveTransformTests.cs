@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class QueryParameterRemoveTransformTests
-{
+public class QueryParameterRemoveTransformTests {
     [Fact]
-    public async Task RemovesExistingQueryParameter()
-    {
+    public async Task RemovesExistingQueryParameter() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request)
         };
         var transform = new QueryParameterRemoveTransform("z");
@@ -24,12 +23,10 @@ public class QueryParameterRemoveTransformTests
     }
 
     [Fact]
-    public async Task LeavesOtherQueryParameters()
-    {
+    public async Task LeavesOtherQueryParameters() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=1&a=2");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
         };
         var transform = new QueryParameterRemoveTransform("z");
@@ -38,12 +35,10 @@ public class QueryParameterRemoveTransformTests
     }
 
     [Fact]
-    public async Task DoesNotFailOnNonExistingQueryParameter()
-    {
+    public async Task DoesNotFailOnNonExistingQueryParameter() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
         };
         var transform = new QueryParameterRemoveTransform("a");

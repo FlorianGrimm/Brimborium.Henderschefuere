@@ -13,17 +13,14 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Limits.Tests;
 
-public class LimitsMiddlewareTests
-{
+public class LimitsMiddlewareTests {
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         CreateMiddleware();
     }
 
     [Fact]
-    public async Task MissingFeature_NoOps()
-    {
+    public async Task MissingFeature_NoOps() {
         var context = CreateContext(10, null);
 
         var sut = CreateMiddleware();
@@ -42,8 +39,7 @@ public class LimitsMiddlewareTests
     [InlineData(false, null, -1L, null)]
     [InlineData(false, 10L, -1L, null)]
     [InlineData(false, 10L, 11L, 11L)]
-    public async Task Invoke_CombinationsWork(bool readOnly, long? serverLimit, long? routeLimit, long? expected)
-    {
+    public async Task Invoke_CombinationsWork(bool readOnly, long? serverLimit, long? routeLimit, long? expected) {
         var feature = new FakeBodySizeFeature() { IsReadOnly = readOnly, MaxRequestBodySize = serverLimit };
         var context = CreateContext(routeLimit, feature);
 
@@ -54,17 +50,14 @@ public class LimitsMiddlewareTests
         Assert.Equal(expected, feature.MaxRequestBodySize);
     }
 
-    private static LimitsMiddleware CreateMiddleware()
-    {
+    private static LimitsMiddleware CreateMiddleware() {
         return new LimitsMiddleware(
             _ => Task.CompletedTask,
             NullLogger<LimitsMiddleware>.Instance);
     }
 
-    private static HttpContext CreateContext(long? bodySizeLimit, IHttpMaxRequestBodySizeFeature feature)
-    {
-        var cluster = new ClusterState("cluster1")
-        {
+    private static HttpContext CreateContext(long? bodySizeLimit, IHttpMaxRequestBodySizeFeature feature) {
+        var cluster = new ClusterState("cluster1") {
             Model = new ClusterModel(new ClusterConfig(),
                 new HttpMessageInvoker(new HttpClientHandler()))
         };
@@ -73,8 +66,7 @@ public class LimitsMiddlewareTests
 
         var route = new RouteModel(new RouteConfig() { MaxRequestBodySize = bodySizeLimit }, cluster, HttpTransformer.Default);
         context.Features.Set<IReverseProxyFeature>(
-            new ReverseProxyFeature()
-            {
+            new ReverseProxyFeature() {
                 Route = route,
                 Cluster = cluster.Model
             });
@@ -88,8 +80,7 @@ public class LimitsMiddlewareTests
         return context;
     }
 
-    private class FakeBodySizeFeature : IHttpMaxRequestBodySizeFeature
-    {
+    private class FakeBodySizeFeature : IHttpMaxRequestBodySizeFeature {
         public bool IsReadOnly { get; set; }
 
         public long? MaxRequestBodySize { get; set; }

@@ -11,26 +11,22 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class RequestHeaderRemoveTransformTests
-{
+public class RequestHeaderRemoveTransformTests {
     [Theory]
     [InlineData("header1", "value1", "header1", "")]
     [InlineData("header1", "value1", "headerX", "header1")]
     [InlineData("header1; header2; header3", "value1, value2, value3", "header2", "header1; header3")]
     [InlineData("header1; header2; header3", "value1, value2, value3", "headerX", "header1; header2; header3")]
     [InlineData("header1; header2; header2; header3", "value1, value2-1, value2-2, value3", "header2", "header1; header3")]
-    public async Task RemoveHeader_Success(string names, string values, string removedHeader, string expected)
-    {
+    public async Task RemoveHeader_Success(string names, string values, string removedHeader, string expected) {
         var httpContext = new DefaultHttpContext();
         var proxyRequest = new HttpRequestMessage();
-        foreach (var pair in TestResources.ParseNameAndValues(names, values))
-        {
+        foreach (var pair in TestResources.ParseNameAndValues(names, values)) {
             proxyRequest.Headers.Add(pair.Name, pair.Values);
         }
 
         var transform = new RequestHeaderRemoveTransform(removedHeader);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,

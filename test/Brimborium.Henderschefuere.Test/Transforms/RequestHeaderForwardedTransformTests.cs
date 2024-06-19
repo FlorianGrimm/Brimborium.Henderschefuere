@@ -11,8 +11,7 @@ using Brimborium.Henderschefuere.Utilities;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class RequestHeaderForwardedTransformTests
-{
+public class RequestHeaderForwardedTransformTests {
     [Theory]
     // Using "|" to represent multi-line headers
     [InlineData("", "https", ForwardedTransformActions.Set, "proto=https")]
@@ -24,8 +23,7 @@ public class RequestHeaderForwardedTransformTests
     [InlineData("existing|Header", "https", ForwardedTransformActions.Append, "existing|Header|proto=https")]
     [InlineData("existing,Header", "https", ForwardedTransformActions.Remove, "")]
     [InlineData("existing|Header", "https", ForwardedTransformActions.Remove, "")]
-    public async Task Proto_Added(string startValue, string scheme, ForwardedTransformActions action, string expected)
-    {
+    public async Task Proto_Added(string startValue, string scheme, ForwardedTransformActions action, string expected) {
         var randomFactory = new TestRandomFactory();
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Scheme = scheme;
@@ -33,18 +31,14 @@ public class RequestHeaderForwardedTransformTests
         proxyRequest.Headers.Add("Forwarded", startValue.Split("|", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderForwardedTransform(randomFactory, forFormat: NodeFormat.None,
             byFormat: NodeFormat.None, host: false, proto: true, action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
         });
-        if (string.IsNullOrEmpty(expected))
-        {
+        if (string.IsNullOrEmpty(expected)) {
             Assert.False(proxyRequest.Headers.TryGetValues("Forwarded", out _));
-        }
-        else
-        {
+        } else {
             Assert.Equal(expected.Split("|", StringSplitOptions.RemoveEmptyEntries), proxyRequest.Headers.GetValues("Forwarded"));
         }
     }
@@ -62,8 +56,7 @@ public class RequestHeaderForwardedTransformTests
     [InlineData("existing,Header", "myHost", ForwardedTransformActions.Append, "existing,Header|host=\"myHost\"")]
     [InlineData("existing|Header", "myHost", ForwardedTransformActions.Append, "existing|Header|host=\"myHost\"")]
     [InlineData("existing|Header", "myHost:80", ForwardedTransformActions.Append, "existing|Header|host=\"myHost:80\"")]
-    public async Task Host_Added(string startValue, string host, ForwardedTransformActions action, string expected)
-    {
+    public async Task Host_Added(string startValue, string host, ForwardedTransformActions action, string expected) {
         var randomFactory = new TestRandomFactory();
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Host = new HostString(host);
@@ -71,8 +64,7 @@ public class RequestHeaderForwardedTransformTests
         proxyRequest.Headers.Add("Forwarded", startValue.Split("|", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderForwardedTransform(randomFactory, forFormat: NodeFormat.None,
             byFormat: NodeFormat.None, host: true, proto: false, action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
@@ -106,8 +98,7 @@ public class RequestHeaderForwardedTransformTests
     [InlineData("existing|header", "::1", 2, NodeFormat.RandomAndPort, ForwardedTransformActions.Append, "existing|header|for=\"_abcdefghi:2\"")]
     [InlineData("existing,header", "::1", 2, NodeFormat.RandomAndRandomPort, ForwardedTransformActions.Append, "existing,header|for=\"_abcdefghi:_jklmnopqr\"")]
     [InlineData("existing|header", "::1", 2, NodeFormat.RandomAndRandomPort, ForwardedTransformActions.Append, "existing|header|for=\"_abcdefghi:_jklmnopqr\"")]
-    public async Task For_Added(string startValue, string ip, int port, NodeFormat format, ForwardedTransformActions action, string expected)
-    {
+    public async Task For_Added(string startValue, string ip, int port, NodeFormat format, ForwardedTransformActions action, string expected) {
         var randomFactory = new TestRandomFactory();
         randomFactory.Instance = new TestRandom() { Sequence = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 } };
         var httpContext = new DefaultHttpContext();
@@ -117,8 +108,7 @@ public class RequestHeaderForwardedTransformTests
         proxyRequest.Headers.Add("Forwarded", startValue.Split("|", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderForwardedTransform(randomFactory, forFormat: format,
             byFormat: NodeFormat.None, host: false, proto: false, action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
@@ -153,8 +143,7 @@ public class RequestHeaderForwardedTransformTests
     [InlineData("existing|header", "::1", 2, NodeFormat.RandomAndPort, ForwardedTransformActions.Append, "existing|header|by=\"_abcdefghi:2\"")]
     [InlineData("existing,header", "::1", 2, NodeFormat.RandomAndRandomPort, ForwardedTransformActions.Append, "existing,header|by=\"_abcdefghi:_jklmnopqr\"")]
     [InlineData("existing|header", "::1", 2, NodeFormat.RandomAndRandomPort, ForwardedTransformActions.Append, "existing|header|by=\"_abcdefghi:_jklmnopqr\"")]
-    public async Task By_Added(string startValue, string ip, int port, NodeFormat format, ForwardedTransformActions action, string expected)
-    {
+    public async Task By_Added(string startValue, string ip, int port, NodeFormat format, ForwardedTransformActions action, string expected) {
         var randomFactory = new TestRandomFactory();
         randomFactory.Instance = new TestRandom() { Sequence = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 } };
         var httpContext = new DefaultHttpContext();
@@ -164,8 +153,7 @@ public class RequestHeaderForwardedTransformTests
         proxyRequest.Headers.Add("Forwarded", startValue.Split("|", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderForwardedTransform(randomFactory, forFormat: NodeFormat.None,
             byFormat: format, host: false, proto: false, action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
@@ -179,8 +167,7 @@ public class RequestHeaderForwardedTransformTests
     [InlineData("", ForwardedTransformActions.Append, "proto=https;host=\"myHost:80\";for=\"[::1]:10\";by=_abcdefghi")]
     [InlineData("otherHeader", ForwardedTransformActions.Set, "proto=https;host=\"myHost:80\";for=\"[::1]:10\";by=_abcdefghi")]
     [InlineData("otherHeader", ForwardedTransformActions.Append, "otherHeader|proto=https;host=\"myHost:80\";for=\"[::1]:10\";by=_abcdefghi")]
-    public async Task AllValues_Added(string startValue, ForwardedTransformActions action, string expected)
-    {
+    public async Task AllValues_Added(string startValue, ForwardedTransformActions action, string expected) {
         var randomFactory = new TestRandomFactory();
         randomFactory.Instance = new TestRandom() { Sequence = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 } };
         var httpContext = new DefaultHttpContext();
@@ -194,8 +181,7 @@ public class RequestHeaderForwardedTransformTests
             forFormat: NodeFormat.IpAndPort,
             byFormat: NodeFormat.Random,
             host: true, proto: true, action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
@@ -203,23 +189,19 @@ public class RequestHeaderForwardedTransformTests
         Assert.Equal(expected.Split("|", StringSplitOptions.RemoveEmptyEntries), proxyRequest.Headers.GetValues("Forwarded"));
     }
 
-    internal class TestRandomFactory : IRandomFactory
-    {
+    internal class TestRandomFactory : IRandomFactory {
         internal TestRandom Instance { get; set; }
 
-        public Random CreateRandomInstance()
-        {
+        public Random CreateRandomInstance() {
             return Instance;
         }
     }
 
-    public class TestRandom : Random
-    {
+    public class TestRandom : Random {
         public int[] Sequence { get; set; }
         public int Offset { get; set; }
 
-        public override int Next(int maxValue)
-        {
+        public override int Next(int maxValue) {
             return Sequence[Offset++];
         }
     }

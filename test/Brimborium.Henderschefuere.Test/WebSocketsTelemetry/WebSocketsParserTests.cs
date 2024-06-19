@@ -9,43 +9,35 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.WebSocketsTelemetry.Tests;
 
-public abstract class WebSocketsParserTests
-{
+public abstract class WebSocketsParserTests {
     protected abstract bool IsServer { get; }
 
     private int MaskSize => IsServer ? 4 : 0;
 
     private WebSocketsParser CreateParser(TimeProvider timeProvider = null) => new(timeProvider ?? TimeProvider.System, IsServer);
 
-    private ReadOnlySpan<byte> GetHeader(int opcode, int length, bool endOfMessage = true)
-    {
+    private ReadOnlySpan<byte> GetHeader(int opcode, int length, bool endOfMessage = true) {
         var header = new byte[2 + MaskSize + (length < 126 ? 0 : (length < 65536 ? 2 : 8))];
 
         Assert.InRange(opcode, 0, 15);
         header[0] = (byte)opcode;
 
-        if (endOfMessage)
-        {
+        if (endOfMessage) {
             header[0] |= 0x80;
         }
 
-        if (length < 126)
-        {
+        if (length < 126) {
             header[1] = (byte)length;
-        }
-        else
-        {
+        } else {
             header[1] = (byte)(length < 65536 ? 126 : 127);
             var i = header.Length - MaskSize - 1;
-            while (length != 0)
-            {
+            while (length != 0) {
                 header[i--] = (byte)(length % 256);
                 length /= 256;
             }
         }
 
-        if (IsServer)
-        {
+        if (IsServer) {
             header[1] |= 0x80;
         }
 
@@ -58,8 +50,7 @@ public abstract class WebSocketsParserTests
 
     private ReadOnlySpan<byte> GetPongFrame(int length = 0) => GetBinaryMessageFrame(Encoding.UTF8.GetBytes(new string('a', length)), opcode: 10);
 
-    private ReadOnlySpan<byte> GetTextMessageFrame(string message, bool continuation = false, bool endOfMessage = true)
-    {
+    private ReadOnlySpan<byte> GetTextMessageFrame(string message, bool continuation = false, bool endOfMessage = true) {
         var messageBytes = Encoding.UTF8.GetBytes(message);
         var header = GetHeader(opcode: continuation ? 0 : 1, length: messageBytes.Length, endOfMessage);
 
@@ -70,8 +61,7 @@ public abstract class WebSocketsParserTests
         return frame;
     }
 
-    private ReadOnlySpan<byte> GetBinaryMessageFrame(ReadOnlySpan<byte> message, bool continuation = false, bool endOfMessage = true, int opcode = 2)
-    {
+    private ReadOnlySpan<byte> GetBinaryMessageFrame(ReadOnlySpan<byte> message, bool continuation = false, bool endOfMessage = true, int opcode = 2) {
         var header = GetHeader(opcode: continuation ? 0 : opcode, length: message.Length, endOfMessage);
 
         var frame = new byte[header.Length + message.Length];
@@ -82,8 +72,7 @@ public abstract class WebSocketsParserTests
     }
 
     [Fact]
-    public void CustomClockIsUsedForCloseTime()
-    {
+    public void CustomClockIsUsedForCloseTime() {
         var timeProvider = new TestTimeProvider(new TimeSpan(42));
         var parser = CreateParser(timeProvider);
 
@@ -96,8 +85,7 @@ public abstract class WebSocketsParserTests
     }
 
     [Fact]
-    public void MessagesAreCountedCorrectly()
-    {
+    public void MessagesAreCountedCorrectly() {
         var parser = CreateParser();
 
         // Whole messages
@@ -161,20 +149,16 @@ public abstract class WebSocketsParserTests
         Assert.Equal(11, parser.MessageCount);
 
         var ms = new MemoryStream();
-        for (var i = (int)parser.MessageCount; i < 500; i++)
-        {
+        for (var i = (int)parser.MessageCount; i < 500; i++) {
             // Control frames are not counted
-            if (i % 7 == 0)
-            {
+            if (i % 7 == 0) {
                 ms.Write(GetPingFrame());
             }
-            if (i % 13 == 0)
-            {
+            if (i % 13 == 0) {
                 ms.Write(GetPongFrame());
             }
 
-            switch (i % 4)
-            {
+            switch (i % 4) {
                 case 0:
                     ms.Write(GetTextMessageFrame(new string('a', i)));
                     break;
@@ -214,11 +198,9 @@ public abstract class WebSocketsParserTests
         parser.Consume(GetTextMessageFrame("Foo"));
         Assert.Equal(501, parser.MessageCount);
 
-        static void ConsumeInFragments(ref WebSocketsParser parser, ReadOnlySpan<byte> message)
-        {
+        static void ConsumeInFragments(ref WebSocketsParser parser, ReadOnlySpan<byte> message) {
             var rng = new Random(42);
-            while (message.Length != 0)
-            {
+            while (message.Length != 0) {
                 var fragmentLength = Math.Min(message.Length, rng.Next(0, 150));
                 parser.Consume(message[..fragmentLength]);
                 message = message[fragmentLength..];
@@ -227,12 +209,10 @@ public abstract class WebSocketsParserTests
     }
 }
 
-public sealed class WebSocketsParserTests_Client : WebSocketsParserTests
-{
+public sealed class WebSocketsParserTests_Client : WebSocketsParserTests {
     protected override bool IsServer => false;
 }
 
-public sealed class WebSocketsParserTests_Server : WebSocketsParserTests
-{
+public sealed class WebSocketsParserTests_Server : WebSocketsParserTests {
     protected override bool IsServer => true;
 }

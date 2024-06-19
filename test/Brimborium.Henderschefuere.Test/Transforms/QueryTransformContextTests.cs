@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class QueryTransformContextTests
-{
+public class QueryTransformContextTests {
     [Fact]
-    public void Collection_TryGetValue_CaseInsensitive()
-    {
+    public void Collection_TryGetValue_CaseInsensitive() {
         var httpContext = new DefaultHttpContext { Request = { QueryString = new QueryString("?z=1") } };
         var queryTransformContext = new QueryTransformContext(httpContext.Request);
         queryTransformContext.Collection.TryGetValue("Z", out var result);
@@ -18,8 +17,7 @@ public class QueryTransformContextTests
     }
 
     [Fact]
-    public void Collection_RemoveKey_CaseInsensitive()
-    {
+    public void Collection_RemoveKey_CaseInsensitive() {
         var httpContext = new DefaultHttpContext { Request = { QueryString = new QueryString("?z=1") } };
         var queryTransformContext = new QueryTransformContext(httpContext.Request);
         queryTransformContext.Collection.Remove("Z");

@@ -13,11 +13,9 @@ using Brimborium.Henderschefuere.Configuration;
 
 namespace Brimborium.Henderschefuere.Routing.Tests;
 
-public class QueryParameterMatcherPolicyTests
-{
+public class QueryParameterMatcherPolicyTests {
     [Fact]
-    public void Comparer_SortOrder_SingleRuleEqual()
-    {
+    public void Comparer_SortOrder_SingleRuleEqual() {
         // Most specific to least
         var endpoints = new[]
         {
@@ -44,10 +42,8 @@ public class QueryParameterMatcherPolicyTests
         };
         var sut = new QueryParameterMatcherPolicy();
 
-        for (var i = 0; i < endpoints.Length; i++)
-        {
-            for (var j = 0; j < endpoints.Length; j++)
-            {
+        for (var i = 0; i < endpoints.Length; i++) {
+            for (var j = 0; j < endpoints.Length; j++) {
                 var a = endpoints[i];
                 var b = endpoints[j];
 
@@ -55,8 +51,7 @@ public class QueryParameterMatcherPolicyTests
                 var expected =
                     a.Item1 < b.Item1 ? -1 :
                     a.Item1 > b.Item1 ? 1 : 0;
-                if (actual != expected)
-                {
+                if (actual != expected) {
                     Assert.Fail($"Error comparing [{i}] to [{j}], expected {expected}, found {actual}.");
                 }
             }
@@ -64,8 +59,7 @@ public class QueryParameterMatcherPolicyTests
     }
 
     [Fact]
-    public void Comparer_MultipleQueryParameters_SortOrder()
-    {
+    public void Comparer_MultipleQueryParameters_SortOrder() {
         // Most specific to least
         var endpoints = new[]
         {
@@ -96,10 +90,8 @@ public class QueryParameterMatcherPolicyTests
         };
         var sut = new QueryParameterMatcherPolicy();
 
-        for (var i = 0; i < endpoints.Length; i++)
-        {
-            for (var j = 0; j < endpoints.Length; j++)
-            {
+        for (var i = 0; i < endpoints.Length; i++) {
+            for (var j = 0; j < endpoints.Length; j++) {
                 var a = endpoints[i];
                 var b = endpoints[j];
 
@@ -107,8 +99,7 @@ public class QueryParameterMatcherPolicyTests
                 var expected =
                     a.Item1 < b.Item1 ? -1 :
                     a.Item1 > b.Item1 ? 1 : 0;
-                if (actual != expected)
-                {
+                if (actual != expected) {
                     Assert.Fail($"Error comparing [{i}] to [{j}], expected {expected}, found {actual}.");
                 }
             }
@@ -116,8 +107,7 @@ public class QueryParameterMatcherPolicyTests
     }
 
     [Fact]
-    public void AppliesToEndpoints_AppliesScenarios()
-    {
+    public void AppliesToEndpoints_AppliesScenarios() {
         var scenarios = new[]
         {
             CreateEndpoint("org-id", Array.Empty<string>(), QueryParameterMatchMode.Exists),
@@ -135,16 +125,14 @@ public class QueryParameterMatcherPolicyTests
         var sut = new QueryParameterMatcherPolicy();
         var endpointSelectorPolicy = (IEndpointSelectorPolicy)sut;
 
-        for (var i = 0; i < scenarios.Length; i++)
-        {
+        for (var i = 0; i < scenarios.Length; i++) {
             var result = endpointSelectorPolicy.AppliesToEndpoints(new[] { scenarios[i] });
             Assert.True(result, $"scenario {i}");
         }
     }
 
     [Fact]
-    public void AppliesToEndpoints_NoMetadata_DoesNotApply()
-    {
+    public void AppliesToEndpoints_NoMetadata_DoesNotApply() {
         var endpoint = CreateEndpoint(Array.Empty<QueryParameterMatcher>());
 
         var sut = new QueryParameterMatcherPolicy();
@@ -158,11 +146,9 @@ public class QueryParameterMatcherPolicyTests
     [InlineData(null, false)]
     [InlineData("", false)]
     [InlineData("abc", true)]
-    public async Task ApplyAsync_MatchingScenarios_AnyQueryParamValue(string incomingQueryParamValue, bool shouldMatch)
-    {
+    public async Task ApplyAsync_MatchingScenarios_AnyQueryParamValue(string incomingQueryParamValue, bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingQueryParamValue is not null)
-        {
+        if (incomingQueryParamValue is not null) {
             var queryStr = "?org-id=" + incomingQueryParamValue;
             context.Request.QueryString = new QueryString(queryStr);
         }
@@ -230,11 +216,9 @@ public class QueryParameterMatcherPolicyTests
         QueryParameterMatchMode queryParamValueMatchMode,
         bool isCaseSensitive,
         string incomingQueryParamValue,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingQueryParamValue is not null)
-        {
+        if (incomingQueryParamValue is not null) {
             var queryStr = "?org-id=" + string.Join("&org-id=", incomingQueryParamValue?.Split(';') ?? new[] { "" });
             context.Request.QueryString = new QueryString(queryStr);
         }
@@ -375,11 +359,9 @@ public class QueryParameterMatcherPolicyTests
         QueryParameterMatchMode queryParamValueMatchMode,
         bool isCaseSensitive,
         string incomingQueryParamValue,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingQueryParamValue is not null)
-        {
+        if (incomingQueryParamValue is not null) {
             var queryStr = "?org-id=" + string.Join("&org-id=", incomingQueryParamValue?.Split(';') ?? new[] { "" });
             context.Request.QueryString = new QueryString(queryStr);
         }
@@ -408,13 +390,11 @@ public class QueryParameterMatcherPolicyTests
     public async Task ApplyAsync_MatchingScenarios_MissingParam(
         QueryParameterMatchMode queryParamValueMatchMode,
         bool isCaseSensitive,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
 
         var queryParamValues = new[] { "bar" };
-        if (queryParamValueMatchMode == QueryParameterMatchMode.Exists)
-        {
+        if (queryParamValueMatchMode == QueryParameterMatchMode.Exists) {
             queryParamValues = null;
         }
 
@@ -432,8 +412,7 @@ public class QueryParameterMatcherPolicyTests
     [InlineData(false, true, false)]
     [InlineData(true, false, false)]
     [InlineData(true, true, true)]
-    public async Task ApplyAsync_MultipleRules_RequiresAllQueryParameter(bool sendQueryParam1, bool sendQueryParam2, bool shouldMatch)
-    {
+    public async Task ApplyAsync_MultipleRules_RequiresAllQueryParameter(bool sendQueryParam1, bool sendQueryParam2, bool shouldMatch) {
         var endpoint = CreateEndpoint(new[]
         {
             new QueryParameterMatcher("queryParam1", new[] { "value1" }, QueryParameterMatchMode.Exact, isCaseSensitive: false),
@@ -442,12 +421,10 @@ public class QueryParameterMatcherPolicyTests
 
         var context = new DefaultHttpContext();
         var queryStr = new List<string>();
-        if (sendQueryParam1)
-        {
+        if (sendQueryParam1) {
             queryStr.Add("queryParam1=value1");
         }
-        if (sendQueryParam2)
-        {
+        if (sendQueryParam2) {
             queryStr.Add("queryParam2=value2");
         }
 
@@ -465,25 +442,21 @@ public class QueryParameterMatcherPolicyTests
         string[] queryParamValues,
         QueryParameterMatchMode mode = QueryParameterMatchMode.Exact,
         bool isCaseSensitive = false,
-        bool isDynamic = false)
-    {
+        bool isDynamic = false) {
         return CreateEndpoint(new[] { new QueryParameterMatcher(queryParamName, queryParamValues, mode, isCaseSensitive) }, isDynamic);
     }
 
-    private static Endpoint CreateEndpoint(IReadOnlyList<QueryParameterMatcher> matchers, bool isDynamic = false)
-    {
+    private static Endpoint CreateEndpoint(IReadOnlyList<QueryParameterMatcher> matchers, bool isDynamic = false) {
         var builder = new RouteEndpointBuilder(_ => Task.CompletedTask, RoutePatternFactory.Parse("/"), 0);
         builder.Metadata.Add(new QueryParameterMetadata(matchers));
-        if (isDynamic)
-        {
+        if (isDynamic) {
             builder.Metadata.Add(new DynamicEndpointMetadata());
         }
 
         return builder.Build();
     }
 
-    private class DynamicEndpointMetadata : IDynamicEndpointMetadata
-    {
+    private class DynamicEndpointMetadata : IDynamicEndpointMetadata {
         public bool IsDynamic => true;
     }
 }

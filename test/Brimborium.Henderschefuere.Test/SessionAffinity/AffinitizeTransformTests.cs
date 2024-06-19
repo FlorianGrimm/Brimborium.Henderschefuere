@@ -15,11 +15,9 @@ using Brimborium.Henderschefuere.Transforms;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class AffinitizeTransformTests
-{
+public class AffinitizeTransformTests {
     [Fact]
-    public async Task ApplyAsync_InvokeAffinitizeRequest()
-    {
+    public async Task ApplyAsync_InvokeAffinitizeRequest() {
         var cluster = GetCluster();
         var destination = cluster.Destinations.Values.First();
         var provider = new Mock<ISessionAffinityPolicy>(MockBehavior.Strict);
@@ -35,15 +33,13 @@ public class AffinitizeTransformTests
         var transform = new AffinitizeTransform(provider.Object);
 
         var context = new DefaultHttpContext();
-        context.Features.Set<IReverseProxyFeature>(new ReverseProxyFeature()
-        {
+        context.Features.Set<IReverseProxyFeature>(new ReverseProxyFeature() {
             Cluster = cluster.Model,
             Route = new RouteModel(new RouteConfig(), cluster, HttpTransformer.Default),
             ProxiedDestination = destination,
         });
 
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = context,
         };
         await transform.ApplyAsync(transformContext);
@@ -51,14 +47,11 @@ public class AffinitizeTransformTests
         provider.Verify();
     }
 
-    internal ClusterState GetCluster()
-    {
+    internal ClusterState GetCluster() {
         var cluster = new ClusterState("cluster-1");
         cluster.Destinations.GetOrAdd("dest-A", id => new DestinationState(id));
-        cluster.Model = new ClusterModel(new ClusterConfig
-        {
-            SessionAffinity = new SessionAffinityConfig
-            {
+        cluster.Model = new ClusterModel(new ClusterConfig {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 Policy = "Policy-B",
                 FailurePolicy = "Policy-1",

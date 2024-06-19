@@ -5,22 +5,22 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseHeadersAllowedTransformTests
-{
+public class ResponseHeadersAllowedTransformTests {
     [Theory]
     [InlineData("", 0)]
     [InlineData("header1", 1)]
     [InlineData("header1;header2", 2)]
     [InlineData("header1;header2;header3", 3)]
     [InlineData("header1;header2;header2;header3", 3)]
-    public async Task AllowedHeaders_Copied(string names, int expected)
-    {
+    public async Task AllowedHeaders_Copied(string names, int expected) {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Headers.TryAddWithoutValidation("header1", "value1");
@@ -31,8 +31,7 @@ public class ResponseHeadersAllowedTransformTests
 
         var allowed = names.Split(';');
         var transform = new ResponseHeadersAllowedTransform(allowed);
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -42,8 +41,7 @@ public class ResponseHeadersAllowedTransformTests
         Assert.True(transformContext.HeadersCopied);
 
         Assert.Equal(expected, httpContext.Response.Headers.Count());
-        foreach (var header in httpContext.Response.Headers)
-        {
+        foreach (var header in httpContext.Response.Headers) {
             Assert.Contains(header.Key, allowed, StringComparer.OrdinalIgnoreCase);
         }
     }
@@ -54,8 +52,7 @@ public class ResponseHeadersAllowedTransformTests
     [InlineData("content-disposition;header0", 2)]
     [InlineData("content-length;content-Location;Content-Type", 3)]
     [InlineData("Allow;Content-Disposition;Content-Encoding;Content-Language;Content-Location;Content-MD5;Content-Range;Content-Type;Expires;Last-Modified;Content-Length", 11)]
-    public async Task ContentHeaders_CopiedIfAllowed(string names, int expected)
-    {
+    public async Task ContentHeaders_CopiedIfAllowed(string names, int expected) {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Content = new StringContent("");
@@ -74,8 +71,7 @@ public class ResponseHeadersAllowedTransformTests
 
         var allowed = names.Split(';');
         var transform = new ResponseHeadersAllowedTransform(allowed);
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -85,8 +81,7 @@ public class ResponseHeadersAllowedTransformTests
         Assert.True(transformContext.HeadersCopied);
 
         Assert.Equal(expected, httpContext.Response.Headers.Count());
-        foreach (var header in httpContext.Response.Headers)
-        {
+        foreach (var header in httpContext.Response.Headers) {
             Assert.Contains(header.Key, allowed, StringComparer.OrdinalIgnoreCase);
         }
     }
@@ -96,8 +91,7 @@ public class ResponseHeadersAllowedTransformTests
     [InlineData("connection", 1)]
     [InlineData("Transfer-Encoding;Keep-Alive", 2)]
     // See https://github.com/microsoft/reverse-proxy/blob/51d797986b1fea03500a1ad173d13a1176fb5552/src/ReverseProxy/Forwarder/RequestUtilities.cs#L61-L83
-    public async Task RestrictedHeaders_CopiedIfAllowed(string names, int expected)
-    {
+    public async Task RestrictedHeaders_CopiedIfAllowed(string names, int expected) {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Headers.TryAddWithoutValidation(HeaderNames.Connection, "value1");
@@ -106,8 +100,7 @@ public class ResponseHeadersAllowedTransformTests
 
         var allowed = names.Split(';');
         var transform = new ResponseHeadersAllowedTransform(allowed);
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -117,21 +110,18 @@ public class ResponseHeadersAllowedTransformTests
         Assert.True(transformContext.HeadersCopied);
 
         Assert.Equal(expected, httpContext.Response.Headers.Count());
-        foreach (var header in httpContext.Response.Headers)
-        {
+        foreach (var header in httpContext.Response.Headers) {
             Assert.Contains(header.Key, allowed, StringComparer.OrdinalIgnoreCase);
         }
     }
 
     [Fact]
-    public async Task ProxyResponseNull_DoNothing()
-    {
+    public async Task ProxyResponseNull_DoNothing() {
         var httpContext = new DefaultHttpContext();
         httpContext.Response.StatusCode = 502;
 
         var transform = new ResponseHeadersAllowedTransform(new[] { "header1" });
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = null,
             HeadersCopied = false,

@@ -11,21 +11,18 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class RequestTransformTests
-{
+public class RequestTransformTests {
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void TakeHeader_RemovesAndReturnsProxyRequestHeader(bool copiedHeaders)
-    {
+    public void TakeHeader_RemovesAndReturnsProxyRequestHeader(bool copiedHeaders) {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers["name"] = "value0";
         var proxyRequest = new HttpRequestMessage();
         proxyRequest.Headers.Add("Name", "value1");
         proxyRequest.Content = new StringContent("hello world");
         proxyRequest.Content.Headers.Add("Name", "value2");
-        var result = RequestTransform.TakeHeader(new RequestTransformContext()
-        {
+        var result = RequestTransform.TakeHeader(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = copiedHeaders,
@@ -38,14 +35,12 @@ public class RequestTransformTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void TakeHeaderFromContent_RemovesAndReturnsProxyContentHeader(bool copiedHeaders)
-    {
+    public void TakeHeaderFromContent_RemovesAndReturnsProxyContentHeader(bool copiedHeaders) {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.ContentType = "value0";
         var proxyRequest = new HttpRequestMessage();
         proxyRequest.Content = new StringContent("hello world");
-        var result = RequestTransform.TakeHeader(new RequestTransformContext()
-        {
+        var result = RequestTransform.TakeHeader(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = copiedHeaders,
@@ -55,13 +50,11 @@ public class RequestTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersNotCopied_ReturnsHttpRequestHeader()
-    {
+    public void TakeHeader_HeadersNotCopied_ReturnsHttpRequestHeader() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers["name"] = "value0";
         var proxyRequest = new HttpRequestMessage();
-        var result = RequestTransform.TakeHeader(new RequestTransformContext()
-        {
+        var result = RequestTransform.TakeHeader(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = false,
@@ -70,13 +63,11 @@ public class RequestTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersCopied_ReturnsNothing()
-    {
+    public void TakeHeader_HeadersCopied_ReturnsNothing() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers["name"] = "value0";
         var proxyRequest = new HttpRequestMessage();
-        var result = RequestTransform.TakeHeader(new RequestTransformContext()
-        {
+        var result = RequestTransform.TakeHeader(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
@@ -97,28 +88,23 @@ public class RequestTransformTests
     [InlineData("header1; Content-Encoding; Accept-Encoding", "Content-Encoding", "header1; Accept-Encoding")]
     [InlineData("header1; Content-Encoding; Accept-Encoding", "Accept-Encoding", "header1; Content-Encoding")]
     [InlineData("header1; Content-Encoding; Accept-Encoding", "headerX", "header1; Content-Encoding; Accept-Encoding")]
-    public void RemoveHeader_RemovesProxyRequestHeader(string names, string removedHeader, string expected)
-    {
+    public void RemoveHeader_RemovesProxyRequestHeader(string names, string removedHeader, string expected) {
         var httpContext = new DefaultHttpContext();
-        var proxyRequest = new HttpRequestMessage()
-        {
+        var proxyRequest = new HttpRequestMessage() {
             Content = new EmptyHttpContent()
         };
 
-        foreach (var name in names.Split("; "))
-        {
+        foreach (var name in names.Split("; ")) {
             httpContext.Request.Headers[name] = "value0";
             RequestUtilities.AddHeader(proxyRequest, name, "value1");
         }
 
-        RequestTransform.RemoveHeader(new RequestTransformContext()
-        {
+        RequestTransform.RemoveHeader(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest
         }, removedHeader);
 
-        foreach (var name in names.Split("; "))
-        {
+        foreach (var name in names.Split("; ")) {
             Assert.True(httpContext.Request.Headers.TryGetValue(name, out var value));
             Assert.Equal("value0", value);
         }

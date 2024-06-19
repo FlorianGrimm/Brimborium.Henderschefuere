@@ -5,21 +5,17 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class SessionAffinityConfigTests
-{
+public class SessionAffinityConfigTests {
     [Fact]
-    public void Equals_Same_Value_Returns_True()
-    {
-        var options1 = new SessionAffinityConfig
-        {
+    public void Equals_Same_Value_Returns_True() {
+        var options1 = new SessionAffinityConfig {
             Enabled = true,
             FailurePolicy = "policy1",
             Policy = "policy1",
             AffinityKeyName = "Key1"
         };
 
-        var options2 = new SessionAffinityConfig
-        {
+        var options2 = new SessionAffinityConfig {
             Enabled = true,
             FailurePolicy = "Policy1",
             Policy = "Policy1",
@@ -33,18 +29,15 @@ public class SessionAffinityConfigTests
     }
 
     [Fact]
-    public void Equals_Different_Value_Returns_False()
-    {
-        var options1 = new SessionAffinityConfig
-        {
+    public void Equals_Different_Value_Returns_False() {
+        var options1 = new SessionAffinityConfig {
             Enabled = true,
             FailurePolicy = "policy1",
             Policy = "policy1",
             AffinityKeyName = "Key1"
         };
 
-        var options2 = new SessionAffinityConfig
-        {
+        var options2 = new SessionAffinityConfig {
             Enabled = false,
             FailurePolicy = "policy2",
             Policy = "policy2",
@@ -57,10 +50,8 @@ public class SessionAffinityConfigTests
     }
 
     [Fact]
-    public void Equals_Second_Null_Returns_False()
-    {
-        var options1 = new SessionAffinityConfig
-        {
+    public void Equals_Second_Null_Returns_False() {
+        var options1 = new SessionAffinityConfig {
             Enabled = true,
             FailurePolicy = "policy1",
             Policy = "policy1",

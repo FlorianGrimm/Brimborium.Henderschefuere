@@ -15,17 +15,14 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Forwarder.Tests;
 
-public class ForwarderMiddlewareTests : TestAutoMockBase
-{
+public class ForwarderMiddlewareTests : TestAutoMockBase {
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         Create<ForwarderMiddleware>();
     }
 
     [Fact]
-    public async Task Invoke_Works()
-    {
+    public async Task Invoke_Works() {
         var events = TestEventListener.Collect();
 
         var httpContext = new DefaultHttpContext();
@@ -36,8 +33,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
         httpContext.Request.QueryString = new QueryString("?a=b&c=d");
 
         var httpClient = new HttpMessageInvoker(new Mock<HttpMessageHandler>().Object);
-        var httpRequestOptions = new ForwarderRequestConfig
-        {
+        var httpRequestOptions = new ForwarderRequestConfig {
             ActivityTimeout = TimeSpan.FromSeconds(60),
             Version = HttpVersion.Version11,
             VersionPolicy = HttpVersionPolicy.RequestVersionExact,
@@ -47,8 +43,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
             httpClient);
         var destination1 = cluster1.Destinations.GetOrAdd(
             "destination1",
-            id => new DestinationState(id)
-            {
+            id => new DestinationState(id) {
                 Model = new DestinationModel(new DestinationConfig { Address = "https://localhost:123/a/b/" })
             });
         var routeConfig = new RouteModel(
@@ -57,8 +52,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
             transformer: HttpTransformer.Default);
 
         httpContext.Features.Set<IReverseProxyFeature>(
-            new ReverseProxyFeature()
-        {
+            new ReverseProxyFeature() {
                 AvailableDestinations = new List<DestinationState>() { destination1 }.AsReadOnly(),
                 Cluster = clusterModel,
                 Route = routeConfig,
@@ -78,8 +72,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
                     && requestOptions.VersionPolicy == httpRequestOptions.VersionPolicy),
                 It.IsAny<HttpTransformer>()))
             .Returns(
-                async () =>
-                {
+                async () => {
                     tcs1.TrySetResult(true);
                     await tcs2.Task;
                     return ForwarderError.None;
@@ -92,8 +85,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
         Assert.Equal(0, destination1.ConcurrentRequestCount);
 
         var task = sut.Invoke(httpContext);
-        if (task.IsFaulted)
-        {
+        if (task.IsFaulted) {
             // Something went wrong, don't hang the test.
             await task;
         }
@@ -119,8 +111,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
     }
 
     [Fact]
-    public async Task NoDestinations_503()
-    {
+    public async Task NoDestinations_503() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Method = "GET";
         httpContext.Request.Scheme = "https";
@@ -134,8 +125,7 @@ public class ForwarderMiddlewareTests : TestAutoMockBase
             cluster: cluster1,
             transformer: HttpTransformer.Default);
         httpContext.Features.Set<IReverseProxyFeature>(
-            new ReverseProxyFeature()
-            {
+            new ReverseProxyFeature() {
                 AvailableDestinations = Array.Empty<DestinationState>(),
                 Cluster = clusterModel,
                 Route = routeConfig,

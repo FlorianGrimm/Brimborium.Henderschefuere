@@ -8,23 +8,19 @@ using System.Threading.Tasks;
 
 namespace Brimborium.Tests.Common;
 
-internal class MockHttpHandler : HttpMessageHandler
-{
+internal class MockHttpHandler : HttpMessageHandler {
     private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _func;
 
-    public MockHttpHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> func)
-    {
+    public MockHttpHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> func) {
         _func = func ?? throw new ArgumentNullException(nameof(func));
     }
 
-    public static HttpMessageInvoker CreateClient(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> func)
-    {
+    public static HttpMessageInvoker CreateClient(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> func) {
         var handler = new MockHttpHandler(func);
         return new HttpMessageInvoker(handler);
     }
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
         return _func(request, cancellationToken);
     }
 }

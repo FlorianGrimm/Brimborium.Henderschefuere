@@ -9,11 +9,9 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Model.Tests;
 
-public class HttpContextFeaturesExtensions
-{
+public class HttpContextFeaturesExtensions {
     [Fact]
-    public void ReassignProxyRequest_Success()
-    {
+    public void ReassignProxyRequest_Success() {
         var client = new HttpMessageInvoker(new SocketsHttpHandler());
         var context = new DefaultHttpContext();
         var d1 = new DestinationState("d1");
@@ -22,8 +20,7 @@ public class HttpContextFeaturesExtensions
         var cm1 = new ClusterModel(cc1, client);
         var cs1 = new ClusterState("c1") { Model = cm1 };
         var r1 = new RouteModel(new RouteConfig() { RouteId = "r1" }, cs1, HttpTransformer.Empty);
-        var feature = new ReverseProxyFeature()
-        {
+        var feature = new ReverseProxyFeature() {
             AllDestinations = d1,
             AvailableDestinations = d1,
             Cluster = cm1,
@@ -35,8 +32,7 @@ public class HttpContextFeaturesExtensions
 
         var cc2 = new ClusterConfig() { ClusterId = "cc2" };
         var cm2 = new ClusterModel(cc2, client);
-        var cs2 = new ClusterState("cs2")
-        {
+        var cs2 = new ClusterState("cs2") {
             DestinationsState = new ClusterDestinationsState(d2, d2),
             Model = cm2,
         };

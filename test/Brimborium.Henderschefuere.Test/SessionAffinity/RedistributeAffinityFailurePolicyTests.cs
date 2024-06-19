@@ -3,18 +3,18 @@
 
 using System;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class RedistributeAffinityFailurePolicyTests
-{
+public class RedistributeAffinityFailurePolicyTests {
     [Theory]
     [InlineData(AffinityStatus.AffinityKeyExtractionFailed)]
     [InlineData(AffinityStatus.DestinationNotFound)]
-    public async Task Handle_FailedAffinityStatus_ReturnTrue(AffinityStatus status)
-    {
+    public async Task Handle_FailedAffinityStatus_ReturnTrue(AffinityStatus status) {
         var policy = new RedistributeAffinityFailurePolicy();
 
         Assert.Equal(SessionAffinityConstants.FailurePolicies.Redistribute, policy.Name);
@@ -24,8 +24,7 @@ public class RedistributeAffinityFailurePolicyTests
     [Theory]
     [InlineData(AffinityStatus.OK)]
     [InlineData(AffinityStatus.AffinityKeyNotSet)]
-    public async Task Handle_SuccessfulAffinityStatus_Throw(AffinityStatus status)
-    {
+    public async Task Handle_SuccessfulAffinityStatus_Throw(AffinityStatus status) {
         var policy = new RedistributeAffinityFailurePolicy();
         var context = new DefaultHttpContext();
 

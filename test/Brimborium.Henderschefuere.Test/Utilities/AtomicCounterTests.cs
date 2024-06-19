@@ -2,27 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Utilities.Tests;
 
-public class AtomicCounterTests
-{
+public class AtomicCounterTests {
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         new AtomicCounter();
     }
 
     [Fact]
-    public void Increment_ThreadSafety()
-    {
+    public void Increment_ThreadSafety() {
         const int Iterations = 100_000;
 
         var counter = new AtomicCounter();
 
-        Parallel.For(0, Iterations, i =>
-        {
+        Parallel.For(0, Iterations, i => {
             counter.Increment();
         });
 
@@ -30,14 +27,12 @@ public class AtomicCounterTests
     }
 
     [Fact]
-    public void Decrement_ThreadSafety()
-    {
+    public void Decrement_ThreadSafety() {
         const int Iterations = 100_000;
 
         var counter = new AtomicCounter();
 
-        Parallel.For(0, Iterations, i =>
-        {
+        Parallel.For(0, Iterations, i => {
             counter.Decrement();
         });
 

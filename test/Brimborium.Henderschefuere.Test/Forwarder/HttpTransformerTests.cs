@@ -19,8 +19,7 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Forwarder.Tests;
 
-public class HttpTransformerTests
-{
+public class HttpTransformerTests {
     private static readonly string[] RestrictedHeaders = new[]
     {
         HeaderNames.Connection,
@@ -43,21 +42,18 @@ public class HttpTransformerTests
     };
 
     [Fact]
-    public async Task TransformRequestAsync_RemovesRestrictedHeaders()
-    {
+    public async Task TransformRequestAsync_RemovesRestrictedHeaders() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
         var proxyRequest = new HttpRequestMessage(HttpMethod.Get, "https://localhost");
 
-        foreach (var header in RestrictedHeaders)
-        {
+        foreach (var header in RestrictedHeaders) {
             httpContext.Request.Headers[header] = "value";
         }
 
         await transformer.TransformRequestAsync(httpContext, proxyRequest, "prefix", CancellationToken.None);
 
-        foreach (var header in RestrictedHeaders)
-        {
+        foreach (var header in RestrictedHeaders) {
             Assert.False(proxyRequest.Headers.Contains(header));
         }
 
@@ -65,8 +61,7 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformRequestAsync_KeepOriginalHost()
-    {
+    public async Task TransformRequestAsync_KeepOriginalHost() {
         var transformer = HttpTransformer.Empty;
         var httpContext = new DefaultHttpContext();
         var proxyRequest = new HttpRequestMessage(HttpMethod.Get, "https://localhost");
@@ -79,8 +74,7 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformRequestAsync_TETrailers_Copied()
-    {
+    public async Task TransformRequestAsync_TETrailers_Copied() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Protocol = "HTTP/2";
@@ -98,12 +92,10 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformRequestAsync_ContentLengthAndTransferEncoding_ContentLengthRemoved()
-    {
+    public async Task TransformRequestAsync_ContentLengthAndTransferEncoding_ContentLengthRemoved() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
-        var proxyRequest = new HttpRequestMessage(HttpMethod.Get, "https://localhost")
-        {
+        var proxyRequest = new HttpRequestMessage(HttpMethod.Get, "https://localhost") {
             Content = new ByteArrayContent(Array.Empty<byte>())
         };
 
@@ -118,20 +110,16 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformRequestAsync_SetDestinationPrefix()
-    {
+    public async Task TransformRequestAsync_SetDestinationPrefix() {
         const string updatedDestinationPrefix = "https://contoso.com";
-        var transformer = TransformBuilderTests.CreateTransformBuilder().CreateInternal(context =>
-        {
-            context.AddRequestTransform(transformContext =>
-            {
+        var transformer = TransformBuilderTests.CreateTransformBuilder().CreateInternal(context => {
+            context.AddRequestTransform(transformContext => {
                 transformContext.DestinationPrefix = updatedDestinationPrefix;
                 return ValueTask.CompletedTask;
             });
         });
         var httpContext = new DefaultHttpContext();
-        var proxyRequest = new HttpRequestMessage(HttpMethod.Get, requestUri: (string)null)
-        {
+        var proxyRequest = new HttpRequestMessage(HttpMethod.Get, requestUri: (string)null) {
             Content = new ByteArrayContent(Array.Empty<byte>()),
         };
 
@@ -144,13 +132,11 @@ public class HttpTransformerTests
     [InlineData(HttpStatusCode.SwitchingProtocols)]
     [InlineData(HttpStatusCode.NoContent)]
     [InlineData(HttpStatusCode.ResetContent)]
-    public async Task TransformResponseAsync_ContentLength0OnBodylessStatusCode_ContentLengthRemoved(HttpStatusCode statusCode)
-    {
+    public async Task TransformResponseAsync_ContentLength0OnBodylessStatusCode_ContentLengthRemoved(HttpStatusCode statusCode) {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
 
-        var proxyResponse = new HttpResponseMessage(statusCode)
-        {
+        var proxyResponse = new HttpResponseMessage(statusCode) {
             Content = new ByteArrayContent(Array.Empty<byte>())
         };
 
@@ -160,27 +146,22 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformResponseAsync_RemovesRestrictedHeaders()
-    {
+    public async Task TransformResponseAsync_RemovesRestrictedHeaders() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
-        var proxyResponse = new HttpResponseMessage()
-        {
+        var proxyResponse = new HttpResponseMessage() {
             Content = new ByteArrayContent(Array.Empty<byte>())
         };
 
-        foreach (var header in RestrictedHeaders)
-        {
-            if (!proxyResponse.Headers.TryAddWithoutValidation(header, "value"))
-            {
+        foreach (var header in RestrictedHeaders) {
+            if (!proxyResponse.Headers.TryAddWithoutValidation(header, "value")) {
                 Assert.True(proxyResponse.Content.Headers.TryAddWithoutValidation(header, "value"));
             }
         }
 
         await transformer.TransformResponseAsync(httpContext, proxyResponse, CancellationToken.None);
 
-        foreach (var header in RestrictedHeaders)
-        {
+        foreach (var header in RestrictedHeaders) {
             Assert.False(httpContext.Response.Headers.ContainsKey(header));
         }
     }
@@ -188,17 +169,14 @@ public class HttpTransformerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task TransformResponseAsync_StrictTransportSecurity_CopiedIfNotPresent(bool alreadyPresent)
-    {
+    public async Task TransformResponseAsync_StrictTransportSecurity_CopiedIfNotPresent(bool alreadyPresent) {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
-        var proxyResponse = new HttpResponseMessage()
-        {
+        var proxyResponse = new HttpResponseMessage() {
             Content = new ByteArrayContent(Array.Empty<byte>())
         };
 
-        if (alreadyPresent)
-        {
+        if (alreadyPresent) {
             httpContext.Response.Headers.StrictTransportSecurity = "max-age=31536000; includeSubDomains";
         }
 
@@ -207,23 +185,18 @@ public class HttpTransformerTests
         await transformer.TransformResponseAsync(httpContext, proxyResponse, CancellationToken.None);
 
         var result = httpContext.Response.Headers.StrictTransportSecurity;
-        if (alreadyPresent)
-        {
+        if (alreadyPresent) {
             Assert.Equal("max-age=31536000; includeSubDomains", result);
-        }
-        else
-        {
+        } else {
             Assert.Equal("max-age=31000; preload", result);
         }
     }
 
     [Fact]
-    public async Task TransformResponseAsync_ContentLengthAndTransferEncoding_ContentLengthRemoved()
-    {
+    public async Task TransformResponseAsync_ContentLengthAndTransferEncoding_ContentLengthRemoved() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
-        var proxyResponse = new HttpResponseMessage()
-        {
+        var proxyResponse = new HttpResponseMessage() {
             Content = new ByteArrayContent(new byte[10])
         };
 
@@ -238,29 +211,25 @@ public class HttpTransformerTests
     }
 
     [Fact]
-    public async Task TransformResponseTrailersAsync_RemovesRestrictedHeaders()
-    {
+    public async Task TransformResponseTrailersAsync_RemovesRestrictedHeaders() {
         var transformer = HttpTransformer.Default;
         var httpContext = new DefaultHttpContext();
         var trailersFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailersFeature);
         var proxyResponse = new HttpResponseMessage();
 
-        foreach (var header in RestrictedHeaders)
-        {
+        foreach (var header in RestrictedHeaders) {
             Assert.True(proxyResponse.TrailingHeaders.TryAddWithoutValidation(header, "value"));
         }
 
         await transformer.TransformResponseTrailersAsync(httpContext, proxyResponse, CancellationToken.None);
 
-        foreach (var header in RestrictedHeaders)
-        {
+        foreach (var header in RestrictedHeaders) {
             Assert.False(trailersFeature.Trailers.ContainsKey(header));
         }
     }
 
-    public enum ImplementationType
-    {
+    public enum ImplementationType {
         StructuredTransformer,
         DerivedWithoutCT,
         DerivedWithCT,
@@ -271,8 +240,7 @@ public class HttpTransformerTests
 
     [Theory]
     [MemberData(nameof(ImplementationTypes_MemberData))]
-    public async Task DerivedImplementation_TransformRequestAsync_DerivedImplementationCalled(ImplementationType implementationType)
-    {
+    public async Task DerivedImplementation_TransformRequestAsync_DerivedImplementationCalled(ImplementationType implementationType) {
         var implementationCalled = 0;
 
         var transformer = GetTransformerImplementation(implementationType, () => implementationCalled++);
@@ -289,8 +257,7 @@ public class HttpTransformerTests
 
     [Theory]
     [MemberData(nameof(ImplementationTypes_MemberData))]
-    public async Task DerivedImplementation_TransformResponseAsync_DerivedImplementationCalled(ImplementationType implementationType)
-    {
+    public async Task DerivedImplementation_TransformResponseAsync_DerivedImplementationCalled(ImplementationType implementationType) {
         var implementationCalled = 0;
 
         var transformer = GetTransformerImplementation(implementationType, () => implementationCalled++);
@@ -306,8 +273,7 @@ public class HttpTransformerTests
 
     [Theory]
     [MemberData(nameof(ImplementationTypes_MemberData))]
-    public async Task DerivedImplementation_TransformResponseTrailersAsync_DerivedImplementationCalled(ImplementationType implementationType)
-    {
+    public async Task DerivedImplementation_TransformResponseTrailersAsync_DerivedImplementationCalled(ImplementationType implementationType) {
         var implementationCalled = 0;
 
         var transformer = GetTransformerImplementation(implementationType, () => implementationCalled++);
@@ -323,24 +289,18 @@ public class HttpTransformerTests
         Assert.Equal(1, implementationCalled);
     }
 
-    private static HttpTransformer GetTransformerImplementation(ImplementationType implementationType, Action callback)
-    {
-        return implementationType switch
-        {
-            ImplementationType.StructuredTransformer => TransformBuilderTests.CreateTransformBuilder().CreateInternal(context =>
-            {
-                context.AddRequestTransform(context =>
-                {
+    private static HttpTransformer GetTransformerImplementation(ImplementationType implementationType, Action callback) {
+        return implementationType switch {
+            ImplementationType.StructuredTransformer => TransformBuilderTests.CreateTransformBuilder().CreateInternal(context => {
+                context.AddRequestTransform(context => {
                     callback();
                     return default;
                 });
-                context.AddResponseTransform(context =>
-                {
+                context.AddResponseTransform(context => {
                     callback();
                     return default;
                 });
-                context.AddResponseTrailersTransform(context =>
-                {
+                context.AddResponseTrailersTransform(context => {
                     callback();
                     return default;
                 });
@@ -351,27 +311,23 @@ public class HttpTransformerTests
         };
     }
 
-    private sealed class DerivedTransformerWithoutCT : HttpTransformer
-    {
+    private sealed class DerivedTransformerWithoutCT : HttpTransformer {
         public Action Callback { get; set; }
 
 #pragma warning disable CS0672 // We're intentionally testing the obsolete overloads
 #pragma warning disable CS0618
-        public override ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix)
-        {
+        public override ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix) {
             Callback();
 
             return base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix);
         }
 
-        public override ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
-        {
+        public override ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse) {
             Callback();
             return base.TransformResponseAsync(httpContext, proxyResponse);
         }
 
-        public override ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
-        {
+        public override ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse) {
             Callback();
             return base.TransformResponseTrailersAsync(httpContext, proxyResponse);
         }
@@ -379,24 +335,20 @@ public class HttpTransformerTests
 #pragma warning restore CS0672
     }
 
-    private sealed class DerivedTransformerWithCT : HttpTransformer
-    {
+    private sealed class DerivedTransformerWithCT : HttpTransformer {
         public Action Callback { get; set; }
 
-        public override ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix, CancellationToken cancellationToken)
-        {
+        public override ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix, CancellationToken cancellationToken) {
             Callback();
             return base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
         }
 
-        public override ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken)
-        {
+        public override ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken) {
             Callback();
             return base.TransformResponseAsync(httpContext, proxyResponse, cancellationToken);
         }
 
-        public override ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken)
-        {
+        public override ValueTask TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse, CancellationToken cancellationToken) {
             Callback();
             return base.TransformResponseTrailersAsync(httpContext, proxyResponse, cancellationToken);
         }

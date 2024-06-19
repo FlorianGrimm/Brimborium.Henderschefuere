@@ -10,8 +10,7 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseTrailerValueTransformTests
-{
+public class ResponseTrailerValueTransformTests {
     [Theory]
     // Using ";" to represent multi-line headers
     [InlineData("", 400, "new", false, ResponseCondition.Success, "")]
@@ -36,15 +35,13 @@ public class ResponseTrailerValueTransformTests
     [InlineData("start;value", 200, "new", true, ResponseCondition.Success, "start;value;new")]
     [InlineData("start;value", 400, "new", true, ResponseCondition.Always, "start;value;new")]
     [InlineData("start;value", 200, "new", true, ResponseCondition.Always, "start;value;new")]
-    public async Task AddResponseTrailer_Success(string startValue, int status, string value, bool append, ResponseCondition condition, string expected)
-    {
+    public async Task AddResponseTrailer_Success(string startValue, int status, string value, bool append, ResponseCondition condition, string expected) {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
         trailerFeature.Trailers["name"] = startValue.Split(";", System.StringSplitOptions.RemoveEmptyEntries);
         httpContext.Response.StatusCode = status;
-        var transformContext = new ResponseTrailersTransformContext()
-        {
+        var transformContext = new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = new HttpResponseMessage(),
             HeadersCopied = true,

@@ -5,11 +5,9 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Utilities.Tests;
 
-public class RandomFactoryTests
-{
+public class RandomFactoryTests {
     [Fact]
-    public void RandomFactory_Work()
-    {
+    public void RandomFactory_Work() {
         // Set up the factory.
         var factory = new RandomFactory();
 

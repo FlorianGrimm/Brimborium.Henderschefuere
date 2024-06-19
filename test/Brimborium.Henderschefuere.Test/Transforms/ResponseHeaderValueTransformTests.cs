@@ -3,13 +3,14 @@
 
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseHeaderValueTransformTests
-{
+public class ResponseHeaderValueTransformTests {
     [Theory]
     // Using ";" to represent multi-line headers
     [InlineData("", 400, "new", false, ResponseCondition.Success, "", false)]
@@ -38,13 +39,11 @@ public class ResponseHeaderValueTransformTests
     [InlineData("start;value", 200, "new", true, ResponseCondition.Success, "start;value;new", false)]
     [InlineData("start;value", 400, "new", true, ResponseCondition.Always, "start;value;new", false)]
     [InlineData("start;value", 200, "new", true, ResponseCondition.Always, "start;value;new", false)]
-    public async Task AddResponseHeader_Success(string startValue, int status, string value, bool append, ResponseCondition condition, string expected, bool responseNull)
-    {
+    public async Task AddResponseHeader_Success(string startValue, int status, string value, bool append, ResponseCondition condition, string expected, bool responseNull) {
         var httpContext = new DefaultHttpContext();
         httpContext.Response.Headers["name"] = startValue.Split(";", System.StringSplitOptions.RemoveEmptyEntries);
         httpContext.Response.StatusCode = status;
-        var transformContext = new ResponseTransformContext()
-        {
+        var transformContext = new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = responseNull ? null : new HttpResponseMessage(),
             HeadersCopied = true,

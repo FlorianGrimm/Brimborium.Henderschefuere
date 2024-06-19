@@ -12,17 +12,13 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration;
 
-public class YarpRateLimiterPolicyProviderTests
-{
+public class YarpRateLimiterPolicyProviderTests {
     [Fact]
-    public async Task GetPolicyAsync_Works()
-    {
+    public async Task GetPolicyAsync_Works() {
         var services = new ServiceCollection();
 
-        services.AddRateLimiter(options =>
-        {
-            options.AddFixedWindowLimiter("customPolicy", opt =>
-            {
+        services.AddRateLimiter(options => {
+            options.AddFixedWindowLimiter("customPolicy", opt => {
                 opt.PermitLimit = 4;
                 opt.Window = TimeSpan.FromSeconds(12);
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;

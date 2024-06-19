@@ -2,27 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net.Http;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseTransformTests
-{
+public class ResponseTransformTests {
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void TakeHeader_RemovesAndReturnsHttpResponseHeader(bool copiedHeaders)
-    {
+    public void TakeHeader_RemovesAndReturnsHttpResponseHeader(bool copiedHeaders) {
         var httpContext = new DefaultHttpContext();
         httpContext.Response.Headers["name"] = "value0";
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Headers.Add("Name", "value1");
         proxyResponse.Content = new StringContent("hello world");
         proxyResponse.Content.Headers.Add("Name", "value2");
-        var result = ResponseTransform.TakeHeader(new ResponseTransformContext()
-        {
+        var result = ResponseTransform.TakeHeader(new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = copiedHeaders,
@@ -34,15 +33,13 @@ public class ResponseTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersNotCopied_ReturnsHttpResponseMessageHeader()
-    {
+    public void TakeHeader_HeadersNotCopied_ReturnsHttpResponseMessageHeader() {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Headers.Add("Name", "value1");
         proxyResponse.Content = new StringContent("hello world");
         proxyResponse.Content.Headers.Add("Name", "value2");
-        var result = ResponseTransform.TakeHeader(new ResponseTransformContext()
-        {
+        var result = ResponseTransform.TakeHeader(new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -51,14 +48,12 @@ public class ResponseTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersNotCopied_ReturnsHttpContentHeader()
-    {
+    public void TakeHeader_HeadersNotCopied_ReturnsHttpContentHeader() {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Content = new StringContent("hello world");
         proxyResponse.Content.Headers.Add("Name", "value2");
-        var result = ResponseTransform.TakeHeader(new ResponseTransformContext()
-        {
+        var result = ResponseTransform.TakeHeader(new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -67,15 +62,13 @@ public class ResponseTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersCopied_ReturnsNothing()
-    {
+    public void TakeHeader_HeadersCopied_ReturnsNothing() {
         var httpContext = new DefaultHttpContext();
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.Headers.Add("Name", "value1");
         proxyResponse.Content = new StringContent("hello world");
         proxyResponse.Content.Headers.Add("Name", "value2");
-        var result = ResponseTransform.TakeHeader(new ResponseTransformContext()
-        {
+        var result = ResponseTransform.TakeHeader(new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = true,
@@ -84,11 +77,9 @@ public class ResponseTransformTests
     }
 
     [Fact]
-    public void TakeHeader_ResponseNull_ReturnsNothing()
-    {
+    public void TakeHeader_ResponseNull_ReturnsNothing() {
         var httpContext = new DefaultHttpContext();
-        var result = ResponseTransform.TakeHeader(new ResponseTransformContext()
-        {
+        var result = ResponseTransform.TakeHeader(new ResponseTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = null,
             HeadersCopied = false,

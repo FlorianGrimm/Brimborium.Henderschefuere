@@ -5,22 +5,18 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class RouteHeaderTests
-{
+public class RouteHeaderTests {
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void Equals_Positive(bool isCaseSensitive)
-    {
-        var a = new RouteHeader()
-        {
+    public void Equals_Positive(bool isCaseSensitive) {
+        var a = new RouteHeader() {
             Name = "foo",
             Mode = HeaderMatchMode.Exists,
             Values = new[] { "v1", "v2" },
             IsCaseSensitive = isCaseSensitive,
         };
-        var b = new RouteHeader()
-        {
+        var b = new RouteHeader() {
             Name = "Foo",
             Mode = HeaderMatchMode.Exists,
             Values = new[] { "v1", "v2" },
@@ -34,10 +30,8 @@ public class RouteHeaderTests
     }
 
     [Fact]
-    public void Equals_Negative()
-    {
-        var a = new RouteHeader()
-        {
+    public void Equals_Negative() {
+        var a = new RouteHeader() {
             Name = "foo",
             Mode = HeaderMatchMode.Exists,
             Values = new[] { "v1", "v2" },
@@ -54,8 +48,7 @@ public class RouteHeaderTests
     }
 
     [Fact]
-    public void Equals_Null_False()
-    {
+    public void Equals_Null_False() {
         Assert.False(new RouteHeader().Equals(null));
     }
 }

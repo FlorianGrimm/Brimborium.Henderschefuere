@@ -11,8 +11,7 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class DefaultProbingRequestFactoryTests
-{
+public class DefaultProbingRequestFactoryTests {
     [Theory]
     [InlineData("https://localhost:10000/", null, null, null, "https://localhost:10000/")]
     [InlineData("https://localhost:10000/", "https://localhost:20000/", null, null, "https://localhost:20000/")]
@@ -27,11 +26,9 @@ public class DefaultProbingRequestFactoryTests
     [InlineData("https://localhost:10000/api", "https://localhost:20000/", "/health/", "?key=value", "https://localhost:20000/health/?key=value")]
     [InlineData("https://localhost:10000/", "https://localhost:20000/api", "/health/", "?key=value", "https://localhost:20000/api/health/?key=value")]
     [InlineData("https://localhost:10000/", "https://localhost:20000/api", "/health?foo=bar", "?key=value", "https://localhost:20000/api/health%3Ffoo=bar?key=value")]
-    public void CreateRequest_HealthEndpointIsNotDefined_UseDestinationAddress(string address, string health, string healthPath, string query, string expectedRequestUri)
-    {
+    public void CreateRequest_HealthEndpointIsNotDefined_UseDestinationAddress(string address, string health, string healthPath, string query, string expectedRequestUri) {
         var clusterModel = GetClusterConfig("cluster0",
-            new ActiveHealthCheckConfig()
-            {
+            new ActiveHealthCheckConfig() {
                 Enabled = true,
                 Policy = "policy",
                 Path = healthPath,
@@ -48,12 +45,10 @@ public class DefaultProbingRequestFactoryTests
     [Theory]
     [InlineData("1.0")]
     [InlineData(null)]
-    public void CreateRequest_RequestVersionProperties(string versionString)
-    {
+    public void CreateRequest_RequestVersionProperties(string versionString) {
         var version = versionString is not null ? Version.Parse(versionString) : null;
         var clusterModel = GetClusterConfig("cluster0",
-            new ActiveHealthCheckConfig()
-            {
+            new ActiveHealthCheckConfig() {
                 Enabled = true,
                 Policy = "policy",
             }, version, HttpVersionPolicy.RequestVersionExact);
@@ -66,18 +61,14 @@ public class DefaultProbingRequestFactoryTests
         Assert.Equal(HttpVersionPolicy.RequestVersionExact, request.VersionPolicy);
     }
 
-    private ClusterModel GetClusterConfig(string id, ActiveHealthCheckConfig healthCheckOptions, Version version, HttpVersionPolicy versionPolicy = HttpVersionPolicy.RequestVersionExact)
-    {
+    private ClusterModel GetClusterConfig(string id, ActiveHealthCheckConfig healthCheckOptions, Version version, HttpVersionPolicy versionPolicy = HttpVersionPolicy.RequestVersionExact) {
         return new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = id,
-                HealthCheck = new HealthCheckConfig()
-                {
+                HealthCheck = new HealthCheckConfig() {
                     Active = healthCheckOptions,
                 },
-                HttpRequest = new ForwarderRequestConfig
-                {
+                HttpRequest = new ForwarderRequestConfig {
                     ActivityTimeout = TimeSpan.FromSeconds(60),
                     Version = version,
                     VersionPolicy = versionPolicy,

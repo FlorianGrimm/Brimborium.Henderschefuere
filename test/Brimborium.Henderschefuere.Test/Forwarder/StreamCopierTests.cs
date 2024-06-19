@@ -14,13 +14,11 @@ using Brimborium.Henderschefuere.Utilities;
 
 namespace Brimborium.Henderschefuere.Forwarder.Tests;
 
-public class StreamCopierTests : TestAutoMockBase
-{
+public class StreamCopierTests : TestAutoMockBase {
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task CopyAsync_Works(bool isRequest)
-    {
+    public async Task CopyAsync_Works(bool isRequest) {
         var events = TestEventListener.Collect();
 
         const int SourceSize = (128 * 1024) - 3;
@@ -41,8 +39,7 @@ public class StreamCopierTests : TestAutoMockBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task SourceThrows_Reported(bool isRequest)
-    {
+    public async Task SourceThrows_Reported(bool isRequest) {
         var events = TestEventListener.Collect();
 
         var timeProvider = new TestTimeProvider();
@@ -66,8 +63,7 @@ public class StreamCopierTests : TestAutoMockBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task DestinationThrows_Reported(bool isRequest)
-    {
+    public async Task DestinationThrows_Reported(bool isRequest) {
         var events = TestEventListener.Collect();
 
         const int SourceSize = 10;
@@ -95,8 +91,7 @@ public class StreamCopierTests : TestAutoMockBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Cancelled_Reported(bool isRequest)
-    {
+    public async Task Cancelled_Reported(bool isRequest) {
         var events = TestEventListener.Collect();
 
         var source = new MemoryStream(new byte[10]);
@@ -120,8 +115,7 @@ public class StreamCopierTests : TestAutoMockBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task SlowStreams_TelemetryReportsCorrectTime(bool isRequest)
-    {
+    public async Task SlowStreams_TelemetryReportsCorrectTime(bool isRequest) {
         var events = TestEventListener.Collect();
 
         const int SourceSize = 3;
@@ -155,8 +149,7 @@ public class StreamCopierTests : TestAutoMockBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task LongContentTransfer_TelemetryReportsTransferringEvents(bool isRequest)
-    {
+    public async Task LongContentTransfer_TelemetryReportsTransferringEvents(bool isRequest) {
         var events = TestEventListener.Collect();
 
         const int SourceSize = 123;
@@ -192,8 +185,7 @@ public class StreamCopierTests : TestAutoMockBase
         var transferringEvents = events.Where(e => e.EventName == "ContentTransferring").ToArray();
         Assert.Equal(contentReads / 2, transferringEvents.Length);
 
-        for (var i = 0; i < transferringEvents.Length; i++)
-        {
+        for (var i = 0; i < transferringEvents.Length; i++) {
             var payload = transferringEvents[i].Payload;
             Assert.Equal(5, payload.Count);
 
@@ -204,12 +196,9 @@ public class StreamCopierTests : TestAutoMockBase
             var iops = (long)payload[2];
             Assert.Equal((i + 1) * 2, iops);
 
-            if (contentLength % BytesPerRead == 0)
-            {
+            if (contentLength % BytesPerRead == 0) {
                 Assert.Equal(iops * BytesPerRead, contentLength);
-            }
-            else
-            {
+            } else {
                 Assert.Equal(transferringEvents.Length - 1, i);
                 Assert.Equal(SourceSize, contentLength);
             }
@@ -229,8 +218,7 @@ public class StreamCopierTests : TestAutoMockBase
         long? iops = null,
         TimeSpan? firstReadTime = null,
         TimeSpan? readTime = null,
-        TimeSpan? writeTime = null)
-    {
+        TimeSpan? writeTime = null) {
         var contentTransferred = Assert.Single(events, e => e.EventName == "ContentTransferred");
         var payload = contentTransferred.Payload;
         Assert.Equal(6, payload.Count);
@@ -239,31 +227,24 @@ public class StreamCopierTests : TestAutoMockBase
         Assert.Equal(contentLength, (long)payload[1]);
 
         var actualIops = (long)payload[2];
-        if (iops.HasValue)
-        {
+        if (iops.HasValue) {
             Assert.Equal(iops.Value, actualIops);
-        }
-        else
-        {
+        } else {
             Assert.InRange(actualIops, 1, contentLength + 1);
         }
 
-        if (readTime.HasValue)
-        {
+        if (readTime.HasValue) {
             Assert.Equal(readTime.Value, new TimeSpan((long)payload[3]), new ApproximateTimeSpanComparer());
         }
 
-        if (writeTime.HasValue)
-        {
+        if (writeTime.HasValue) {
             Assert.Equal(writeTime.Value, new TimeSpan((long)payload[4]), new ApproximateTimeSpanComparer());
         }
 
-        if (firstReadTime.HasValue)
-        {
+        if (firstReadTime.HasValue) {
             Assert.Equal(firstReadTime.Value, new TimeSpan((long)payload[5]), new ApproximateTimeSpanComparer());
 
-            if (readTime.HasValue)
-            {
+            if (readTime.HasValue) {
                 Assert.True(firstReadTime.Value <= readTime.Value);
             }
         }
@@ -276,41 +257,33 @@ public class StreamCopierTests : TestAutoMockBase
         Assert.True(startTime <= contentTransferred.TimeStamp);
     }
 
-    private class ThrowStream : DelegatingStream
-    {
+    private class ThrowStream : DelegatingStream {
         public ThrowStream()
-            : base(Stream.Null)
-        { }
+            : base(Stream.Null) { }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-        {
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
             throw new IOException("Fake connection issue");
         }
 
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-        {
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
             throw new IOException("Fake connection issue");
         }
     }
 
-    private class SlowStream : DelegatingStream
-    {
+    private class SlowStream : DelegatingStream {
         private readonly TimeSpan _waitTime;
         private readonly TestTimeProvider _timeProvider;
 
         public int MaxBytesPerRead { get; set; } = 1;
 
         public SlowStream(Stream innerStream, TestTimeProvider timeProvider, TimeSpan waitTime)
-            : base(innerStream)
-        {
+            : base(innerStream) {
             _timeProvider = timeProvider;
             _waitTime = waitTime;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-        {
-            if (buffer.Length == 0)
-            {
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
+            if (buffer.Length == 0) {
                 return new ValueTask<int>(0);
             }
 
@@ -318,15 +291,13 @@ public class StreamCopierTests : TestAutoMockBase
             return base.ReadAsync(buffer.Slice(0, Math.Min(buffer.Length, MaxBytesPerRead)), cancellationToken);
         }
 
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-        {
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
             _timeProvider.Advance(_waitTime);
             return base.WriteAsync(buffer, cancellationToken);
         }
     }
 
-    private class ApproximateTimeSpanComparer : IEqualityComparer<TimeSpan>
-    {
+    private class ApproximateTimeSpanComparer : IEqualityComparer<TimeSpan> {
         public TimeSpan Precision { get; set; } = TimeSpan.FromMilliseconds(0.1);
 
         public bool Equals(TimeSpan x, TimeSpan y) => x > y

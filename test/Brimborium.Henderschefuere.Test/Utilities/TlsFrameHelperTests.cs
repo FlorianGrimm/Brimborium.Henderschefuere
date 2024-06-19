@@ -7,51 +7,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Security;
 using System.Security.Authentication;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Utilities.Tls.Tests;
 
-public class TlsFrameHelperTests
-{
+public class TlsFrameHelperTests {
     [Fact]
-    public void SniHelper_ValidData_Ok()
-    {
+    public void SniHelper_ValidData_Ok() {
         InvalidClientHello(s_validClientHello, -1, shouldPass: true);
     }
 
     [Theory]
     [MemberData(nameof(InvalidClientHelloData))]
-    public void SniHelper_InvalidData_Fails(int id, byte[] clientHello)
-    {
+    public void SniHelper_InvalidData_Fails(int id, byte[] clientHello) {
         InvalidClientHello(clientHello, id, shouldPass: false);
     }
 
     [Fact]
-    public void SniHelper_TruncatedData_Fails()
-    {
+    public void SniHelper_TruncatedData_Fails() {
         // moving inside one test because there are more than 3000 cases and they overflow subresults
-        foreach ((int id, byte[] clientHello) in InvalidClientHelloDataTruncatedBytes())
-        {
+        foreach ((int id, byte[] clientHello) in InvalidClientHelloDataTruncatedBytes()) {
             InvalidClientHello(clientHello, id, shouldPass: false);
         }
     }
 
-    private void InvalidClientHello(byte[] clientHello, int id, bool shouldPass)
-    {
+    private void InvalidClientHello(byte[] clientHello, int id, bool shouldPass) {
         var ret = TlsFrameHelper.GetServerName(clientHello);
-        if (shouldPass)
-        {
+        if (shouldPass) {
             Assert.NotNull(ret);
-        }
-        else
-        {
+        } else {
             Assert.Null(ret);
         }
     }
 
     [Fact]
-    public void TlsFrameHelper_ValidData_Ok()
-    {
+    public void TlsFrameHelper_ValidData_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_validClientHello, ref info));
 
@@ -62,8 +53,7 @@ public class TlsFrameHelperTests
     }
 
     [Fact]
-    public void TlsFrameHelper_Tls12ClientHello_Ok()
-    {
+    public void TlsFrameHelper_Tls12ClientHello_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_Tls12ClientHello, ref info));
 
@@ -73,13 +63,11 @@ public class TlsFrameHelperTests
 
         Assert.Equal(46, info.TlsCipherSuites.Length);
         int expectedCiphersCount = 0;
-        for (int i = 0; i < info.TlsCipherSuites.Length; i++)
-        {
+        for (int i = 0; i < info.TlsCipherSuites.Length; i++) {
             // spotcheck on ciphers
             if (info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 ||
                 info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256 ||
-                info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_RSA_WITH_RC4_128_SHA)
-            {
+                info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_RSA_WITH_RC4_128_SHA) {
                 expectedCiphersCount++;
             }
         }
@@ -87,8 +75,7 @@ public class TlsFrameHelperTests
     }
 
     [Fact]
-    public void TlsFrameHelper_Tls13ClientHello_Ok()
-    {
+    public void TlsFrameHelper_Tls13ClientHello_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_Tls13ClientHello, ref info));
 
@@ -98,12 +85,10 @@ public class TlsFrameHelperTests
 
         Assert.Equal(6, info.TlsCipherSuites.Length);
         int expectedCiphersCount = 0;
-        for (int i = 0; i < info.TlsCipherSuites.Length; i++)
-        {
+        for (int i = 0; i < info.TlsCipherSuites.Length; i++) {
             if (info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_AES_256_GCM_SHA384 ||
                 info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_CHACHA20_POLY1305_SHA256 ||
-                info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)
-            {
+                info.TlsCipherSuites.Span[i] == TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) {
                 expectedCiphersCount++;
             }
         }
@@ -112,8 +97,7 @@ public class TlsFrameHelperTests
     }
 
     [Fact]
-    public void TlsFrameHelper_UnifiedClientHello_Ok()
-    {
+    public void TlsFrameHelper_UnifiedClientHello_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_UnifiedHello, ref info));
 #pragma warning disable CS0618 // Ssl2 and Ssl3 are obsolete
@@ -125,9 +109,8 @@ public class TlsFrameHelperTests
         Assert.Equal(TlsHandshakeType.ClientHello, info.HandshakeType);
     }
 
-     [Fact]
-     public void TlsFrameHelper_TlsClientHelloNoExtensions_Ok()
-     {
+    [Fact]
+    public void TlsFrameHelper_TlsClientHelloNoExtensions_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_TlsClientHelloNoExtensions, ref info));
         Assert.Equal(SslProtocols.Tls12, info.Header.Version);
@@ -135,11 +118,10 @@ public class TlsFrameHelperTests
         Assert.Equal(TlsContentType.Handshake, info.Header.Type);
         Assert.Equal(TlsFrameHelper.ApplicationProtocolInfo.None, info.ApplicationProtocols);
         Assert.Equal(TlsHandshakeType.ClientHello, info.HandshakeType);
-     }
+    }
 
     [Fact]
-    public void TlsFrameHelper_Tls12ServerHello_Ok()
-    {
+    public void TlsFrameHelper_Tls12ServerHello_Ok() {
         TlsFrameHelper.TlsFrameInfo info = default;
         Assert.True(TlsFrameHelper.TryGetFrameInfo(s_Tls12ServerHello, ref info));
 
@@ -148,36 +130,29 @@ public class TlsFrameHelperTests
         Assert.Equal(TlsFrameHelper.ApplicationProtocolInfo.Http2, info.ApplicationProtocols);
     }
 
-    public static IEnumerable<object[]> InvalidClientHelloData()
-    {
+    public static IEnumerable<object[]> InvalidClientHelloData() {
         int id = 0;
-        foreach (byte[] invalidClientHello in InvalidClientHello())
-        {
+        foreach (byte[] invalidClientHello in InvalidClientHello()) {
             id++;
             yield return new object[] { id, invalidClientHello };
         }
     }
 
-    public static IEnumerable<Tuple<int, byte[]>> InvalidClientHelloDataTruncatedBytes()
-    {
+    public static IEnumerable<Tuple<int, byte[]>> InvalidClientHelloDataTruncatedBytes() {
         // converting to base64 first to remove duplicated test cases
         var uniqueInvalidHellos = new HashSet<string>();
-        foreach (byte[] invalidClientHello in InvalidClientHello())
-        {
-            for (int i = 0; i < invalidClientHello.Length; i++)
-            {
+        foreach (byte[] invalidClientHello in InvalidClientHello()) {
+            for (int i = 0; i < invalidClientHello.Length; i++) {
                 uniqueInvalidHellos.Add(Convert.ToBase64String(invalidClientHello.Take(i).ToArray()));
             }
         }
 
-        for (int i = 0; i < s_validClientHello.Length; i++)
-        {
+        for (int i = 0; i < s_validClientHello.Length; i++) {
             uniqueInvalidHellos.Add(Convert.ToBase64String(s_validClientHello.Take(i).ToArray()));
         }
 
         int id = 0;
-        foreach (string invalidClientHello in uniqueInvalidHellos)
-        {
+        foreach (string invalidClientHello in uniqueInvalidHellos) {
             id++;
             yield return new Tuple<int, byte[]>(id, Convert.FromBase64String(invalidClientHello));
         }
@@ -471,8 +446,7 @@ public class TlsFrameHelperTests
         0x00, 0x05, 0x00, 0x04, 0x01, 0x00
     };
 
-    private static IEnumerable<byte[]> InvalidClientHello()
-    {
+    private static IEnumerable<byte[]> InvalidClientHello() {
         // This test covers following test cases:
         // - Length of structure off by 1 (search for "length off by 1")
         // - Length of structure is max length (search for "max length")

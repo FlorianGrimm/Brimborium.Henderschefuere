@@ -3,12 +3,12 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
+
 using Xunit.Abstractions;
 
 namespace Brimborium.Henderschefuere.Common;
 
-internal sealed class TestLoggerProvider(ITestOutputHelper output) : ILoggerProvider
-{
+internal sealed class TestLoggerProvider(ITestOutputHelper output) : ILoggerProvider {
     private readonly XunitLoggerProvider _xunitLoggerProvider = new(output);
 
     public ILogger CreateLogger(string categoryName) => new TestLogger(_xunitLoggerProvider.CreateLogger(categoryName), categoryName);

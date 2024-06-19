@@ -11,16 +11,13 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class CookieSessionAffinityPolicyTests
-{
-    private readonly SessionAffinityConfig _config = new SessionAffinityConfig
-    {
+public class CookieSessionAffinityPolicyTests {
+    private readonly SessionAffinityConfig _config = new SessionAffinityConfig {
         Enabled = true,
         Policy = "Cookie",
         FailurePolicy = "Return503Error",
         AffinityKeyName = "My.Affinity",
-        Cookie = new SessionAffinityCookieConfig
-        {
+        Cookie = new SessionAffinityCookieConfig {
             Domain = "mydomain.my",
             HttpOnly = false,
             IsEssential = true,
@@ -33,8 +30,7 @@ public class CookieSessionAffinityPolicyTests
     private readonly IReadOnlyList<DestinationState> _destinations = new[] { new DestinationState("dest-A"), new DestinationState("dest-B"), new DestinationState("dest-C") };
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet() {
         var policy = new CookieSessionAffinityPolicy(
             AffinityTestHelper.GetDataProtector().Object,
             new TestTimeProvider(),
@@ -53,8 +49,7 @@ public class CookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success() {
         var policy = new CookieSessionAffinityPolicy(
             AffinityTestHelper.GetDataProtector().Object,
             new TestTimeProvider(),
@@ -72,8 +67,7 @@ public class CookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_CustomConfigAffinityKeyIsNotExtracted_SetKeyOnResponse()
-    {
+    public void AffinitizedRequest_CustomConfigAffinityKeyIsNotExtracted_SetKeyOnResponse() {
         var policy = new CookieSessionAffinityPolicy(
             AffinityTestHelper.GetDataProtector().Object,
             new TestTimeProvider(),
@@ -87,8 +81,7 @@ public class CookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizeRequest_CookieConfigSpecified_UseIt()
-    {
+    public void AffinitizeRequest_CookieConfigSpecified_UseIt() {
         var policy = new CookieSessionAffinityPolicy(
             AffinityTestHelper.GetDataProtector().Object,
             new TestTimeProvider(),
@@ -102,8 +95,7 @@ public class CookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing()
-    {
+    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing() {
         var policy = new CookieSessionAffinityPolicy(
             AffinityTestHelper.GetDataProtector().Object,
             new TestTimeProvider(),
@@ -122,8 +114,7 @@ public class CookieSessionAffinityPolicyTests
         Assert.False(context.Response.Headers.ContainsKey("Cookie"));
     }
 
-    private string[] GetCookieWithAffinity(DestinationState affinitizedDestination)
-    {
+    private string[] GetCookieWithAffinity(DestinationState affinitizedDestination) {
         return new[] { $"Some-Cookie=ZZZ", $"{_config.AffinityKeyName}={affinitizedDestination.DestinationId.ToUTF8BytesInBase64()}" };
     }
 }

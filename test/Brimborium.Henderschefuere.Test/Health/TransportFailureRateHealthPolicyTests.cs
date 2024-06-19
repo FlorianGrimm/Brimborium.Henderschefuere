@@ -17,11 +17,9 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class TransportFailureRateHealthPolicyTests
-{
+public class TransportFailureRateHealthPolicyTests {
     [Fact]
-    public void RequestProxied_FailureRateLimitExceeded_MarkDestinationUnhealthy()
-    {
+    public void RequestProxied_FailureRateLimitExceeded_MarkDestinationUnhealthy() {
         var options = Options.Create(
             new TransportFailureRateHealthPolicyOptions { DefaultFailureRateLimit = 0.5, DetectionWindowSize = TimeSpan.FromSeconds(30), MinimalTotalCountThreshold = 1 });
         var timeProvider = new TestTimeProvider(TimeSpan.FromMilliseconds(10000));
@@ -39,8 +37,7 @@ public class TransportFailureRateHealthPolicyTests
         Assert.All(cluster1.Destinations.Values, d => Assert.Equal(DestinationHealth.Unknown, d.Health.Passive));
 
         // Successful requests
-        for (var i = 0; i < 3; i++)
-        {
+        for (var i = 0; i < 3; i++) {
             policy.RequestProxied(new DefaultHttpContext(), cluster0, cluster0.Destinations.Values.First());
             policy.RequestProxied(new DefaultHttpContext(), cluster0, cluster0.Destinations.Values.Skip(1).First());
             policy.RequestProxied(new DefaultHttpContext(), cluster1, cluster1.Destinations.Values.First());
@@ -55,8 +52,7 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
 
         // Failed requests
-        for (var i = 0; i < 3; i++)
-        {
+        for (var i = 0; i < 3; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster0, cluster0.Destinations.Values.Skip(1).First());
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.Request), cluster1, cluster1.Destinations.Values.First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(4000));
@@ -79,8 +75,7 @@ public class TransportFailureRateHealthPolicyTests
     }
 
     [Fact]
-    public void RequestProxied_FailureMovedOutOfDetectionWindow_MarkDestinationHealthy()
-    {
+    public void RequestProxied_FailureMovedOutOfDetectionWindow_MarkDestinationHealthy() {
         var options = Options.Create(
             new TransportFailureRateHealthPolicyOptions { DefaultFailureRateLimit = 0.5, DetectionWindowSize = TimeSpan.FromSeconds(30), MinimalTotalCountThreshold = 1 });
         var timeProvider = new TestTimeProvider(TimeSpan.FromMilliseconds(10000));
@@ -90,8 +85,7 @@ public class TransportFailureRateHealthPolicyTests
         var cluster = GetClusterInfo("cluster0", destinationCount: 2);
 
         // Initial failed requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(1000));
         }
@@ -100,8 +94,7 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
 
         // Successful requests
-        for (var i = 0; i < 4; i++)
-        {
+        for (var i = 0; i < 4; i++) {
             policy.RequestProxied(new DefaultHttpContext(), cluster, cluster.Destinations.Values.First());
             policy.RequestProxied(new DefaultHttpContext(), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(5000));
@@ -113,8 +106,7 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
 
         // Failed requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(1));
         }
@@ -127,8 +119,7 @@ public class TransportFailureRateHealthPolicyTests
         timeProvider.Advance(TimeSpan.FromMilliseconds(10998));
 
         // New successful requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(new DefaultHttpContext(), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(1));
         }
@@ -141,8 +132,7 @@ public class TransportFailureRateHealthPolicyTests
     }
 
     [Fact]
-    public void RequestProxied_FailedAndReactivationLessDetection_UseDetectionPeriodForReactivation()
-    {
+    public void RequestProxied_FailedAndReactivationLessDetection_UseDetectionPeriodForReactivation() {
         var options = Options.Create(
             new TransportFailureRateHealthPolicyOptions { DefaultFailureRateLimit = 0.5, DetectionWindowSize = TimeSpan.FromSeconds(30), MinimalTotalCountThreshold = 1 });
         var timeProvider = new TestTimeProvider(TimeSpan.FromMilliseconds(10000));
@@ -152,8 +142,7 @@ public class TransportFailureRateHealthPolicyTests
         var cluster = GetClusterInfo("cluster0", destinationCount: 2, reactivationPeriod: TimeSpan.FromSeconds(10));
 
         // Initial failed requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(1000));
         }
@@ -175,8 +164,7 @@ public class TransportFailureRateHealthPolicyTests
     }
 
     [Fact]
-    public void RequestProxied_MultipleConcurrentRequests_MarkDestinationUnhealthyAndHealthyAgain()
-    {
+    public void RequestProxied_MultipleConcurrentRequests_MarkDestinationUnhealthyAndHealthyAgain() {
         var options = Options.Create(
             new TransportFailureRateHealthPolicyOptions { DefaultFailureRateLimit = 0.5, DetectionWindowSize = TimeSpan.FromSeconds(30), MinimalTotalCountThreshold = 1 });
         var timeProvider = new TestTimeProvider(TimeSpan.FromMilliseconds(10000));
@@ -190,8 +178,7 @@ public class TransportFailureRateHealthPolicyTests
         Assert.All(cluster.Destinations.Values, d => Assert.Equal(DestinationHealth.Unknown, d.Health.Passive));
 
         // Initial sucessful requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(new DefaultHttpContext(), cluster, cluster.Destinations.Values.Skip(1).First());
         }
 
@@ -200,8 +187,7 @@ public class TransportFailureRateHealthPolicyTests
 
         // Concurrent failed requests.
         // They are 'concurrent' because the timeProvider is not updated.
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster, cluster.Destinations.Values.Skip(1).First());
         }
 
@@ -210,8 +196,7 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
 
         // More successful requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(new DefaultHttpContext(), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(100));
         }
@@ -221,8 +206,7 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
 
         // More failed requests
-        for (var i = 0; i < 2; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             policy.RequestProxied(GetFailedRequestContext(ForwarderError.RequestTimedOut), cluster, cluster.Destinations.Values.Skip(1).First());
             timeProvider.Advance(TimeSpan.FromMilliseconds(100));
         }
@@ -237,27 +221,22 @@ public class TransportFailureRateHealthPolicyTests
         healthUpdater.VerifyNoOtherCalls();
     }
 
-    private HttpContext GetFailedRequestContext(ForwarderError error)
-    {
+    private HttpContext GetFailedRequestContext(ForwarderError error) {
         var errorFeature = new ForwarderErrorFeature(error, null);
         var context = new DefaultHttpContext();
         context.Features.Set<IForwarderErrorFeature>(errorFeature);
         return context;
     }
 
-    private ClusterState GetClusterInfo(string id, int destinationCount, double? failureRateLimit = null, TimeSpan? reactivationPeriod = null)
-    {
+    private ClusterState GetClusterInfo(string id, int destinationCount, double? failureRateLimit = null, TimeSpan? reactivationPeriod = null) {
         var metadata = failureRateLimit is not null
             ? new Dictionary<string, string> { { TransportFailureRateHealthPolicyOptions.FailureRateLimitMetadataName, failureRateLimit?.ToString(CultureInfo.InvariantCulture) } }
             : null;
         var clusterModel = new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = id,
-                HealthCheck = new HealthCheckConfig
-                {
-                    Passive = new PassiveHealthCheckConfig
-                    {
+                HealthCheck = new HealthCheckConfig {
+                    Passive = new PassiveHealthCheckConfig {
                         Enabled = true,
                         Policy = "policy",
                         ReactivationPeriod = reactivationPeriod,
@@ -268,12 +247,10 @@ public class TransportFailureRateHealthPolicyTests
             new HttpMessageInvoker(new HttpClientHandler()));
         var clusterState = new ClusterState(id);
         clusterState.Model = clusterModel;
-        for (var i = 0; i < destinationCount; i++)
-        {
+        for (var i = 0; i < destinationCount; i++) {
             var destinationModel = new DestinationModel(new DestinationConfig { Address = $"https://localhost:1000{i}/{id}/", Health = $"https://localhost:2000{i}/{id}/" });
             var destinationId = $"destination{i}";
-            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id)
-            {
+            clusterState.Destinations.GetOrAdd(destinationId, id => new DestinationState(id) {
                 Model = destinationModel
             });
         }

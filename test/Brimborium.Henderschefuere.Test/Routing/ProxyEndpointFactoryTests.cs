@@ -21,34 +21,28 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Routing.Tests;
 
-public class ProxyEndpointFactoryTests
-{
-    private IServiceProvider CreateServices()
-    {
+public class ProxyEndpointFactoryTests {
+    private IServiceProvider CreateServices() {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddSingleton<ProxyEndpointFactory, ProxyEndpointFactory>();
         return serviceCollection.BuildServiceProvider();
     }
 
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         var services = CreateServices();
         _ = services.GetRequiredService<ProxyEndpointFactory>();
     }
 
     [Fact]
-    public void AddEndpoint_HostAndPath_Works()
-    {
+    public void AddEndpoint_HostAndPath_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Hosts = new[] { "example.com" },
                 Path = "/a",
             },
@@ -72,8 +66,7 @@ public class ProxyEndpointFactoryTests
         Assert.Equal("example.com", hostMetadata.Hosts[0]);
     }
 
-    private (RouteEndpoint routeEndpoint, RouteModel routeConfig) CreateEndpoint(ProxyEndpointFactory factory, RouteState routeState, RouteConfig routeConfig, ClusterState clusterState)
-    {
+    private (RouteEndpoint routeEndpoint, RouteModel routeConfig) CreateEndpoint(ProxyEndpointFactory factory, RouteState routeState, RouteConfig routeConfig, ClusterState clusterState) {
         routeState.ClusterRevision = clusterState.Revision;
         var routeModel = new RouteModel(routeConfig, clusterState, HttpTransformer.Default);
 
@@ -85,17 +78,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_JustHost_Works()
-    {
+    public void AddEndpoint_JustHost_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Hosts = new[] { "example.com" },
             },
             Order = 12,
@@ -119,17 +109,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_JustHostWithWildcard_Works()
-    {
+    public void AddEndpoint_JustHostWithWildcard_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Hosts = new[] { "*.example.com" },
             },
             Order = 12,
@@ -153,17 +140,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_JustPath_Works()
-    {
+    public void AddEndpoint_JustPath_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Path = "/a",
             },
             Order = 12,
@@ -185,14 +169,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_NullMatchers_Works()
-    {
+    public void AddEndpoint_NullMatchers_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Order = 12,
             Match = new RouteMatch()
@@ -214,17 +196,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_InvalidPath_BubblesOutException()
-    {
+    public void AddEndpoint_InvalidPath_BubblesOutException() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Path = "/{invalid",
             },
             Order = 12,
@@ -238,14 +217,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_DefaultAuth_Works()
-    {
+    public void AddEndpoint_DefaultAuth_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             AuthorizationPolicy = "defaulT",
             Order = 12,
@@ -261,14 +238,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_AnonymousAuth_Works()
-    {
+    public void AddEndpoint_AnonymousAuth_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             AuthorizationPolicy = "AnonymouS",
             Order = 12,
@@ -283,14 +258,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_CustomAuth_Works()
-    {
+    public void AddEndpoint_CustomAuth_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             AuthorizationPolicy = "custom",
             Order = 12,
@@ -306,14 +279,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_NoAuth_Works()
-    {
+    public void AddEndpoint_NoAuth_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Order = 12,
             Match = new RouteMatch(),
@@ -329,14 +300,12 @@ public class ProxyEndpointFactoryTests
 
 #if NET7_0_OR_GREATER
     [Fact]
-    public void AddEndpoint_DefaultRateLimiter_Works()
-    {
+    public void AddEndpoint_DefaultRateLimiter_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             RateLimiterPolicy = "defaulT",
             Order = 12,
@@ -352,14 +321,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_CustomRateLimiter_Works()
-    {
+    public void AddEndpoint_CustomRateLimiter_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             RateLimiterPolicy = "custom",
             Order = 12,
@@ -377,14 +344,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_DisableRateLimiter_Works()
-    {
+    public void AddEndpoint_DisableRateLimiter_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             RateLimiterPolicy = "disAble",
             Order = 12,
@@ -400,14 +365,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_NoRateLimiter_Works()
-    {
+    public void AddEndpoint_NoRateLimiter_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Order = 12,
             Match = new RouteMatch(),
@@ -423,14 +386,12 @@ public class ProxyEndpointFactoryTests
 #endif
 #if NET8_0_OR_GREATER
     [Fact]
-    public void AddEndpoint_CustomTimeoutPolicy_Works()
-    {
+    public void AddEndpoint_CustomTimeoutPolicy_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             TimeoutPolicy = "custom",
             Order = 12,
@@ -449,14 +410,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_CustomTimeout_Works()
-    {
+    public void AddEndpoint_CustomTimeout_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Timeout = TimeSpan.FromSeconds(5),
             Order = 12,
@@ -475,14 +434,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_DisableTimeoutPolicy_Works()
-    {
+    public void AddEndpoint_DisableTimeoutPolicy_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             TimeoutPolicy = "disAble",
             Order = 12,
@@ -498,14 +455,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_NoTimeoutPolicy_Works()
-    {
+    public void AddEndpoint_NoTimeoutPolicy_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Order = 12,
             Match = new RouteMatch(),
@@ -521,14 +476,12 @@ public class ProxyEndpointFactoryTests
 #endif
 
     [Fact]
-    public void AddEndpoint_DefaultCors_Works()
-    {
+    public void AddEndpoint_DefaultCors_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             CorsPolicy = "defaulT",
             Order = 12,
@@ -545,14 +498,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_CustomCors_Works()
-    {
+    public void AddEndpoint_CustomCors_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             CorsPolicy = "custom",
             Order = 12,
@@ -569,14 +520,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_DisableCors_Works()
-    {
+    public void AddEndpoint_DisableCors_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             CorsPolicy = "disAble",
             Order = 12,
@@ -592,14 +541,12 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void AddEndpoint_NoCors_Works()
-    {
+    public void AddEndpoint_NoCors_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
             Order = 12,
             Match = new RouteMatch(),
@@ -614,17 +561,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void BuildEndpoints_Header_Works()
-    {
+    public void BuildEndpoints_Header_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Path = "/",
                 Headers = new[]
                 {
@@ -659,17 +603,14 @@ public class ProxyEndpointFactoryTests
     }
 
     [Fact]
-    public void BuildEndpoints_Headers_Works()
-    {
+    public void BuildEndpoints_Headers_Works() {
         var services = CreateServices();
         var factory = services.GetRequiredService<ProxyEndpointFactory>();
         factory.SetProxyPipeline(context => Task.CompletedTask);
 
-        var route = new RouteConfig
-        {
+        var route = new RouteConfig {
             RouteId = "route1",
-            Match = new RouteMatch
-            {
+            Match = new RouteMatch {
                 Path = "/",
                 Headers = new[]
                 {

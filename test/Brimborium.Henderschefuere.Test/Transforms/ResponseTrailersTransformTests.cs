@@ -10,21 +10,18 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseTrailersTransformTests
-{
+public class ResponseTrailersTransformTests {
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void TakeHeader_RemovesAndReturnsHttpResponseTrailer(bool copiedHeaders)
-    {
+    public void TakeHeader_RemovesAndReturnsHttpResponseTrailer(bool copiedHeaders) {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
         trailerFeature.Trailers["name"] = "value0";
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.TrailingHeaders.Add("Name", "value1");
-        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext()
-        {
+        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = copiedHeaders,
@@ -35,15 +32,13 @@ public class ResponseTrailersTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersNotCopied_ReturnsHttpResponseMessageTrailer()
-    {
+    public void TakeHeader_HeadersNotCopied_ReturnsHttpResponseMessageTrailer() {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.TrailingHeaders.Add("Name", "value1");
-        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext()
-        {
+        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = false,
@@ -54,15 +49,13 @@ public class ResponseTrailersTransformTests
     }
 
     [Fact]
-    public void TakeHeader_HeadersCopied_ReturnsNothing()
-    {
+    public void TakeHeader_HeadersCopied_ReturnsNothing() {
         var httpContext = new DefaultHttpContext();
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
         var proxyResponse = new HttpResponseMessage();
         proxyResponse.TrailingHeaders.Add("Name", "value1");
-        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext()
-        {
+        var result = ResponseTrailersTransform.TakeHeader(new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = true,

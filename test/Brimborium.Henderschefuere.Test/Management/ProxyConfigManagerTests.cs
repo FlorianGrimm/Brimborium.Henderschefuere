@@ -65,8 +65,8 @@ public class ProxyConfigManagerTests {
 
     private static IServiceProvider CreateServices(
         IEnumerable<IProxyConfigProvider> configProviders,
-        Action<IReverseProxyBuilder> configureProxy = null,
-        IEnumerable<IConfigChangeListener> configListeners = null) {
+        Action<IReverseProxyBuilder>? configureProxy = null,
+        IEnumerable<IConfigChangeListener>? configListeners = null) {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging();
         serviceCollection.AddRouting();
@@ -271,8 +271,8 @@ public class ProxyConfigManagerTests {
             Match = new RouteMatch { Path = "/" }
         };
 
-        var config1 = new InMemoryConfigProvider([], new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster1 });
-        var config2 = new InMemoryConfigProvider([], new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 });
+        var config1 = new InMemoryConfigProvider(new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster1 });
+        var config2 = new InMemoryConfigProvider(new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster2 });
 
         var services = CreateServices(new[] { config1, config2 });
 
@@ -353,8 +353,8 @@ public class ProxyConfigManagerTests {
             Match = new RouteMatch { Path = "/" }
         };
 
-        var config1 = new InMemoryConfigProvider([], new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster1 });
-        var config2 = new InMemoryConfigProvider([], new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster2 });
+        var config1 = new InMemoryConfigProvider(new List<RouteConfig>() { route2 }, new List<ClusterConfig>() { cluster1 });
+        var config2 = new InMemoryConfigProvider(new List<RouteConfig>() { route1 }, new List<ClusterConfig>() { cluster2 });
 
         var services = CreateServices(new[] { config1, config2 });
 
@@ -624,8 +624,8 @@ public class ProxyConfigManagerTests {
 
     [Fact]
     public async Task BuildConfig_CanBeNotifiedOfProxyConfigSuccessfulAndFailedUpdating() {
-        var configProviderA = new InMemoryConfigProvider([], new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "A1");
-        var configProviderB = new InMemoryConfigProvider([], new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "B1");
+        var configProviderA = new InMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "A1");
+        var configProviderB = new InMemoryConfigProvider(new List<RouteConfig>() { }, new List<ClusterConfig>() { }, "B1");
 
         var configChangeListenerCounter = new ConfigChangeListenerCounter();
         var fakeConfigChangeListener = new FakeConfigChangeListener();

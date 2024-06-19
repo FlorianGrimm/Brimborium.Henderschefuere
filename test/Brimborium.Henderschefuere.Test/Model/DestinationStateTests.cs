@@ -3,20 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Model.Tests;
 
-public class DestinationStateTests
-{
+public class DestinationStateTests {
     [Fact]
-    public void DestinationInfoEnumerator()
-    {
+    public void DestinationInfoEnumerator() {
         var destinationInfo = new DestinationState("destionation1");
         var list = new List<DestinationState>();
 
-        foreach (var item in destinationInfo)
-        {
+        foreach (var item in destinationInfo) {
             list.Add(item);
         }
 
@@ -25,8 +23,7 @@ public class DestinationStateTests
     }
 
     [Fact]
-    public void DestionationInfoReadOnlyList()
-    {
+    public void DestionationInfoReadOnlyList() {
         var destinationInfo = new DestinationState("destionation2");
 
         IReadOnlyList<DestinationState> list = destinationInfo;

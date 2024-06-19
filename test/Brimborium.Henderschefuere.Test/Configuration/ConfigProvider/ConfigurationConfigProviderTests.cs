@@ -20,12 +20,10 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Configuration.ConfigProvider.Tests;
 
-public class ConfigurationConfigProviderTests
-{
+public class ConfigurationConfigProviderTests {
     #region JSON test configuration
 
-    private readonly ConfigurationSnapshot _validConfigurationData = new ConfigurationSnapshot()
-    {
+    private readonly ConfigurationSnapshot _validConfigurationData = new ConfigurationSnapshot() {
         Clusters =
         {
             {
@@ -408,8 +406,7 @@ public class ConfigurationConfigProviderTests
     #endregion
 
     [Fact]
-    public void GetConfig_ValidSerializedConfiguration_ConvertToAbstractionsSuccessfully()
-    {
+    public void GetConfig_ValidSerializedConfiguration_ConvertToAbstractionsSuccessfully() {
         var builder = new ConfigurationBuilder();
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(_validJsonConfig));
         var proxyConfig = builder.AddJsonStream(stream).Build();
@@ -423,8 +420,7 @@ public class ConfigurationConfigProviderTests
     }
 
     [Fact]
-    public void GetConfig_ValidConfiguration_AllAbstractionsPropertiesAreSet()
-    {
+    public void GetConfig_ValidConfiguration_AllAbstractionsPropertiesAreSet() {
         var builder = new ConfigurationBuilder();
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(_validJsonConfig));
         var proxyConfig = builder.AddJsonStream(stream).Build();
@@ -440,10 +436,8 @@ public class ConfigurationConfigProviderTests
 
         VerifyAllPropertiesAreSet(abstractConfig);
 
-        void VerifyFullyInitialized(object obj, string name)
-        {
-            switch (obj)
-            {
+        void VerifyFullyInitialized(object obj, string name) {
+            switch (obj) {
                 case null:
                     Assert.Fail($"Property {name} is not initialized.");
                     break;
@@ -456,69 +450,58 @@ public class ConfigurationConfigProviderTests
                 case ValueType v:
                     var equals = Equals(Activator.CreateInstance(v.GetType()), v);
                     Assert.False(equals, $"Property {name} is not initialized.");
-                    if (v.GetType().Namespace == abstractionsNamespace)
-                    {
+                    if (v.GetType().Namespace == abstractionsNamespace) {
                         VerifyAllPropertiesAreSet(v);
                     }
                     break;
                 case IDictionary d:
                     Assert.NotEmpty(d);
-                    foreach (var value in d.Values)
-                    {
+                    foreach (var value in d.Values) {
                         VerifyFullyInitialized(value, name);
                     }
                     break;
                 case IEnumerable e:
                     Assert.NotEmpty(e);
-                    foreach (var item in e)
-                    {
+                    foreach (var item in e) {
                         VerifyFullyInitialized(item, name);
                     }
 
                     var type = e.GetType();
-                    if (!type.IsArray && type.Namespace == abstractionsNamespace)
-                    {
+                    if (!type.IsArray && type.Namespace == abstractionsNamespace) {
                         VerifyAllPropertiesAreSet(e);
                     }
                     break;
                 case object o:
-                    if (o.GetType().Namespace == abstractionsNamespace)
-                    {
+                    if (o.GetType().Namespace == abstractionsNamespace) {
                         VerifyAllPropertiesAreSet(o);
                     }
                     break;
             }
         }
 
-        void VerifyAllPropertiesAreSet(object obj)
-        {
+        void VerifyAllPropertiesAreSet(object obj) {
             var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Cast<PropertyInfo>();
-            foreach (var property in properties)
-            {
+            foreach (var property in properties) {
                 VerifyFullyInitialized(property.GetValue(obj), $"{property.DeclaringType.Name}.{property.Name}");
             }
         }
     }
 
-    private void TriggerOnChange(IConfigurationRoot configurationRoot)
-    {
+    private void TriggerOnChange(IConfigurationRoot configurationRoot) {
         // This method is protected so we use reflection to trigger it. The alternative is to wrap or implement
         // a custom configuration provider and expose OnReload as a public method
         var reload = typeof(ConfigurationProvider).GetMethod("OnReload", BindingFlags.NonPublic | BindingFlags.Instance);
 
         Assert.NotNull(reload);
 
-        foreach (var provider in configurationRoot.Providers)
-        {
-            if (provider is ConfigurationProvider configProvider)
-            {
+        foreach (var provider in configurationRoot.Providers) {
+            if (provider is ConfigurationProvider configProvider) {
                 reload.Invoke(configProvider, Array.Empty<object>());
             }
         }
     }
 
-    private void VerifyValidAbstractConfig(IProxyConfig validConfig, IProxyConfig abstractConfig)
-    {
+    private void VerifyValidAbstractConfig(IProxyConfig validConfig, IProxyConfig abstractConfig) {
         Assert.NotNull(abstractConfig);
         Assert.Equal(2, abstractConfig.Clusters.Count);
 
@@ -585,8 +568,7 @@ public class ConfigurationConfigProviderTests
         VerifyRoute(validConfig, abstractConfig, "routeB");
     }
 
-    private void VerifyRoute(IProxyConfig validConfig, IProxyConfig abstractConfig, string routeId)
-    {
+    private void VerifyRoute(IProxyConfig validConfig, IProxyConfig abstractConfig, string routeId) {
         var route = validConfig.Routes.Single(c => c.RouteId == routeId);
         Assert.Single(abstractConfig.Routes.Where(c => c.RouteId == routeId));
         var abstractRoute = abstractConfig.Routes.Single(c => c.RouteId == routeId);

@@ -2,45 +2,38 @@
 // Licensed under the MIT License.
 
 using System;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class HealthCheckConfigTests
-{
+public class HealthCheckConfigTests {
     [Fact]
-    public void Equals_Same_Value_Returns_True()
-    {
-        var options1 = new HealthCheckConfig
-        {
-            Active = new ActiveHealthCheckConfig
-            {
+    public void Equals_Same_Value_Returns_True() {
+        var options1 = new HealthCheckConfig {
+            Active = new ActiveHealthCheckConfig {
                 Enabled = true,
                 Interval = TimeSpan.FromSeconds(2),
                 Timeout = TimeSpan.FromSeconds(1),
                 Policy = "Any5xxResponse",
                 Path = "/a",
             },
-            Passive = new PassiveHealthCheckConfig
-            {
+            Passive = new PassiveHealthCheckConfig {
                 Enabled = true,
                 Policy = "Passive",
                 ReactivationPeriod = TimeSpan.FromSeconds(5),
             }
         };
 
-        var options2 = new HealthCheckConfig
-        {
-            Active = new ActiveHealthCheckConfig
-            {
+        var options2 = new HealthCheckConfig {
+            Active = new ActiveHealthCheckConfig {
                 Enabled = true,
                 Interval = TimeSpan.FromSeconds(2),
                 Timeout = TimeSpan.FromSeconds(1),
                 Policy = "any5xxResponse",
                 Path = "/a",
             },
-            Passive = new PassiveHealthCheckConfig
-            {
+            Passive = new PassiveHealthCheckConfig {
                 Enabled = true,
                 Policy = "passive",
                 ReactivationPeriod = TimeSpan.FromSeconds(5),
@@ -54,38 +47,31 @@ public class HealthCheckConfigTests
     }
 
     [Fact]
-    public void Equals_Different_Value_Returns_False()
-    {
-        var options1 = new HealthCheckConfig
-        {
-            Active = new ActiveHealthCheckConfig
-            {
+    public void Equals_Different_Value_Returns_False() {
+        var options1 = new HealthCheckConfig {
+            Active = new ActiveHealthCheckConfig {
                 Enabled = true,
                 Interval = TimeSpan.FromSeconds(2),
                 Timeout = TimeSpan.FromSeconds(1),
                 Policy = "Any5xxResponse",
                 Path = "/a",
             },
-            Passive = new PassiveHealthCheckConfig
-            {
+            Passive = new PassiveHealthCheckConfig {
                 Enabled = true,
                 Policy = "Passive",
                 ReactivationPeriod = TimeSpan.FromSeconds(5),
             }
         };
 
-        var options2 = new HealthCheckConfig
-        {
-            Active = new ActiveHealthCheckConfig
-            {
+        var options2 = new HealthCheckConfig {
+            Active = new ActiveHealthCheckConfig {
                 Enabled = true,
                 Interval = TimeSpan.FromSeconds(2),
                 Timeout = TimeSpan.FromSeconds(1),
                 Policy = "Different",
                 Path = "/a",
             },
-            Passive = new PassiveHealthCheckConfig
-            {
+            Passive = new PassiveHealthCheckConfig {
                 Enabled = true,
                 Policy = "Passive",
                 ReactivationPeriod = TimeSpan.FromSeconds(5),
@@ -98,8 +84,7 @@ public class HealthCheckConfigTests
     }
 
     [Fact]
-    public void Equals_Second_Null_Returns_False()
-    {
+    public void Equals_Second_Null_Returns_False() {
         var options1 = new HealthCheckConfig();
 
         var equals = options1.Equals(null);

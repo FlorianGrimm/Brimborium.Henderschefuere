@@ -11,18 +11,15 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Microsoft.AspNetCore.Builder.Tests;
 
-public class ReverseProxyConventionBuilderTests
-{
+public class ReverseProxyConventionBuilderTests {
     [Fact]
-    public void ReverseProxyConventionBuilder_Configure_Works()
-    {
+    public void ReverseProxyConventionBuilder_Configure_Works() {
         var configured = false;
 
         var conventions = new List<Action<EndpointBuilder>>();
         var builder = new ReverseProxyConventionBuilder(conventions);
 
-        builder.ConfigureEndpoints(builder =>
-        {
+        builder.ConfigureEndpoints(builder => {
             configured = true;
         });
 
@@ -37,15 +34,13 @@ public class ReverseProxyConventionBuilderTests
     }
 
     [Fact]
-    public void ReverseProxyConventionBuilder_ConfigureWithProxy_Works()
-    {
+    public void ReverseProxyConventionBuilder_ConfigureWithProxy_Works() {
         var configured = false;
 
         var conventions = new List<Action<EndpointBuilder>>();
         var builder = new ReverseProxyConventionBuilder(conventions);
 
-        builder.ConfigureEndpoints((builder, proxy) =>
-        {
+        builder.ConfigureEndpoints((builder, proxy) => {
             configured = true;
         });
 
@@ -60,15 +55,13 @@ public class ReverseProxyConventionBuilderTests
     }
 
     [Fact]
-    public void ReverseProxyConventionBuilder_ConfigureWithProxyAndCluster_Works()
-    {
+    public void ReverseProxyConventionBuilder_ConfigureWithProxyAndCluster_Works() {
         var configured = false;
 
         var conventions = new List<Action<EndpointBuilder>>();
         var builder = new ReverseProxyConventionBuilder(conventions);
 
-        builder.ConfigureEndpoints((builder, proxy, cluster) =>
-        {
+        builder.ConfigureEndpoints((builder, proxy, cluster) => {
             configured = true;
         });
 
@@ -82,13 +75,11 @@ public class ReverseProxyConventionBuilderTests
         Assert.True(configured);
     }
 
-    private static RouteEndpointBuilder CreateEndpointBuilder(RouteConfig routeConfig, ClusterConfig cluster)
-    {
+    private static RouteEndpointBuilder CreateEndpointBuilder(RouteConfig routeConfig, ClusterConfig cluster) {
         var endpointBuilder = new RouteEndpointBuilder(context => Task.CompletedTask, RoutePatternFactory.Parse(""), 0);
         var routeModel = new RouteModel(
             routeConfig,
-            new ClusterState("cluster-1")
-            {
+            new ClusterState("cluster-1") {
                 Model = new ClusterModel(cluster, new HttpMessageInvoker(new HttpClientHandler()))
             },
             HttpTransformer.Default);

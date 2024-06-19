@@ -3,18 +3,18 @@
 
 using System;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class Return503ErrorAffinityFailurePolicyTests
-{
+public class Return503ErrorAffinityFailurePolicyTests {
     [Theory]
     [InlineData(AffinityStatus.DestinationNotFound)]
     [InlineData(AffinityStatus.AffinityKeyExtractionFailed)]
-    public async Task Handle_FaultyAffinityStatus_RespondWith503(AffinityStatus status)
-    {
+    public async Task Handle_FaultyAffinityStatus_RespondWith503(AffinityStatus status) {
         var policy = new Return503ErrorAffinityFailurePolicy();
         var context = new DefaultHttpContext();
 
@@ -27,8 +27,7 @@ public class Return503ErrorAffinityFailurePolicyTests
     [Theory]
     [InlineData(AffinityStatus.OK)]
     [InlineData(AffinityStatus.AffinityKeyNotSet)]
-    public async Task Handle_SuccessfulAffinityStatus_Throw(AffinityStatus status)
-    {
+    public async Task Handle_SuccessfulAffinityStatus_Throw(AffinityStatus status) {
         var policy = new Return503ErrorAffinityFailurePolicy();
         var context = new DefaultHttpContext();
 

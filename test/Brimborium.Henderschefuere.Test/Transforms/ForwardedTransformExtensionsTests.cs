@@ -13,8 +13,7 @@ using Brimborium.Henderschefuere.Utilities;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
-{
+public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase {
     private readonly ForwardedTransformFactory _factory = new ForwardedTransformFactory(new TestRandomFactory());
 
     [Theory]
@@ -33,47 +32,34 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
         ForwardedTransformActions? xFor,
         ForwardedTransformActions? xHost,
         ForwardedTransformActions? xProto,
-        ForwardedTransformActions? xPrefix)
-    {
+        ForwardedTransformActions? xPrefix) {
         var routeConfig = new RouteConfig();
         var prefix = "prefix-";
         routeConfig = routeConfig.WithTransformXForwarded(prefix, xDefault, xFor, xHost, xProto, xPrefix);
 
         var builderContext = ValidateAndBuild(routeConfig, _factory);
 
-        if (xFor != ForwardedTransformActions.Off)
-        {
+        if (xFor != ForwardedTransformActions.Off) {
             ValidateXForwardedTransform("For", prefix, xFor ?? xDefault, builderContext.RequestTransforms.OfType<RequestHeaderXForwardedForTransform>().Single());
-        }
-        else
-        {
+        } else {
             Assert.Empty(builderContext.RequestTransforms.OfType<RequestHeaderXForwardedForTransform>());
         }
 
-        if (xHost != ForwardedTransformActions.Off)
-        {
+        if (xHost != ForwardedTransformActions.Off) {
             ValidateXForwardedTransform("Host", prefix, xHost ?? xDefault, builderContext.RequestTransforms.OfType<RequestHeaderXForwardedHostTransform>().Single());
-        }
-        else
-        {
+        } else {
             Assert.Empty(builderContext.RequestTransforms.OfType<RequestHeaderXForwardedHostTransform>());
         }
 
-        if (xProto != ForwardedTransformActions.Off)
-        {
+        if (xProto != ForwardedTransformActions.Off) {
             ValidateXForwardedTransform("Proto", prefix, xProto ?? xDefault, builderContext.RequestTransforms.OfType<RequestHeaderXForwardedProtoTransform>().Single());
-        }
-        else
-        {
+        } else {
             Assert.Empty(builderContext.RequestTransforms.OfType<RequestHeaderXForwardedProtoTransform>());
         }
 
-        if (xPrefix != ForwardedTransformActions.Off)
-        {
+        if (xPrefix != ForwardedTransformActions.Off) {
             ValidateXForwardedTransform("Prefix", prefix, xPrefix ?? xDefault, builderContext.RequestTransforms.OfType<RequestHeaderXForwardedPrefixTransform>().Single());
-        }
-        else
-        {
+        } else {
             Assert.Empty(builderContext.RequestTransforms.OfType<RequestHeaderXForwardedPrefixTransform>());
         }
     }
@@ -81,16 +67,14 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
     [Theory]
     [MemberData(nameof(GetAddXForwardedCases))]
     public void AddXForwarded(Func<TransformBuilderContext, string, ForwardedTransformActions, TransformBuilderContext> addFunc,
-        string transformName, ForwardedTransformActions action)
-    {
+        string transformName, ForwardedTransformActions action) {
         var builderContext = CreateBuilderContext();
         addFunc(builderContext, "prefix-" + transformName, action);
 
         ValidateXForwarded(builderContext, transformName, "prefix-", action);
     }
 
-    public static IEnumerable<object[]> GetAddXForwardedCases()
-    {
+    public static IEnumerable<object[]> GetAddXForwardedCases() {
         var actions = (ForwardedTransformActions[])Enum.GetValues(typeof(ForwardedTransformActions));
         var addTransformFuncs = new (Func<TransformBuilderContext, string, ForwardedTransformActions, TransformBuilderContext>, string)[]
         {
@@ -101,23 +85,18 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
         return addTransformFuncs.Join(actions, _ => true, _ => true, (t, a) => new object[] { t.Item1, t.Item2, a });
     }
 
-    private static void ValidateXForwarded(TransformBuilderContext builderContext, string transformName, string headerPrefix, ForwardedTransformActions action)
-    {
+    private static void ValidateXForwarded(TransformBuilderContext builderContext, string transformName, string headerPrefix, ForwardedTransformActions action) {
         Assert.False(builderContext.UseDefaultForwarders);
 
-        if (action == ForwardedTransformActions.Off)
-        {
+        if (action == ForwardedTransformActions.Off) {
             Assert.Empty(builderContext.RequestTransforms);
-        }
-        else
-        {
+        } else {
             var transform = Assert.Single(builderContext.RequestTransforms);
             ValidateXForwardedTransform(transformName, headerPrefix, action, transform);
         }
     }
 
-    private static void ValidateXForwardedTransform(string transformName, string headerPrefix, ForwardedTransformActions action, RequestTransform transform)
-    {
+    private static void ValidateXForwardedTransform(string transformName, string headerPrefix, ForwardedTransformActions action, RequestTransform transform) {
         Assert.Equal($"RequestHeaderXForwarded{transformName}Transform", transform.GetType().Name);
         Assert.Equal(headerPrefix + transformName, ((dynamic)transform).HeaderName);
         Assert.Equal(action, ((dynamic)transform).TransformAction);
@@ -136,8 +115,7 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
     [InlineData(NodeFormat.None, false, true, NodeFormat.UnknownAndPort, ForwardedTransformActions.Set)]
     [InlineData(NodeFormat.None, false, true, NodeFormat.Ip, ForwardedTransformActions.Set)]
     [InlineData(NodeFormat.None, false, true, NodeFormat.IpAndPort, ForwardedTransformActions.Set)]
-    public void WithTransformForwarded(NodeFormat forFormat, bool useHost, bool useProto, NodeFormat byFormat, ForwardedTransformActions action)
-    {
+    public void WithTransformForwarded(NodeFormat forFormat, bool useHost, bool useProto, NodeFormat byFormat, ForwardedTransformActions action) {
         var routeConfig = new RouteConfig();
         routeConfig = routeConfig.WithTransformForwarded(useHost, useProto, forFormat, byFormat, action);
 
@@ -159,8 +137,7 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
     [InlineData(NodeFormat.None, false, true, NodeFormat.UnknownAndPort, ForwardedTransformActions.Set)]
     [InlineData(NodeFormat.None, false, true, NodeFormat.Ip, ForwardedTransformActions.Set)]
     [InlineData(NodeFormat.None, false, true, NodeFormat.IpAndPort, ForwardedTransformActions.Set)]
-    public void AddForwarded(NodeFormat forFormat, bool useHost, bool useProto, NodeFormat byFormat, ForwardedTransformActions action)
-    {
+    public void AddForwarded(NodeFormat forFormat, bool useHost, bool useProto, NodeFormat byFormat, ForwardedTransformActions action) {
         var builderContext = CreateBuilderContext(services: CreateServices());
         builderContext.AddForwarded(useHost, useProto, forFormat, byFormat, action);
 
@@ -168,17 +145,14 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
     }
 
     private static void ValidateForwarded(TransformBuilderContext builderContext, bool useHost, bool useProto,
-        NodeFormat forFormat, NodeFormat byFormat, ForwardedTransformActions action)
-    {
+        NodeFormat forFormat, NodeFormat byFormat, ForwardedTransformActions action) {
         Assert.False(builderContext.UseDefaultForwarders);
 
-        if (byFormat != NodeFormat.None || forFormat != NodeFormat.None || useHost || useProto)
-        {
+        if (byFormat != NodeFormat.None || forFormat != NodeFormat.None || useHost || useProto) {
             Assert.Equal(5, builderContext.RequestTransforms.Count);
             Assert.All(
                 builderContext.RequestTransforms.Skip(1).Select(t => (dynamic)t),
-                t =>
-                {
+                t => {
                     Assert.StartsWith("X-Forwarded-", t.HeaderName);
                     Assert.Equal(ForwardedTransformActions.Remove, t.TransformAction);
                 });
@@ -189,16 +163,13 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
             Assert.Equal(useProto, requestHeaderForwardedTransform.ProtoEnabled);
             Assert.Equal(byFormat, requestHeaderForwardedTransform.ByFormat);
             Assert.Equal(forFormat, requestHeaderForwardedTransform.ForFormat);
-        }
-        else
-        {
+        } else {
             Assert.Empty(builderContext.RequestTransforms);
         }
     }
 
     [Fact]
-    public void WithTransformClientCertHeader()
-    {
+    public void WithTransformClientCertHeader() {
         var routeConfig = new RouteConfig();
         routeConfig = routeConfig.WithTransformClientCertHeader("name");
 
@@ -210,8 +181,7 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
     }
 
     [Fact]
-    public void AddClientCertHeader()
-    {
+    public void AddClientCertHeader() {
         var builderContext = CreateBuilderContext();
         builderContext.AddClientCertHeader("name");
 
@@ -220,8 +190,7 @@ public class ForwardedTransformExtensionsTests : TransformExtentionsTestsBase
         Assert.Equal("name", certTransform.HeaderName);
     }
 
-    private static IServiceProvider CreateServices()
-    {
+    private static IServiceProvider CreateServices() {
         var collection = new ServiceCollection();
         collection.AddSingleton<IRandomFactory, TestRandomFactory>();
         return collection.BuildServiceProvider();

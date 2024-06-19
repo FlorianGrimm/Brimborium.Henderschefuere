@@ -5,13 +5,14 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class RequestHeaderXForwardedForTransformTests
-{
+public class RequestHeaderXForwardedForTransformTests {
     [Theory]
     // Using ";" to represent multi-line headers
     [InlineData("", "", ForwardedTransformActions.Set, "")]
@@ -33,25 +34,20 @@ public class RequestHeaderXForwardedForTransformTests
     [InlineData("existing,Header", "127.0.0.1", ForwardedTransformActions.Append, "existing,Header;127.0.0.1")]
     [InlineData("existing;Header", "127.0.0.1", ForwardedTransformActions.Append, "existing;Header;127.0.0.1")]
     [InlineData("existing;Header", "127.0.0.1", ForwardedTransformActions.Remove, "")]
-    public async Task RemoteIp_Added(string startValue, string remoteIp, ForwardedTransformActions action, string expected)
-    {
+    public async Task RemoteIp_Added(string startValue, string remoteIp, ForwardedTransformActions action, string expected) {
         var httpContext = new DefaultHttpContext();
         httpContext.Connection.RemoteIpAddress = string.IsNullOrEmpty(remoteIp) ? null : IPAddress.Parse(remoteIp);
         var proxyRequest = new HttpRequestMessage();
         proxyRequest.Headers.Add("name", startValue.Split(";", StringSplitOptions.RemoveEmptyEntries));
         var transform = new RequestHeaderXForwardedForTransform("name", action);
-        await transform.ApplyAsync(new RequestTransformContext()
-        {
+        await transform.ApplyAsync(new RequestTransformContext() {
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,
             HeadersCopied = true,
         });
-        if (string.IsNullOrEmpty(expected))
-        {
+        if (string.IsNullOrEmpty(expected)) {
             Assert.False(proxyRequest.Headers.TryGetValues("name", out var _));
-        }
-        else
-        {
+        } else {
             Assert.Equal(expected.Split(";", StringSplitOptions.RemoveEmptyEntries), proxyRequest.Headers.GetValues("name"));
         }
     }

@@ -3,27 +3,25 @@
 
 using System;
 using System.Net.Http;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Forwarder;
 
-public class ReverseProxyServiceCollectionTests
-{
+public class ReverseProxyServiceCollectionTests {
 
     [Fact]
-    public void ConfigureHttpClient_Works()
-    {
+    public void ConfigureHttpClient_Works() {
         new ServiceCollection()
             .AddReverseProxy()
             .ConfigureHttpClient((_, _) => { });
     }
 
-    [Fact] 
-    public void ConfigureHttpClient_ThrowIfCustomServiceAdded()
-    {
-        Assert.Throws<InvalidOperationException>(() =>
-        {
+    [Fact]
+    public void ConfigureHttpClient_ThrowIfCustomServiceAdded() {
+        Assert.Throws<InvalidOperationException>(() => {
             new ServiceCollection()
                 .AddSingleton<IForwarderHttpClientFactory, CustomForwarderHttpClientFactory>()
                 .AddReverseProxy()
@@ -31,10 +29,8 @@ public class ReverseProxyServiceCollectionTests
         });
     }
 
-    private class CustomForwarderHttpClientFactory : IForwarderHttpClientFactory
-    {
-        public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context)
-        {
+    private class CustomForwarderHttpClientFactory : IForwarderHttpClientFactory {
+        public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) {
             throw new NotImplementedException();
         }
     }

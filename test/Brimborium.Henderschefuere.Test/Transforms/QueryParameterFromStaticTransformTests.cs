@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class QueryParameterFromStaticTransformTests
-{
+public class QueryParameterFromStaticTransformTests {
     [Fact]
-    public async Task Append_AddsQueryStringParameterWithStaticValue()
-    {
+    public async Task Append_AddsQueryStringParameterWithStaticValue() {
         var httpContext = new DefaultHttpContext();
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -24,12 +23,10 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Append_IgnoresExistingQueryStringParameter()
-    {
+    public async Task Append_IgnoresExistingQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -39,12 +36,10 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Set_OverwritesExistingQueryStringParameter()
-    {
+    public async Task Set_OverwritesExistingQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -54,11 +49,9 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Set_AddsNewQueryStringParameter()
-    {
+    public async Task Set_AddsNewQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -68,11 +61,9 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Set_AddsNewEmptyQueryStringParameter()
-    {
+    public async Task Set_AddsNewEmptyQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -82,12 +73,10 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Set_OverwritesExistingParamWithEmptyValue()
-    {
+    public async Task Set_OverwritesExistingParamWithEmptyValue() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=foo");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -97,12 +86,10 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Set_AddNewEmptyParamToExistingQueryStringParameter()
-    {
+    public async Task Set_AddNewEmptyParamToExistingQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?x=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -112,11 +99,9 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Append_AddsNewEmptyQueryStringParameter()
-    {
+    public async Task Append_AddsNewEmptyQueryStringParameter() {
         var httpContext = new DefaultHttpContext();
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };
@@ -126,12 +111,10 @@ public class QueryParameterFromStaticTransformTests
     }
 
     [Fact]
-    public async Task Append_AppendsEmptyValueToExistingParam()
-    {
+    public async Task Append_AppendsEmptyValueToExistingParam() {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new QueryString("?z=foo");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
         };

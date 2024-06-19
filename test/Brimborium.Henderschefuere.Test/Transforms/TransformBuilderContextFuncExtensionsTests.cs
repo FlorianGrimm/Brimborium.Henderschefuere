@@ -5,14 +5,11 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class TransformBuilderContextFuncExtensionsTests : TransformExtentionsTestsBase
-{
+public class TransformBuilderContextFuncExtensionsTests : TransformExtentionsTestsBase {
     [Fact]
-    public void AddRequestTransform()
-    {
+    public void AddRequestTransform() {
         var builderContext = CreateBuilderContext();
-        builderContext.AddRequestTransform(context =>
-        {
+        builderContext.AddRequestTransform(context => {
             return default;
         });
 
@@ -21,11 +18,9 @@ public class TransformBuilderContextFuncExtensionsTests : TransformExtentionsTes
     }
 
     [Fact]
-    public void AddResponseTransform()
-    {
+    public void AddResponseTransform() {
         var builderContext = CreateBuilderContext();
-        builderContext.AddResponseTransform(context =>
-        {
+        builderContext.AddResponseTransform(context => {
             return default;
         });
 
@@ -34,11 +29,9 @@ public class TransformBuilderContextFuncExtensionsTests : TransformExtentionsTes
     }
 
     [Fact]
-    public void AddResponseTrailersTransform()
-    {
+    public void AddResponseTrailersTransform() {
         var builderContext = CreateBuilderContext();
-        builderContext.AddResponseTrailersTransform(context =>
-        {
+        builderContext.AddResponseTrailersTransform(context => {
             return default;
         });
 

@@ -7,8 +7,7 @@ using System.Threading;
 
 namespace Brimborium.Tests.Common;
 
-internal static class TestEventListener
-{
+internal static class TestEventListener {
     private static readonly AsyncLocal<List<EventWrittenEventArgs>> _eventsAsyncLocal = new();
 #pragma warning disable IDE0052 // Remove unread private members
     private static readonly InternalEventListener _listener = new();
@@ -16,12 +15,9 @@ internal static class TestEventListener
 
     public static List<EventWrittenEventArgs> Collect() => _eventsAsyncLocal.Value ??= [];
 
-    private sealed class InternalEventListener : EventListener
-    {
-        protected override void OnEventSourceCreated(EventSource eventSource)
-        {
-            if (eventSource.Name == "Brimborium.Henderschefuere")
-            {
+    private sealed class InternalEventListener : EventListener {
+        protected override void OnEventSourceCreated(EventSource eventSource) {
+            if (eventSource.Name == "Brimborium.Henderschefuere") {
                 EnableEvents(eventSource, EventLevel.LogAlways, EventKeywords.All);
             }
         }

@@ -12,17 +12,13 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration;
 
-public class YarpOutputCachePolicyProviderTests
-{
+public class YarpOutputCachePolicyProviderTests {
     [Fact]
-    public async Task GetPolicyAsync_Works()
-    {
+    public async Task GetPolicyAsync_Works() {
         var services = new ServiceCollection();
 
-        services.AddOutputCache(options =>
-        {
-            options.AddPolicy("customPolicy", opt =>
-            {
+        services.AddOutputCache(options => {
+            options.AddPolicy("customPolicy", opt => {
                 opt.Expire(TimeSpan.FromSeconds(12));
                 opt.SetVaryByHost(true);
             });

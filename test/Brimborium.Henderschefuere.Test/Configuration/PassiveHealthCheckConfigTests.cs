@@ -2,24 +2,21 @@
 // Licensed under the MIT License.
 
 using System;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class PassiveHealthCheckConfigTests
-{
+public class PassiveHealthCheckConfigTests {
     [Fact]
-    public void Equals_Same_Value_Returns_True()
-    {
-        var options1 = new PassiveHealthCheckConfig
-        {
+    public void Equals_Same_Value_Returns_True() {
+        var options1 = new PassiveHealthCheckConfig {
             Enabled = true,
             Policy = "Passive",
             ReactivationPeriod = TimeSpan.FromSeconds(5),
         };
 
-        var options2 = new PassiveHealthCheckConfig
-        {
+        var options2 = new PassiveHealthCheckConfig {
             Enabled = true,
             Policy = "passive",
             ReactivationPeriod = TimeSpan.FromSeconds(5),
@@ -32,17 +29,14 @@ public class PassiveHealthCheckConfigTests
     }
 
     [Fact]
-    public void Equals_Different_Value_Returns_False()
-    {
-        var options1 = new PassiveHealthCheckConfig
-        {
+    public void Equals_Different_Value_Returns_False() {
+        var options1 = new PassiveHealthCheckConfig {
             Enabled = true,
             Policy = "Passive",
             ReactivationPeriod = TimeSpan.FromSeconds(5),
         };
 
-        var options2 = new PassiveHealthCheckConfig
-        {
+        var options2 = new PassiveHealthCheckConfig {
             Enabled = false,
             Policy = "Passive",
             ReactivationPeriod = TimeSpan.FromSeconds(1),
@@ -54,8 +48,7 @@ public class PassiveHealthCheckConfigTests
     }
 
     [Fact]
-    public void Equals_Second_Null_Returns_False()
-    {
+    public void Equals_Second_Null_Returns_False() {
         var options1 = new PassiveHealthCheckConfig();
 
         var equals = options1.Equals(null);

@@ -13,11 +13,9 @@ using Brimborium.Henderschefuere.Configuration;
 
 namespace Brimborium.Henderschefuere.Routing.Tests;
 
-public class HeaderMatcherPolicyTests
-{
+public class HeaderMatcherPolicyTests {
     [Fact]
-    public void Comparer_SortOrder_SingleRuleEqual()
-    {
+    public void Comparer_SortOrder_SingleRuleEqual() {
         // Most specific to least
         var endpoints = new[]
         {
@@ -40,10 +38,8 @@ public class HeaderMatcherPolicyTests
         };
         var sut = new HeaderMatcherPolicy();
 
-        for (var i = 0; i < endpoints.Length; i++)
-        {
-            for (var j = 0; j < endpoints.Length; j++)
-            {
+        for (var i = 0; i < endpoints.Length; i++) {
+            for (var j = 0; j < endpoints.Length; j++) {
                 var a = endpoints[i];
                 var b = endpoints[j];
 
@@ -51,8 +47,7 @@ public class HeaderMatcherPolicyTests
                 var expected =
                     a.Item1 < b.Item1 ? -1 :
                     a.Item1 > b.Item1 ? 1 : 0;
-                if (actual != expected)
-                {
+                if (actual != expected) {
                     Assert.Fail($"Error comparing [{i}] to [{j}], expected {expected}, found {actual}.");
                 }
             }
@@ -60,8 +55,7 @@ public class HeaderMatcherPolicyTests
     }
 
     [Fact]
-    public void Comparer_MultipleHeaders_SortOrder()
-    {
+    public void Comparer_MultipleHeaders_SortOrder() {
         // Most specific to least
         var endpoints = new[]
         {
@@ -91,10 +85,8 @@ public class HeaderMatcherPolicyTests
         };
         var sut = new HeaderMatcherPolicy();
 
-        for (var i = 0; i < endpoints.Length; i++)
-        {
-            for (var j = 0; j < endpoints.Length; j++)
-            {
+        for (var i = 0; i < endpoints.Length; i++) {
+            for (var j = 0; j < endpoints.Length; j++) {
                 var a = endpoints[i];
                 var b = endpoints[j];
 
@@ -102,8 +94,7 @@ public class HeaderMatcherPolicyTests
                 var expected =
                     a.Item1 < b.Item1 ? -1 :
                     a.Item1 > b.Item1 ? 1 : 0;
-                if (actual != expected)
-                {
+                if (actual != expected) {
                     Assert.Fail($"Error comparing [{i}] to [{j}], expected {expected}, found {actual}.");
                 }
             }
@@ -111,8 +102,7 @@ public class HeaderMatcherPolicyTests
     }
 
     [Fact]
-    public void AppliesToEndpoints_AppliesScenarios()
-    {
+    public void AppliesToEndpoints_AppliesScenarios() {
         var scenarios = new[]
         {
             CreateEndpoint("org-id", Array.Empty<string>(), HeaderMatchMode.Exists),
@@ -130,16 +120,14 @@ public class HeaderMatcherPolicyTests
         var sut = new HeaderMatcherPolicy();
         var endpointSelectorPolicy = (IEndpointSelectorPolicy)sut;
 
-        for (var i = 0; i < scenarios.Length; i++)
-        {
+        for (var i = 0; i < scenarios.Length; i++) {
             var result = endpointSelectorPolicy.AppliesToEndpoints(new[] { scenarios[i] });
             Assert.True(result, $"scenario {i}");
         }
     }
 
     [Fact]
-    public void AppliesToEndpoints_NoMetadata_DoesNotApply()
-    {
+    public void AppliesToEndpoints_NoMetadata_DoesNotApply() {
         var endpoint = CreateEndpoint(Array.Empty<HeaderMatcher>());
 
         var sut = new HeaderMatcherPolicy();
@@ -156,11 +144,9 @@ public class HeaderMatcherPolicyTests
     [InlineData(null, HeaderMatchMode.NotExists, true)]
     [InlineData("", HeaderMatchMode.NotExists, true)]
     [InlineData("abc", HeaderMatchMode.NotExists, false)]
-    public async Task ApplyAsync_MatchingScenarios_AnyHeaderValue(string incomingHeaderValue, HeaderMatchMode mode, bool shouldMatch)
-    {
+    public async Task ApplyAsync_MatchingScenarios_AnyHeaderValue(string incomingHeaderValue, HeaderMatchMode mode, bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingHeaderValue is not null)
-        {
+        if (incomingHeaderValue is not null) {
             context.Request.Headers["org-id"] = incomingHeaderValue;
         }
 
@@ -301,11 +287,9 @@ public class HeaderMatcherPolicyTests
         HeaderMatchMode headerValueMatchMode,
         bool isCaseSensitive,
         string incomingHeaderValues,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingHeaderValues is not null)
-        {
+        if (incomingHeaderValues is not null) {
             context.Request.Headers["org-id"] = incomingHeaderValues.Split(';');
         }
 
@@ -445,11 +429,9 @@ public class HeaderMatcherPolicyTests
         HeaderMatchMode headerValueMatchMode,
         bool isCaseSensitive,
         string incomingHeaderValues,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
-        if (incomingHeaderValues is not null)
-        {
+        if (incomingHeaderValues is not null) {
             context.Request.Headers["org-id"] = incomingHeaderValues.Split(';');
         }
 
@@ -479,14 +461,12 @@ public class HeaderMatcherPolicyTests
     public async Task ApplyAsync_MatchingScenarios_MissingHeader(
         HeaderMatchMode headerValueMatchMode,
         bool isCaseSensitive,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
 
         var headerValues = new[] { "bar" };
         if (headerValueMatchMode == HeaderMatchMode.Exists
-            || headerValueMatchMode == HeaderMatchMode.NotExists)
-        {
+            || headerValueMatchMode == HeaderMatchMode.NotExists) {
             headerValues = null;
         }
 
@@ -519,8 +499,7 @@ public class HeaderMatcherPolicyTests
         string headerValue,
         HeaderMatchMode headerValueMatchMode,
         string incomingHeaderValue,
-        bool shouldMatch)
-    {
+        bool shouldMatch) {
         var context = new DefaultHttpContext();
         context.Request.Headers[headerName] = incomingHeaderValue;
 
@@ -538,8 +517,7 @@ public class HeaderMatcherPolicyTests
     [InlineData(false, true, false)]
     [InlineData(true, false, false)]
     [InlineData(true, true, true)]
-    public async Task ApplyAsync_MultipleRules_RequiresAllHeaders(bool sendHeader1, bool sendHeader2, bool shouldMatch)
-    {
+    public async Task ApplyAsync_MultipleRules_RequiresAllHeaders(bool sendHeader1, bool sendHeader2, bool shouldMatch) {
         var endpoint = CreateEndpoint(new[]
         {
             new HeaderMatcher("header1", new[] { "value1" }, HeaderMatchMode.ExactHeader, isCaseSensitive: false),
@@ -547,12 +525,10 @@ public class HeaderMatcherPolicyTests
         });
 
         var context = new DefaultHttpContext();
-        if (sendHeader1)
-        {
+        if (sendHeader1) {
             context.Request.Headers["header1"] = "value1";
         }
-        if (sendHeader2)
-        {
+        if (sendHeader2) {
             context.Request.Headers["header2"] = "value2";
         }
 
@@ -569,25 +545,21 @@ public class HeaderMatcherPolicyTests
         string[] headerValues,
         HeaderMatchMode mode = HeaderMatchMode.ExactHeader,
         bool isCaseSensitive = false,
-        bool isDynamic = false)
-    {
+        bool isDynamic = false) {
         return CreateEndpoint(new[] { new HeaderMatcher(headerName, headerValues, mode, isCaseSensitive) }, isDynamic);
     }
 
-    private static Endpoint CreateEndpoint(IReadOnlyList<HeaderMatcher> matchers, bool isDynamic = false)
-    {
+    private static Endpoint CreateEndpoint(IReadOnlyList<HeaderMatcher> matchers, bool isDynamic = false) {
         var builder = new RouteEndpointBuilder(_ => Task.CompletedTask, RoutePatternFactory.Parse("/"), 0);
         builder.Metadata.Add(new HeaderMetadata(matchers));
-        if (isDynamic)
-        {
+        if (isDynamic) {
             builder.Metadata.Add(new DynamicEndpointMetadata());
         }
 
         return builder.Build();
     }
 
-    private class DynamicEndpointMetadata : IDynamicEndpointMetadata
-    {
+    private class DynamicEndpointMetadata : IDynamicEndpointMetadata {
         public bool IsDynamic => true;
     }
 }

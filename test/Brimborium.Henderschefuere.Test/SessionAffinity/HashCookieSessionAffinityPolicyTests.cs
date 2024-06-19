@@ -14,16 +14,13 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class HashCookieSessionAffinityPolicyTests
-{
-    private readonly SessionAffinityConfig _config = new()
-    {
+public class HashCookieSessionAffinityPolicyTests {
+    private readonly SessionAffinityConfig _config = new() {
         Enabled = true,
         Policy = "HashCookie",
         FailurePolicy = "Return503Error",
         AffinityKeyName = "My.Affinity",
-        Cookie = new SessionAffinityCookieConfig
-        {
+        Cookie = new SessionAffinityCookieConfig {
             Domain = "mydomain.my",
             HttpOnly = false,
             IsEssential = true,
@@ -36,8 +33,7 @@ public class HashCookieSessionAffinityPolicyTests
     private readonly IReadOnlyList<DestinationState> _destinations = new[] { new DestinationState("dest-A"), new DestinationState("dest-B"), new DestinationState("dest-C") };
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsNotSetOnRequest_ReturnKeyNotSet() {
         var policy = new HashCookieSessionAffinityPolicy(
             new TestTimeProvider(),
             NullLogger<HashCookieSessionAffinityPolicy>.Instance);
@@ -55,8 +51,7 @@ public class HashCookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success()
-    {
+    public void FindAffinitizedDestination_AffinityKeyIsSetOnRequest_Success() {
         var policy = new HashCookieSessionAffinityPolicy(
             new TestTimeProvider(),
             NullLogger<HashCookieSessionAffinityPolicy>.Instance);
@@ -73,8 +68,7 @@ public class HashCookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_CustomConfigAffinityKeyIsNotExtracted_SetKeyOnResponse()
-    {
+    public void AffinitizedRequest_CustomConfigAffinityKeyIsNotExtracted_SetKeyOnResponse() {
         var policy = new HashCookieSessionAffinityPolicy(
             new TestTimeProvider(),
             NullLogger<HashCookieSessionAffinityPolicy>.Instance);
@@ -88,8 +82,7 @@ public class HashCookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizeRequest_CookieConfigSpecified_UseIt()
-    {
+    public void AffinitizeRequest_CookieConfigSpecified_UseIt() {
         var policy = new HashCookieSessionAffinityPolicy(
             new TestTimeProvider(),
             NullLogger<HashCookieSessionAffinityPolicy>.Instance);
@@ -103,8 +96,7 @@ public class HashCookieSessionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing()
-    {
+    public void AffinitizedRequest_AffinityKeyIsExtracted_DoNothing() {
         var policy = new HashCookieSessionAffinityPolicy(
             new TestTimeProvider(),
             NullLogger<HashCookieSessionAffinityPolicy>.Instance);
@@ -122,8 +114,7 @@ public class HashCookieSessionAffinityPolicyTests
         Assert.False(context.Response.Headers.ContainsKey("Cookie"));
     }
 
-    private string[] GetCookieWithAffinity(DestinationState affinitizedDestination)
-    {
+    private string[] GetCookieWithAffinity(DestinationState affinitizedDestination) {
         var destinationIdBytes = Encoding.Unicode.GetBytes(affinitizedDestination.DestinationId.ToUpperInvariant());
         var hashBytes = XxHash64.Hash(destinationIdBytes);
         var value = Convert.ToHexString(hashBytes).ToLowerInvariant();

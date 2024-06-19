@@ -3,70 +3,61 @@
 
 using System;
 using System.Net.Http;
+
 using Microsoft.AspNetCore.Http;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Forwarder.Tests;
 
-public class RequestUtilitiesTests
-{
+public class RequestUtilitiesTests {
     [Fact]
-    public void GetHttpMethod_Get_Works()
-    {
+    public void GetHttpMethod_Get_Works() {
         Assert.Same(HttpMethod.Get, RequestUtilities.GetHttpMethod("GET"));
     }
 
     [Fact]
-    public void GetHttpMethod_Post_Works()
-    {
+    public void GetHttpMethod_Post_Works() {
         Assert.Same(HttpMethod.Post, RequestUtilities.GetHttpMethod("POST"));
     }
 
     [Fact]
-    public void GetHttpMethod_Put_Works()
-    {
+    public void GetHttpMethod_Put_Works() {
         Assert.Same(HttpMethod.Put, RequestUtilities.GetHttpMethod("PUT"));
     }
 
     [Fact]
-    public void GetHttpMethod_Delete_Works()
-    {
+    public void GetHttpMethod_Delete_Works() {
         Assert.Same(HttpMethod.Delete, RequestUtilities.GetHttpMethod("DELETE"));
     }
 
     [Fact]
-    public void GetHttpMethod_Options_Works()
-    {
+    public void GetHttpMethod_Options_Works() {
         Assert.Same(HttpMethod.Options, RequestUtilities.GetHttpMethod("OPTIONS"));
     }
 
     [Fact]
-    public void GetHttpMethod_Head_Works()
-    {
+    public void GetHttpMethod_Head_Works() {
         Assert.Same(HttpMethod.Head, RequestUtilities.GetHttpMethod("HEAD"));
     }
 
     [Fact]
-    public void GetHttpMethod_Patch_Works()
-    {
+    public void GetHttpMethod_Patch_Works() {
         Assert.Same(HttpMethod.Patch, RequestUtilities.GetHttpMethod("PATCH"));
     }
 
     [Fact]
-    public void GetHttpMethod_Trace_Works()
-    {
+    public void GetHttpMethod_Trace_Works() {
         Assert.Same(HttpMethod.Trace, RequestUtilities.GetHttpMethod("TRACE"));
     }
 
     [Fact]
-    public void GetHttpMethod_Unknown_Works()
-    {
+    public void GetHttpMethod_Unknown_Works() {
         Assert.Same("Unknown", RequestUtilities.GetHttpMethod("Unknown").Method);
     }
 
     [Fact]
-    public void GetHttpMethod_Connect_Throws()
-    {
+    public void GetHttpMethod_Connect_Throws() {
         Assert.Throws<NotSupportedException>(() => RequestUtilities.GetHttpMethod("CONNECT"));
     }
 
@@ -74,8 +65,7 @@ public class RequestUtilitiesTests
     [InlineData(" GET")]
     [InlineData("GET ")]
     [InlineData("G;ET")]
-    public void GetHttpMethod_Invalid_Throws(string method)
-    {
+    public void GetHttpMethod_Invalid_Throws(string method) {
         Assert.Throws<FormatException>(() => RequestUtilities.GetHttpMethod(method));
     }
 
@@ -101,8 +91,7 @@ public class RequestUtilitiesTests
     // #if NET6.0 [InlineData("http://localhost/base/", "/path/", "?query%4A", "http://localhost/base/path/?query%4A")] // https://github.com/dotnet/runtime/issues/58057
     // PathString should be fully un-escaped to start with and QueryString should be fully escaped.
     [InlineData("http://localhost/base/", "/path/%2F%20", "?query%20", "http://localhost/base/path/%252F%2520?query%20")]
-    public void MakeDestinationAddress(string destinationPrefix, string path, string query, string expected)
-    {
+    public void MakeDestinationAddress(string destinationPrefix, string path, string query, string expected) {
         var uri = RequestUtilities.MakeDestinationAddress(destinationPrefix, new PathString(path), new QueryString(query));
         Assert.Equal(expected, uri.AbsoluteUri);
     }
@@ -116,8 +105,7 @@ public class RequestUtilitiesTests
     // sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 
     [Fact]
-    public void ValidPathCharacters()
-    {
+    public void ValidPathCharacters() {
         var valids = new char[]
         {
             '!', '$', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
@@ -128,8 +116,7 @@ public class RequestUtilitiesTests
             'a', 'b', 'c', 'd', 'e', 'f','g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
             '~'
         };
-        foreach (var c in valids)
-        {
+        foreach (var c in valids) {
             var isValid = RequestUtilities.IsValidPathChar(c);
 
             Assert.True(isValid, c.ToString());
@@ -137,8 +124,7 @@ public class RequestUtilitiesTests
     }
 
     [Fact]
-    public void InvalidPathCharacters()
-    {
+    public void InvalidPathCharacters() {
         var invalids = new char[]
         {
             // Controls
@@ -146,8 +132,7 @@ public class RequestUtilitiesTests
             (char)0x10, (char)0x11, (char)0x02, (char)0x13, (char)0x14, (char)0x15, (char)0x16, (char)0x10, (char)0x17, (char)0x18, (char)0x19, (char)0x1A, (char)0x1B, (char)0x1C, (char)0x1D, (char)0x1E, (char)0x1F,
             ' ', '"', '#', '%', '<', '>', '?', '[', '\\', ']', '^', '`', '{', '|', '}'
         };
-        foreach (var c in invalids)
-        {
+        foreach (var c in invalids) {
             var isValid = RequestUtilities.IsValidPathChar(c);
 
             Assert.False(isValid, c.ToString());
@@ -167,11 +152,9 @@ public class RequestUtilitiesTests
     [InlineData("a;b", "c;d", "a;b;c;d")]
     [InlineData("a", "b c", "a;b c")]
     [InlineData("a b", "c", "a b;c")]
-    public void Concat(string stringValues, string inputHeaderStringValues, string expectedOutput)
-    {
+    public void Concat(string stringValues, string inputHeaderStringValues, string expectedOutput) {
         var request = new HttpRequestMessage();
-        foreach (var value in inputHeaderStringValues.Split(';'))
-        {
+        foreach (var value in inputHeaderStringValues.Split(';')) {
             request.Headers.TryAddWithoutValidation("foo", value);
         }
         request.Headers.TryAddWithoutValidation("bar", inputHeaderStringValues.Split(';'));
@@ -197,11 +180,9 @@ public class RequestUtilitiesTests
     [InlineData("", "a", "b")]
     [InlineData("", "a", "")]
     [InlineData("a", "", "b")]
-    public void TryGetValues(params string[] headerValues)
-    {
+    public void TryGetValues(params string[] headerValues) {
         var request = new HttpRequestMessage();
-        foreach (var value in headerValues)
-        {
+        foreach (var value in headerValues) {
             request.Headers.TryAddWithoutValidation("foo", value);
         }
         request.Headers.TryAddWithoutValidation("bar", headerValues);

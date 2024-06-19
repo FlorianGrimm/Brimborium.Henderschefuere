@@ -5,13 +5,10 @@ using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class RouteMatchTests
-{
+public class RouteMatchTests {
     [Fact]
-    public void Equals_Positive()
-    {
-        var a = new RouteMatch()
-        {
+    public void Equals_Positive() {
+        var a = new RouteMatch() {
             Headers = new[]
             {
                 new RouteHeader()
@@ -26,8 +23,7 @@ public class RouteMatchTests
             Methods = new[] { "GET", "POST" },
             Path = "/p",
         };
-        var b = new RouteMatch()
-        {
+        var b = new RouteMatch() {
             Headers = new[]
             {
                 new RouteHeader()
@@ -51,10 +47,8 @@ public class RouteMatchTests
     }
 
     [Fact]
-    public void Equals_Negative()
-    {
-        var a = new RouteMatch()
-        {
+    public void Equals_Negative() {
+        var a = new RouteMatch() {
             Headers = new[]
             {
                 new RouteHeader()
@@ -69,8 +63,7 @@ public class RouteMatchTests
             Methods = new[] { "GET", "POST" },
             Path = "/p",
         };
-        var b = a with
-        {
+        var b = a with {
             Headers = new[]
             {
                 new RouteHeader()
@@ -93,8 +86,7 @@ public class RouteMatchTests
     }
 
     [Fact]
-    public void Equals_Null_False()
-    {
+    public void Equals_Null_False() {
         Assert.False(new RouteMatch().Equals(null));
     }
 }

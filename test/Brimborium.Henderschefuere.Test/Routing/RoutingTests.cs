@@ -1,28 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Xunit;
-using Brimborium.Henderschefuere.Configuration;
-
 namespace Brimborium.Henderschefuere.Routing.Tests;
 
-public class RoutingTests
-{
+public class RoutingTests {
     [Fact]
-    public async Task PathRouting_Works()
-    {
+    public async Task PathRouting_Works() {
         var routes = new[]
         {
             new RouteConfig()
@@ -47,8 +30,7 @@ public class RoutingTests
     }
 
     [Fact]
-    public async Task HostRouting_Works()
-    {
+    public async Task HostRouting_Works() {
         var routes = new[]
         {
             new RouteConfig()
@@ -73,8 +55,7 @@ public class RoutingTests
     }
 
     [Fact]
-    public async Task HeaderRouting_OneHeader_Works()
-    {
+    public async Task HeaderRouting_OneHeader_Works() {
         var routes = new[]
         {
             new RouteConfig()
@@ -127,8 +108,7 @@ public class RoutingTests
     }
 
     [Fact]
-    public async Task HeaderRouting_MultipleHeaders_Works()
-    {
+    public async Task HeaderRouting_MultipleHeaders_Works() {
         var routes = new[]
         {
             new RouteConfig()
@@ -238,8 +218,7 @@ public class RoutingTests
     }
 
     [Fact]
-    public async Task Precedence_PathMethodHostHeaders()
-    {
+    public async Task Precedence_PathMethodHostHeaders() {
         var routes = new[]
         {
             new RouteConfig()
@@ -320,8 +299,7 @@ public class RoutingTests
         Assert.Equal("route4", response.Headers.GetValues("route").SingleOrDefault());
     }
 
-    public static Task<IHost> CreateHostAsync(IReadOnlyList<RouteConfig> routes)
-    {
+    public static Task<IHost> CreateHostAsync(IReadOnlyList<RouteConfig> routes) {
         var clusters = new[]
         {
             new ClusterConfig()
@@ -335,25 +313,20 @@ public class RoutingTests
         };
 
         return new HostBuilder()
-            .ConfigureWebHost(webHost =>
-            {
+            .ConfigureWebHost(webHost => {
                 webHost.UseTestServer();
-                webHost.ConfigureServices(services =>
-                {
+                webHost.ConfigureServices(services => {
                     services.AddReverseProxy()
                         .LoadFromMemory(routes, clusters);
                 });
-                webHost.Configure(appBuilder =>
-                {
+                webHost.Configure(appBuilder => {
                     appBuilder.UseRouting();
-                    appBuilder.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapReverseProxy(proxyApp =>
-                        {
-                            proxyApp.Run(context =>
-                            {
-                                var endpoint = context.GetEndpoint();
-                                context.Response.Headers["route"] = endpoint.DisplayName;
+                    appBuilder.UseEndpoints(endpoints => {
+                        endpoints.MapReverseProxy(proxyApp => {
+                            proxyApp.Run(context => {
+                                if (context.GetEndpoint() is { } endpoint) {
+                                    context.Response.Headers["route"] = endpoint.DisplayName;
+                                }
                                 return Task.CompletedTask;
                             });
                         });

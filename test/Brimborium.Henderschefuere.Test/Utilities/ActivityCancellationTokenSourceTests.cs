@@ -4,28 +4,25 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Utilities.Tests;
 
-public class ActivityCancellationTokenSourceTests
-{
+public class ActivityCancellationTokenSourceTests {
     [Fact]
-    public void ActivityCancellationTokenSource_PoolsSources()
-    {
+    public void ActivityCancellationTokenSource_PoolsSources() {
         // This test can run in parallel with others making use of ActivityCancellationTokenSource
         // A different thread could have already added/removed a source from the queue
 
-        for (var i = 0; i < 1000; i++)
-        {
+        for (var i = 0; i < 1000; i++) {
             var cts = ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), CancellationToken.None);
             cts.Return();
 
             var cts2 = ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), CancellationToken.None);
             cts2.Return();
 
-            if (ReferenceEquals(cts, cts2))
-            {
+            if (ReferenceEquals(cts, cts2)) {
                 return;
             }
         }
@@ -34,8 +31,7 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public void ActivityCancellationTokenSource_DoesNotPoolsCanceledSources()
-    {
+    public void ActivityCancellationTokenSource_DoesNotPoolsCanceledSources() {
         var cts = ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), CancellationToken.None);
         cts.Cancel();
 
@@ -45,8 +41,7 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public void ActivityCancellationTokenSource_RespectsLinkedToken1()
-    {
+    public void ActivityCancellationTokenSource_RespectsLinkedToken1() {
         var linkedCts = new CancellationTokenSource();
 
         var cts = ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), linkedCts.Token);
@@ -57,8 +52,7 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public void ActivityCancellationTokenSource_RespectsLinkedToken2()
-    {
+    public void ActivityCancellationTokenSource_RespectsLinkedToken2() {
         var linkedCts = new CancellationTokenSource();
 
         var cts = ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), default, linkedCts.Token);
@@ -69,8 +63,7 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public void ActivityCancellationTokenSource_RespectsBothLinkedTokens()
-    {
+    public void ActivityCancellationTokenSource_RespectsBothLinkedTokens() {
         var linkedCts1 = new CancellationTokenSource();
         var linkedCts2 = new CancellationTokenSource();
 
@@ -83,8 +76,7 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public void ActivityCancellationTokenSource_ClearsRegistrations()
-    {
+    public void ActivityCancellationTokenSource_ClearsRegistrations() {
         var linkedCts1 = new CancellationTokenSource();
         var linkedCts2 = new CancellationTokenSource();
 
@@ -98,14 +90,11 @@ public class ActivityCancellationTokenSourceTests
     }
 
     [Fact]
-    public async Task ActivityCancellationTokenSource_RespectsTimeout()
-    {
+    public async Task ActivityCancellationTokenSource_RespectsTimeout() {
         var cts = ActivityCancellationTokenSource.Rent(TimeSpan.FromMilliseconds(1), CancellationToken.None);
 
-        for (var i = 0; i < 1000; i++)
-        {
-            if (cts.IsCancellationRequested)
-            {
+        for (var i = 0; i < 1000; i++) {
+            if (cts.IsCancellationRequested) {
                 Assert.False(cts.CancelledByLinkedToken);
                 return;
             }

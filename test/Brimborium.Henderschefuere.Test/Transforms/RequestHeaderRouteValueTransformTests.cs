@@ -9,18 +9,16 @@ using Brimborium.Henderschefuere.Transforms;
 
 namespace Brimborium.Henderschefuere.Tests.Transforms;
 
-public class RequestHeaderRouteValueTransformTests
-{
+public class RequestHeaderRouteValueTransformTests {
     [Theory]
-    [InlineData("defaultHeader","value","/{a}/{b}/{c}", "a", "value;6", true)]
-    [InlineData("defaultHeader","value","/{a}/{b}/{c}", "notInRoute", "value", true)]
-    [InlineData("defaultHeader","value","/{a}/{b}/{c}", "notInRoute", "value", false)]
-    [InlineData("defaultHeader","value","/{a}/{b}/{c}", "a", "6", false)]
-    [InlineData("h1","value","/{a}/{b}/{c}", "a", "6", false)]
-    [InlineData("h1","value","/{a}/{b}/{c}", "b", "7", false)]
-    [InlineData("h1","value","/{a}/{*remainder}", "remainder", "7/8", false)]
-    public async Task AddsRequestHeaderRouteValue_SetHeader(string headerName, string defaultHeaderStartValue, string pattern, string routeValueKey, string expected, bool append)
-    {
+    [InlineData("defaultHeader", "value", "/{a}/{b}/{c}", "a", "value;6", true)]
+    [InlineData("defaultHeader", "value", "/{a}/{b}/{c}", "notInRoute", "value", true)]
+    [InlineData("defaultHeader", "value", "/{a}/{b}/{c}", "notInRoute", "value", false)]
+    [InlineData("defaultHeader", "value", "/{a}/{b}/{c}", "a", "6", false)]
+    [InlineData("h1", "value", "/{a}/{b}/{c}", "a", "6", false)]
+    [InlineData("h1", "value", "/{a}/{b}/{c}", "b", "7", false)]
+    [InlineData("h1", "value", "/{a}/{*remainder}", "remainder", "7/8", false)]
+    public async Task AddsRequestHeaderRouteValue_SetHeader(string headerName, string defaultHeaderStartValue, string pattern, string routeValueKey, string expected, bool append) {
         // Arrange
         const string path = "/6/7/8";
 
@@ -33,8 +31,7 @@ public class RequestHeaderRouteValueTransformTests
         var proxyRequest = new HttpRequestMessage();
         proxyRequest.Headers.Add("defaultHeader", defaultHeaderStartValue.Split(";", StringSplitOptions.RemoveEmptyEntries));
 
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Path = path,
             HttpContext = httpContext,
             ProxyRequest = proxyRequest,

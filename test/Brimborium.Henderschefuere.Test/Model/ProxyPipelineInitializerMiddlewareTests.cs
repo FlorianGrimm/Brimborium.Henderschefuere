@@ -21,26 +21,21 @@ using System.Diagnostics;
 
 namespace Brimborium.Henderschefuere.Model.Tests;
 
-public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
-{
-    public ProxyPipelineInitializerMiddlewareTests()
-    {
-        Provide<RequestDelegate>(context =>
-        {
+public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase {
+    public ProxyPipelineInitializerMiddlewareTests() {
+        Provide<RequestDelegate>(context => {
             context.Response.StatusCode = StatusCodes.Status418ImATeapot;
             return Task.CompletedTask;
         });
     }
 
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         Create<ProxyPipelineInitializerMiddleware>();
     }
 
     [Fact]
-    public async Task Invoke_SetsFeatures()
-    {
+    public async Task Invoke_SetsFeatures() {
         var httpClient = new HttpMessageInvoker(new Mock<HttpMessageHandler>().Object);
         var cluster1 = new ClusterState(clusterId: "cluster1");
         cluster1.Model = new ClusterModel(new ClusterConfig(), httpClient);
@@ -74,17 +69,13 @@ public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
     }
 
     [Fact]
-    public async Task Invoke_NoHealthyEndpoints_CallsNext()
-    {
+    public async Task Invoke_NoHealthyEndpoints_CallsNext() {
         var httpClient = new HttpMessageInvoker(new Mock<HttpMessageHandler>().Object);
         var cluster1 = new ClusterState(clusterId: "cluster1");
         cluster1.Model = new ClusterModel(
-            new ClusterConfig()
-            {
-                HealthCheck = new HealthCheckConfig
-                {
-                    Active = new ActiveHealthCheckConfig
-                    {
+            new ClusterConfig() {
+                HealthCheck = new HealthCheckConfig {
+                    Active = new ActiveHealthCheckConfig {
                         Enabled = true,
                         Timeout = Timeout.InfiniteTimeSpan,
                         Interval = Timeout.InfiniteTimeSpan,
@@ -95,8 +86,7 @@ public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
             httpClient);
         var destination1 = cluster1.Destinations.GetOrAdd(
             "destination1",
-            id => new DestinationState(id)
-            {
+            id => new DestinationState(id) {
                 Model = new DestinationModel(new DestinationConfig { Address = "https://localhost:123/a/b/" }),
                 Health = { Active = DestinationHealth.Unhealthy },
             });
@@ -128,11 +118,9 @@ public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
     [Theory]
     [InlineData(1)]
     [InlineData(Timeout.Infinite)]
-    public async Task Invoke_MissingTimeoutMiddleware_RefuseRequest(int timeoutMs)
-    {
+    public async Task Invoke_MissingTimeoutMiddleware_RefuseRequest(int timeoutMs) {
         var httpClient = new HttpMessageInvoker(new Mock<HttpMessageHandler>().Object);
-        var cluster1 = new ClusterState(clusterId: "cluster1")
-        {
+        var cluster1 = new ClusterState(clusterId: "cluster1") {
             Model = new ClusterModel(new ClusterConfig(), httpClient)
         };
 
@@ -142,8 +130,7 @@ public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
             cluster: cluster1,
             transformer: HttpTransformer.Default);
         var aspNetCoreEndpoint = CreateAspNetCoreEndpoint(routeConfig,
-            builder =>
-            {
+            builder => {
                 builder.Metadata.Add(new RequestTimeoutAttribute(timeoutMs));
             });
         aspNetCoreEndpoints.Add(aspNetCoreEndpoint);
@@ -152,20 +139,16 @@ public class ProxyPipelineInitializerMiddlewareTests : TestAutoMockBase
 
         var sut = Create<ProxyPipelineInitializerMiddleware>();
 
-        if (timeoutMs == Timeout.Infinite || Debugger.IsAttached)
-        {
+        if (timeoutMs == Timeout.Infinite || Debugger.IsAttached) {
             // If the timeout was infinite or the debugger is attached, we shouldn't refuse the request.
             await sut.Invoke(httpContext);
-        }
-        else
-        {
+        } else {
             await Assert.ThrowsAsync<InvalidOperationException>(() => sut.Invoke(httpContext));
         }
     }
 #endif
 
-    private static Endpoint CreateAspNetCoreEndpoint(RouteModel routeConfig, Action<RouteEndpointBuilder> configure = null)
-    {
+    private static Endpoint CreateAspNetCoreEndpoint(RouteModel routeConfig, Action<RouteEndpointBuilder> configure = null) {
         var endpointBuilder = new RouteEndpointBuilder(
             requestDelegate: httpContext => Task.CompletedTask,
             routePattern: RoutePatternFactory.Parse("/"),

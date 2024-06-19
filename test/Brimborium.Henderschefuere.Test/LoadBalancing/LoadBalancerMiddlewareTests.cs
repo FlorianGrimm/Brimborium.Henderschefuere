@@ -15,10 +15,8 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.LoadBalancing.Tests;
 
-public class LoadBalancerMiddlewareTests
-{
-    private static LoadBalancingMiddleware CreateMiddleware(RequestDelegate next, params ILoadBalancingPolicy[] loadBalancingPolicies)
-    {
+public class LoadBalancerMiddlewareTests {
+    private static LoadBalancingMiddleware CreateMiddleware(RequestDelegate next, params ILoadBalancingPolicy[] loadBalancingPolicies) {
         var logger = new Mock<ILogger<LoadBalancingMiddleware>>();
         logger
             .Setup(l => l.IsEnabled(It.IsAny<LogLevel>()))
@@ -31,14 +29,12 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public void Constructor_Works()
-    {
+    public void Constructor_Works() {
         CreateMiddleware(_ => Task.CompletedTask);
     }
 
     [Fact]
-    public async Task PickDestination_UnsupportedPolicy_Throws()
-    {
+    public async Task PickDestination_UnsupportedPolicy_Throws() {
         const string PolicyName = "NonExistentPolicy";
         var context = CreateContext(PolicyName, new[]
         {
@@ -53,8 +49,7 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public async Task PickDestination_SingleDestinations_ShortCircuit()
-    {
+    public async Task PickDestination_SingleDestinations_ShortCircuit() {
         var context = CreateContext(LoadBalancingPolicies.FirstAlphabetical, new[]
         {
             new DestinationState("destination1")
@@ -74,8 +69,7 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_Works()
-    {
+    public async Task Invoke_Works() {
         // Selects the alphabetically first available destination.
         var context = CreateContext(LoadBalancingPolicies.FirstAlphabetical, new[]
         {
@@ -97,12 +91,10 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_WithoutDestinations_503()
-    {
+    public async Task Invoke_WithoutDestinations_503() {
         var context = CreateContext(LoadBalancingPolicies.FirstAlphabetical, Array.Empty<DestinationState>());
 
-        var sut = CreateMiddleware(context =>
-        {
+        var sut = CreateMiddleware(context => {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             return Task.CompletedTask;
         });
@@ -118,8 +110,7 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_ServiceReturnsNoResults_FallThrough()
-    {
+    public async Task Invoke_ServiceReturnsNoResults_FallThrough() {
         const string PolicyName = "CustomPolicy";
 
         var context = CreateContext(PolicyName, new[]
@@ -136,8 +127,7 @@ public class LoadBalancerMiddlewareTests
             .Setup(p => p.PickDestination(It.IsAny<HttpContext>(), It.IsAny<ClusterState>(), It.IsAny<IReadOnlyList<DestinationState>>()))
             .Returns((DestinationState)null);
 
-        var sut = CreateMiddleware(context =>
-        {
+        var sut = CreateMiddleware(context => {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             return Task.CompletedTask;
         },
@@ -154,8 +144,7 @@ public class LoadBalancerMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_NoPolicySpecified_DefaultsToPowerOfTwoChoices()
-    {
+    public async Task Invoke_NoPolicySpecified_DefaultsToPowerOfTwoChoices() {
         var destinations = new[]
         {
             new DestinationState("destination1"),
@@ -178,10 +167,8 @@ public class LoadBalancerMiddlewareTests
         policy.Verify(p => p.PickDestination(context, It.IsAny<ClusterState>(), destinations), Times.Once);
     }
 
-    private static HttpContext CreateContext(string loadBalancingPolicy, IReadOnlyList<DestinationState> destinations)
-    {
-        var cluster = new ClusterState("cluster1")
-        {
+    private static HttpContext CreateContext(string loadBalancingPolicy, IReadOnlyList<DestinationState> destinations) {
+        var cluster = new ClusterState("cluster1") {
             Model = new ClusterModel(new ClusterConfig { LoadBalancingPolicy = loadBalancingPolicy },
                 new HttpMessageInvoker(new HttpClientHandler()))
         };
@@ -190,8 +177,7 @@ public class LoadBalancerMiddlewareTests
 
         var route = new RouteModel(new RouteConfig(), cluster, HttpTransformer.Default);
         context.Features.Set<IReverseProxyFeature>(
-            new ReverseProxyFeature()
-            {
+            new ReverseProxyFeature() {
                 AvailableDestinations = destinations,
                 Route = route,
                 Cluster = cluster.Model

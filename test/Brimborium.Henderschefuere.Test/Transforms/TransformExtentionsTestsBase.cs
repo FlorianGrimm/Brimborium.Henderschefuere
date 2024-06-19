@@ -8,16 +8,13 @@ using Brimborium.Henderschefuere.Transforms.Builder;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public abstract class TransformExtentionsTestsBase
-{
-    protected static TransformBuilderContext CreateBuilderContext(IServiceProvider services = null) => new()
-    {
+public abstract class TransformExtentionsTestsBase {
+    protected static TransformBuilderContext CreateBuilderContext(IServiceProvider services = null) => new() {
         Route = new RouteConfig(),
         Services = services,
     };
 
-    protected static TransformBuilderContext ValidateAndBuild(RouteConfig routeConfig, ITransformFactory factory, IServiceProvider serviceProvider = null)
-    {
+    protected static TransformBuilderContext ValidateAndBuild(RouteConfig routeConfig, ITransformFactory factory, IServiceProvider serviceProvider = null) {
         var transformValues = Assert.Single(routeConfig.Transforms);
 
         var validationContext = new TransformRouteValidationContext { Route = routeConfig };

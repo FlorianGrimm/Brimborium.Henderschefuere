@@ -12,8 +12,7 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class ResponseTrailerRemoveTransformTests
-{
+public class ResponseTrailerRemoveTransformTests {
     [Theory]
     [InlineData("header1", "value1", 200, ResponseCondition.Success, "header1", "")]
     [InlineData("header1", "value1", 404, ResponseCondition.Success, "header1", "header1")]
@@ -37,21 +36,18 @@ public class ResponseTrailerRemoveTransformTests
     [InlineData("header1; header2; header2; header3", "value1, value2-1, value2-2, value3", 404, ResponseCondition.Success, "header2", "header1; header2; header3")]
     [InlineData("header1; header2; header2; header3", "value1, value2-1, value2-2, value3", 200, ResponseCondition.Always, "header2", "header1; header3")]
     [InlineData("header1; header2; header2; header3", "value1, value2-1, value2-2, value3", 404, ResponseCondition.Always, "header2", "header1; header3")]
-    public async Task RemoveTrailerFromFeature_Success(string names, string values, int status, ResponseCondition condition, string removedHeader, string expected)
-    {
+    public async Task RemoveTrailerFromFeature_Success(string names, string values, int status, ResponseCondition condition, string removedHeader, string expected) {
         var httpContext = new DefaultHttpContext();
         httpContext.Response.StatusCode = status;
         var trailerFeature = new TestTrailersFeature();
         httpContext.Features.Set<IHttpResponseTrailersFeature>(trailerFeature);
         var proxyResponse = new HttpResponseMessage();
-        foreach (var (name, subvalues) in TestResources.ParseNameAndValues(names, values))
-        {
+        foreach (var (name, subvalues) in TestResources.ParseNameAndValues(names, values)) {
             trailerFeature.Trailers[name] = subvalues;
         }
 
         var transform = new ResponseTrailerRemoveTransform(removedHeader, condition);
-        await transform.ApplyAsync(new ResponseTrailersTransformContext()
-        {
+        await transform.ApplyAsync(new ResponseTrailersTransformContext() {
             HttpContext = httpContext,
             ProxyResponse = proxyResponse,
             HeadersCopied = true,

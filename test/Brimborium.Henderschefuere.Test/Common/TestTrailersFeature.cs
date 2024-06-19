@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace Brimborium.Tests.Common;
 
-internal sealed class TestTrailersFeature : IHttpResponseTrailersFeature
-{
+internal sealed class TestTrailersFeature : IHttpResponseTrailersFeature {
     public IHeaderDictionary Trailers { get; set; } = new HeaderDictionary();
 }

@@ -17,10 +17,8 @@ using Brimborium.Tests.Common;
 
 namespace Brimborium.Henderschefuere.Forwarder.Tests;
 
-public class StreamCopyHttpContentTests
-{
-    private static StreamCopyHttpContent CreateContent(HttpContext context = null, bool isStreamingRequest = false, TimeProvider timeProvider = null, ActivityCancellationTokenSource contentCancellation = null)
-    {
+public class StreamCopyHttpContentTests {
+    private static StreamCopyHttpContent CreateContent(HttpContext context = null, bool isStreamingRequest = false, TimeProvider timeProvider = null, ActivityCancellationTokenSource contentCancellation = null) {
         context ??= new DefaultHttpContext();
         timeProvider ??= TimeProvider.System;
         contentCancellation ??= ActivityCancellationTokenSource.Rent(TimeSpan.FromSeconds(10), CancellationToken.None);
@@ -28,8 +26,7 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public async Task CopyToAsync_InvokesStreamCopier()
-    {
+    public async Task CopyToAsync_InvokesStreamCopier() {
         const int SourceSize = (128 * 1024) - 3;
 
         var sourceBytes = Enumerable.Range(0, SourceSize).Select(i => (byte)(i % 256)).ToArray();
@@ -51,15 +48,13 @@ public class StreamCopyHttpContentTests
     [Theory]
     [InlineData(false)] // we expect to always flush at least once to trigger sending request headers
     [InlineData(true)]
-    public async Task CopyToAsync_AutoFlushing(bool autoFlush)
-    {
+    public async Task CopyToAsync_AutoFlushing(bool autoFlush) {
         // Must be same as StreamCopier constant.
         const int DefaultBufferSize = 65536;
         const int SourceSize = (128 * 1024) - 3;
 
         var expectedFlushes = 0;
-        if (autoFlush)
-        {
+        if (autoFlush) {
             // How many buffers is needed to send the source rounded up.
             expectedFlushes = (SourceSize - 1) / DefaultBufferSize + 1;
         }
@@ -85,8 +80,7 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public async Task CopyToAsync_AsyncSequencing()
-    {
+    public async Task CopyToAsync_AsyncSequencing() {
         var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var source = new Mock<Stream>();
         source.Setup(s => s.ReadAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>())).Returns(() => new ValueTask<int>(tcs.Task));
@@ -109,8 +103,7 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public Task ReadAsStreamAsync_Throws()
-    {
+    public Task ReadAsStreamAsync_Throws() {
         var sut = CreateContent();
 
         Func<Task> func = () => sut.ReadAsStreamAsync();
@@ -119,8 +112,7 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public void AllowDuplex_ReturnsTrue()
-    {
+    public void AllowDuplex_ReturnsTrue() {
         var sut = CreateContent();
 
         // This is an internal property that HttpClient and friends use internally and which must be true
@@ -133,14 +125,11 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public async Task SerializeToStreamAsync_RespectsContentCancellation()
-    {
+    public async Task SerializeToStreamAsync_RespectsContentCancellation() {
         var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var source = new ReadDelegatingStream(new MemoryStream(), async (buffer, cancellation) =>
-        {
-            if (buffer.Length == 0)
-            {
+        var source = new ReadDelegatingStream(new MemoryStream(), async (buffer, cancellation) => {
+            if (buffer.Length == 0) {
                 return 0;
             }
 
@@ -165,14 +154,11 @@ public class StreamCopyHttpContentTests
     }
 
     [Fact]
-    public async Task SerializeToStreamAsync_CanBeCanceledExternally()
-    {
+    public async Task SerializeToStreamAsync_CanBeCanceledExternally() {
         var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var source = new ReadDelegatingStream(new MemoryStream(), async (buffer, cancellation) =>
-        {
-            if (buffer.Length == 0)
-            {
+        var source = new ReadDelegatingStream(new MemoryStream(), async (buffer, cancellation) => {
+            if (buffer.Length == 0) {
                 return 0;
             }
 
@@ -195,33 +181,27 @@ public class StreamCopyHttpContentTests
         await copyToTask;
     }
 
-    private class FlushCountingStream : DelegatingStream
-    {
+    private class FlushCountingStream : DelegatingStream {
         public FlushCountingStream(Stream stream)
-            : base(stream)
-        { }
+            : base(stream) { }
 
         public int NumFlushes { get; private set; }
 
-        public override async Task FlushAsync(CancellationToken cancellationToken)
-        {
+        public override async Task FlushAsync(CancellationToken cancellationToken) {
             await base.FlushAsync(cancellationToken);
             NumFlushes++;
         }
     }
 
-    private sealed class ReadDelegatingStream : DelegatingStream
-    {
+    private sealed class ReadDelegatingStream : DelegatingStream {
         private readonly Func<Memory<byte>, CancellationToken, ValueTask<int>> _readAsync;
 
         public ReadDelegatingStream(Stream stream, Func<Memory<byte>, CancellationToken, ValueTask<int>> readAsync)
-            : base(stream)
-        {
+            : base(stream) {
             _readAsync = readAsync;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-        {
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
             return _readAsync(buffer, cancellationToken);
         }
     }

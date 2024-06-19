@@ -14,11 +14,9 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class DestinationHealthUpdaterTests
-{
+public class DestinationHealthUpdaterTests {
     [Fact]
-    public async Task SetPassiveAsync_DestinationBecameUnhealthy_SetUnhealthyAndScheduleReactivation()
-    {
+    public async Task SetPassiveAsync_DestinationBecameUnhealthy_SetUnhealthyAndScheduleReactivation() {
         var destination = new DestinationState("destination0");
         destination.Health.Active = DestinationHealth.Healthy;
         destination.Health.Passive = DestinationHealth.Healthy;
@@ -44,8 +42,7 @@ public class DestinationHealthUpdaterTests
     }
 
     [Fact]
-    public async Task SetPassiveAsync_DestinationBecameHealthy_SetNewState()
-    {
+    public async Task SetPassiveAsync_DestinationBecameHealthy_SetNewState() {
         var destination = new DestinationState("destination0");
         destination.Health.Active = DestinationHealth.Healthy;
         destination.Health.Passive = DestinationHealth.Unhealthy;
@@ -66,8 +63,7 @@ public class DestinationHealthUpdaterTests
     [InlineData(DestinationHealth.Unhealthy)]
     [InlineData(DestinationHealth.Healthy)]
     [InlineData(DestinationHealth.Unknown)]
-    public async Task SetPassiveAsync_HealthSateIsNotChanged_DoNothing(DestinationHealth health)
-    {
+    public async Task SetPassiveAsync_HealthSateIsNotChanged_DoNothing(DestinationHealth health) {
         var destination = new DestinationState("destination0");
         destination.Health.Active = DestinationHealth.Healthy;
         destination.Health.Passive = health;
@@ -83,8 +79,7 @@ public class DestinationHealthUpdaterTests
     }
 
     [Fact]
-    public void SetActive_ChangedAndUnchangedHealthStates_SetChangedStates()
-    {
+    public void SetActive_ChangedAndUnchangedHealthStates_SetChangedStates() {
         var destination0 = new DestinationState("destination0");
         destination0.Health.Active = DestinationHealth.Healthy;
         destination0.Health.Passive = DestinationHealth.Healthy;
@@ -106,8 +101,7 @@ public class DestinationHealthUpdaterTests
         };
         updater.SetActive(cluster, newHealthStates);
 
-        foreach (var newHealthState in newHealthStates)
-        {
+        foreach (var newHealthState in newHealthStates) {
             Assert.Equal(newHealthState.NewActiveHealth, newHealthState.Destination.Health.Active);
             Assert.Equal(DestinationHealth.Healthy, newHealthState.Destination.Health.Passive);
         }
@@ -117,22 +111,17 @@ public class DestinationHealthUpdaterTests
         Assert.Contains(cluster.DestinationsState.AvailableDestinations, d => d == destination3);
     }
 
-    private static ClusterState CreateCluster(bool passive, bool active, params DestinationState[] destinations)
-    {
+    private static ClusterState CreateCluster(bool passive, bool active, params DestinationState[] destinations) {
         var cluster = new ClusterState("cluster0");
         cluster.Model = new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = cluster.ClusterId,
-                HealthCheck = new HealthCheckConfig()
-                {
-                    Passive = new PassiveHealthCheckConfig()
-                    {
+                HealthCheck = new HealthCheckConfig() {
+                    Passive = new PassiveHealthCheckConfig() {
                         Policy = "policy0",
                         Enabled = passive,
                     },
-                    Active = new ActiveHealthCheckConfig()
-                    {
+                    Active = new ActiveHealthCheckConfig() {
                         Enabled = active,
                         Policy = "policy1",
                     },
@@ -140,8 +129,7 @@ public class DestinationHealthUpdaterTests
             },
             new HttpMessageInvoker(new HttpClientHandler()));
 
-        foreach (var destination in destinations)
-        {
+        foreach (var destination in destinations) {
             cluster.Destinations.TryAdd(destination.DestinationId, destination);
         }
 
@@ -150,11 +138,9 @@ public class DestinationHealthUpdaterTests
         return cluster;
     }
 
-    private IClusterDestinationsUpdater GetClusterUpdater()
-    {
+    private IClusterDestinationsUpdater GetClusterUpdater() {
         var result = new Mock<IClusterDestinationsUpdater>(MockBehavior.Strict);
-        result.Setup(u => u.UpdateAvailableDestinations(It.IsAny<ClusterState>())).Callback((ClusterState c) =>
-        {
+        result.Setup(u => u.UpdateAvailableDestinations(It.IsAny<ClusterState>())).Callback((ClusterState c) => {
             var availableDestinations = c.Destinations.Values
                 .Where(d => d.Health.Active != DestinationHealth.Unhealthy && d.Health.Passive != DestinationHealth.Unhealthy)
                 .ToList();

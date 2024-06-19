@@ -13,17 +13,14 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class PassiveHealthCheckMiddlewareTests
-{
+public class PassiveHealthCheckMiddlewareTests {
     [Fact]
-    public async Task Invoke_PassiveHealthCheckIsEnabled_CallPolicy()
-    {
+    public async Task Invoke_PassiveHealthCheckIsEnabled_CallPolicy() {
         var policies = new[] { GetPolicy("policy0"), GetPolicy("policy1") };
         var cluster0 = GetClusterInfo("cluster0", "policy0");
         var cluster1 = GetClusterInfo("cluster1", "policy1");
         var nextInvoked = false;
-        var middleware = new PassiveHealthCheckMiddleware(c =>
-        {
+        var middleware = new PassiveHealthCheckMiddleware(c => {
             nextInvoked = true;
             return Task.CompletedTask;
         }, policies.Select(p => p.Object));
@@ -51,13 +48,11 @@ public class PassiveHealthCheckMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_PassiveHealthCheckIsDisabled_DoNothing()
-    {
+    public async Task Invoke_PassiveHealthCheckIsDisabled_DoNothing() {
         var policies = new[] { GetPolicy("policy0"), GetPolicy("policy1") };
         var cluster0 = GetClusterInfo("cluster0", "policy0", enabled: false);
         var nextInvoked = false;
-        var middleware = new PassiveHealthCheckMiddleware(c =>
-        {
+        var middleware = new PassiveHealthCheckMiddleware(c => {
             nextInvoked = true;
             return Task.CompletedTask;
         }, policies.Select(p => p.Object));
@@ -73,13 +68,11 @@ public class PassiveHealthCheckMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_PassiveHealthCheckIsEnabledButNoDestinationSelected_DoNothing()
-    {
+    public async Task Invoke_PassiveHealthCheckIsEnabledButNoDestinationSelected_DoNothing() {
         var policies = new[] { GetPolicy("policy0"), GetPolicy("policy1") };
         var cluster0 = GetClusterInfo("cluster0", "policy0");
         var nextInvoked = false;
-        var middleware = new PassiveHealthCheckMiddleware(c =>
-        {
+        var middleware = new PassiveHealthCheckMiddleware(c => {
             nextInvoked = true;
             return Task.CompletedTask;
         }, policies.Select(p => p.Object));
@@ -95,41 +88,33 @@ public class PassiveHealthCheckMiddlewareTests
         policies[1].VerifyNoOtherCalls();
     }
 
-    private HttpContext GetContext(ClusterState cluster, int selectedDestination, IForwarderErrorFeature error)
-    {
+    private HttpContext GetContext(ClusterState cluster, int selectedDestination, IForwarderErrorFeature error) {
         var context = new DefaultHttpContext();
         context.Features.Set(GetProxyFeature(cluster, cluster.DestinationsState.AllDestinations[selectedDestination]));
         context.Features.Set(error);
         return context;
     }
 
-    private Mock<IPassiveHealthCheckPolicy> GetPolicy(string name)
-    {
+    private Mock<IPassiveHealthCheckPolicy> GetPolicy(string name) {
         var policy = new Mock<IPassiveHealthCheckPolicy>();
         policy.SetupGet(p => p.Name).Returns(name);
         return policy;
     }
 
-    private IReverseProxyFeature GetProxyFeature(ClusterState clusterState, DestinationState destination)
-    {
-        return new ReverseProxyFeature()
-        {
+    private IReverseProxyFeature GetProxyFeature(ClusterState clusterState, DestinationState destination) {
+        return new ReverseProxyFeature() {
             ProxiedDestination = destination,
             Cluster = clusterState.Model,
             Route = new RouteModel(new RouteConfig(), clusterState, HttpTransformer.Default),
         };
     }
 
-    private ClusterState GetClusterInfo(string id, string policy, bool enabled = true)
-    {
+    private ClusterState GetClusterInfo(string id, string policy, bool enabled = true) {
         var clusterModel = new ClusterModel(
-            new ClusterConfig
-            {
+            new ClusterConfig {
                 ClusterId = id,
-                HealthCheck = new HealthCheckConfig
-                {
-                    Passive = new PassiveHealthCheckConfig
-                    {
+                HealthCheck = new HealthCheckConfig {
+                    Passive = new PassiveHealthCheckConfig {
                         Enabled = enabled,
                         Policy = policy,
                     }

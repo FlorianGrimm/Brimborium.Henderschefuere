@@ -8,16 +8,12 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class HealtyAndUnknownDesitnationsPolicyTests
-{
+public class HealtyAndUnknownDesitnationsPolicyTests {
     [Fact]
-    public void GetAvailableDestinations_HealthChecksEnabled_FilterOutUnhealthy()
-    {
-        var cluster = new ClusterConfig()
-        {
+    public void GetAvailableDestinations_HealthChecksEnabled_FilterOutUnhealthy() {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
-            HealthCheck = new HealthCheckConfig
-            {
+            HealthCheck = new HealthCheckConfig {
                 Active = new ActiveHealthCheckConfig { Enabled = true },
                 Passive = new PassiveHealthCheckConfig { Enabled = true }
             }
@@ -46,8 +42,7 @@ public class HealtyAndUnknownDesitnationsPolicyTests
 
     [Theory]
     [MemberData(nameof(GetDisabledHealthChecksCases))]
-    public void GetAvailableDestinations_HealthChecksDisabled_ReturnAll(HealthCheckConfig config)
-    {
+    public void GetAvailableDestinations_HealthChecksDisabled_ReturnAll(HealthCheckConfig config) {
         var cluster = new ClusterConfig() { ClusterId = "cluster1", HealthCheck = config };
         var allDestinations = new[]
         {
@@ -78,13 +73,10 @@ public class HealtyAndUnknownDesitnationsPolicyTests
     [InlineData(true, DestinationHealth.Healthy, false, DestinationHealth.Unhealthy, true)]
     [InlineData(false, DestinationHealth.Unhealthy, false, DestinationHealth.Unhealthy, true)]
     [InlineData(true, DestinationHealth.Unhealthy, true, DestinationHealth.Unhealthy, false)]
-    public void GetAvailableDestinations_OneHealthCheckDisabled_UseUnknownState(bool activeEnabled, DestinationHealth active, bool passiveEnabled, DestinationHealth passive, bool isAvailable)
-    {
-        var cluster = new ClusterConfig()
-        {
+    public void GetAvailableDestinations_OneHealthCheckDisabled_UseUnknownState(bool activeEnabled, DestinationHealth active, bool passiveEnabled, DestinationHealth passive, bool isAvailable) {
+        var cluster = new ClusterConfig() {
             ClusterId = "cluster1",
-            HealthCheck = new HealthCheckConfig
-            {
+            HealthCheck = new HealthCheckConfig {
                 Active = new ActiveHealthCheckConfig { Enabled = activeEnabled },
                 Passive = new PassiveHealthCheckConfig { Enabled = passiveEnabled }
             }
@@ -95,18 +87,14 @@ public class HealtyAndUnknownDesitnationsPolicyTests
         var destination = new DestinationState("d0") { Health = { Active = active, Passive = passive } };
         var availableDestinations = policy.GetAvailalableDestinations(cluster, new[] { destination });
 
-        if (isAvailable)
-        {
+        if (isAvailable) {
             Assert.Single(availableDestinations, destination);
-        }
-        else
-        {
+        } else {
             Assert.Empty(availableDestinations);
         }
     }
 
-    public static IEnumerable<object[]> GetDisabledHealthChecksCases()
-    {
+    public static IEnumerable<object[]> GetDisabledHealthChecksCases() {
         yield return new[] { new HealthCheckConfig() };
         yield return new[] { (object)null };
     }

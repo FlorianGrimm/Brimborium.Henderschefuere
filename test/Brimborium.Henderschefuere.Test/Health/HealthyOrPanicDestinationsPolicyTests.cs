@@ -7,11 +7,9 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class HealthyOrPanicDestinationsPolicyTests
-{
+public class HealthyOrPanicDestinationsPolicyTests {
     [Fact]
-    public void GetAvailableDestinations_SomeDestinationsAreHealthy_ReturnOnlyHealthy()
-    {
+    public void GetAvailableDestinations_SomeDestinationsAreHealthy_ReturnOnlyHealthy() {
         var cluster = GetClusterConfig();
 
         var allDestinations = new[]
@@ -32,8 +30,7 @@ public class HealthyOrPanicDestinationsPolicyTests
     }
 
     [Fact]
-    public void GetAvailableDestinations_AllDestinationsAreUnhealthy_ReturnAll()
-    {
+    public void GetAvailableDestinations_AllDestinationsAreUnhealthy_ReturnAll() {
         var cluster = GetClusterConfig();
 
         var allDestinations = new[]
@@ -54,13 +51,10 @@ public class HealthyOrPanicDestinationsPolicyTests
         Assert.Same(allDestinations[3], availableDestinations[3]);
     }
 
-    private static ClusterConfig GetClusterConfig()
-    {
-        return new ClusterConfig()
-        {
+    private static ClusterConfig GetClusterConfig() {
+        return new ClusterConfig() {
             ClusterId = "cluster1",
-            HealthCheck = new HealthCheckConfig
-            {
+            HealthCheck = new HealthCheckConfig {
                 Active = new ActiveHealthCheckConfig { Enabled = true },
                 Passive = new PassiveHealthCheckConfig { Enabled = true }
             }

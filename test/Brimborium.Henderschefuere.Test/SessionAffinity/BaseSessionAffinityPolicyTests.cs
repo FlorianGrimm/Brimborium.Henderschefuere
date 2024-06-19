@@ -15,13 +15,11 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.SessionAffinity.Tests;
 
-public class BaseSesstionAffinityPolicyTests
-{
+public class BaseSesstionAffinityPolicyTests {
     private const string InvalidKeyNull = "!invalid key - null!";
     private const string InvalidKeyThrow = "!invalid key - throw!";
     private const string KeyName = "StubAffinityKey";
-    private readonly SessionAffinityConfig _defaultOptions = new SessionAffinityConfig
-    {
+    private readonly SessionAffinityConfig _defaultOptions = new SessionAffinityConfig {
         Enabled = true,
         Policy = "Stub",
         FailurePolicy = "Return503Error",
@@ -38,45 +36,37 @@ public class BaseSesstionAffinityPolicyTests
         byte[] expectedEncryptedKey,
         bool unprotectCalled,
         LogLevel? expectedLogLevel,
-        EventId expectedEventId)
-    {
+        EventId expectedEventId) {
         var dataProtector = GetDataProtector();
         var logger = AffinityTestHelper.GetLogger<BaseEncryptedSessionAffinityPolicy<string>>();
         var provider = new ProviderStub(dataProtector.Object, logger.Object);
         var cluster = new ClusterState("cluster");
         var affinityResult = provider.FindAffinitizedDestinations(context, cluster, _defaultOptions, allDestinations);
 
-        if (unprotectCalled)
-        {
+        if (unprotectCalled) {
             dataProtector.Verify(p => p.Unprotect(It.Is<byte[]>(b => b.SequenceEqual(expectedEncryptedKey))), Times.Once);
         }
 
         Assert.Equal(expectedStatus, affinityResult.Status);
         Assert.Same(expectedDestination, affinityResult.Destinations?.FirstOrDefault());
 
-        if (expectedLogLevel is not null)
-        {
+        if (expectedLogLevel is not null) {
             logger.Verify(
                 l => l.Log(expectedLogLevel.Value, expectedEventId, It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
                 Times.Once);
         }
 
-        if (expectedDestination is not null)
-        {
+        if (expectedDestination is not null) {
             Assert.Single(affinityResult.Destinations);
-        }
-        else
-        {
+        } else {
             Assert.Null(affinityResult.Destinations);
         }
     }
 
     [Fact]
-    public void FindAffinitizedDestination_AffinityDisabledOnCluster_ReturnsAffinityDisabled()
-    {
+    public void FindAffinitizedDestination_AffinityDisabledOnCluster_ReturnsAffinityDisabled() {
         var provider = new ProviderStub(GetDataProtector().Object, AffinityTestHelper.GetLogger<BaseEncryptedSessionAffinityPolicy<string>>().Object);
-        var options = new SessionAffinityConfig
-        {
+        var options = new SessionAffinityConfig {
             Enabled = false,
             Policy = _defaultOptions.Policy,
             FailurePolicy = _defaultOptions.FailurePolicy,
@@ -87,16 +77,14 @@ public class BaseSesstionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizeRequest_AffinityDisabled_DoNothing()
-    {
+    public void AffinitizeRequest_AffinityDisabled_DoNothing() {
         var dataProtector = GetDataProtector();
         var provider = new ProviderStub(dataProtector.Object, AffinityTestHelper.GetLogger<BaseEncryptedSessionAffinityPolicy<string>>().Object);
         Assert.Throws<InvalidOperationException>(() => provider.AffinitizeResponse(new DefaultHttpContext(), new ClusterState("cluster"), new SessionAffinityConfig(), new DestinationState("id")));
     }
 
     [Fact]
-    public void AffinitizeRequest_RequestIsAffinitized_DoNothing()
-    {
+    public void AffinitizeRequest_RequestIsAffinitized_DoNothing() {
         var dataProtector = GetDataProtector();
         var provider = new ProviderStub(dataProtector.Object, AffinityTestHelper.GetLogger<BaseEncryptedSessionAffinityPolicy<string>>().Object);
         var context = new DefaultHttpContext();
@@ -107,8 +95,7 @@ public class BaseSesstionAffinityPolicyTests
     }
 
     [Fact]
-    public void AffinitizeRequest_RequestIsNotAffinitized_SetAffinityKey()
-    {
+    public void AffinitizeRequest_RequestIsNotAffinitized_SetAffinityKey() {
         var dataProtector = GetDataProtector();
         var provider = new ProviderStub(dataProtector.Object, AffinityTestHelper.GetLogger<BaseEncryptedSessionAffinityPolicy<string>>().Object);
         var destination = new DestinationState("dest-A");
@@ -119,16 +106,14 @@ public class BaseSesstionAffinityPolicyTests
     }
 
     [Fact]
-    public void Ctor_MandatoryArgumentIsNull_Throw()
-    {
+    public void Ctor_MandatoryArgumentIsNull_Throw() {
         Assert.Throws<ArgumentNullException>(() => new ProviderStub(null, new Mock<ILogger>().Object));
         // CreateDataProtector will return null
         Assert.Throws<ArgumentNullException>(() => new ProviderStub(new Mock<IDataProtector>().Object, new Mock<ILogger>().Object));
         Assert.Throws<ArgumentNullException>(() => new ProviderStub(GetDataProtector().Object, null));
     }
 
-    public static IEnumerable<object[]> FindAffinitizedDestinationsCases()
-    {
+    public static IEnumerable<object[]> FindAffinitizedDestinationsCases() {
         var destinations = new[] { new DestinationState("dest-A"), new DestinationState("dest-B"), new DestinationState("dest-C") };
         yield return new object[] { GetHttpContext(new[] { ("SomeKey", "SomeValue") }), destinations, AffinityStatus.AffinityKeyNotSet, null, null, false, null, null };
         yield return new object[] { GetHttpContext(new[] { (KeyName, "dest-B") }), destinations, AffinityStatus.OK, destinations[1], Encoding.UTF8.GetBytes("dest-B"), true, null, null };
@@ -139,17 +124,14 @@ public class BaseSesstionAffinityPolicyTests
         yield return new object[] { GetHttpContext(new[] { (KeyName, InvalidKeyThrow) }), destinations, AffinityStatus.AffinityKeyExtractionFailed, null, Encoding.UTF8.GetBytes(InvalidKeyThrow), true, LogLevel.Error, EventIds.RequestAffinityKeyDecryptionFailed };
     }
 
-    private static HttpContext GetHttpContext((string Key, string Value)[] items, bool encodeToBase64 = true)
-    {
-        var context = new DefaultHttpContext
-        {
+    private static HttpContext GetHttpContext((string Key, string Value)[] items, bool encodeToBase64 = true) {
+        var context = new DefaultHttpContext {
             Items = items.ToDictionary(i => (object)i.Key, i => encodeToBase64 ? (object)Convert.ToBase64String(Encoding.UTF8.GetBytes(i.Value)) : i.Value)
         };
         return context;
     }
 
-    private Mock<IDataProtector> GetDataProtector()
-    {
+    private Mock<IDataProtector> GetDataProtector() {
         var result = new Mock<IDataProtector>();
         var nullBytes = Encoding.UTF8.GetBytes(InvalidKeyNull);
         var throwBytes = Encoding.UTF8.GetBytes(InvalidKeyThrow);
@@ -161,30 +143,25 @@ public class BaseSesstionAffinityPolicyTests
         return result;
     }
 
-    private class ProviderStub : BaseEncryptedSessionAffinityPolicy<string>
-    {
+    private class ProviderStub : BaseEncryptedSessionAffinityPolicy<string> {
         public static readonly string KeyNameSetting = "AffinityKeyName";
 
         public ProviderStub(IDataProtectionProvider dataProtectionProvider, ILogger logger)
-            : base(dataProtectionProvider, logger)
-        {}
+            : base(dataProtectionProvider, logger) { }
 
         public override string Name => "Stub";
 
         public string LastSetEncryptedKey { get; private set; }
 
-        public void DirectlySetExtractedKeyOnContext(HttpContext context, string key)
-        {
+        public void DirectlySetExtractedKeyOnContext(HttpContext context, string key) {
             context.Items[AffinityKeyId] = key;
         }
 
-        protected override string GetDestinationAffinityKey(DestinationState destination)
-        {
+        protected override string GetDestinationAffinityKey(DestinationState destination) {
             return destination.DestinationId;
         }
 
-        protected override (string Key, bool ExtractedSuccessfully) GetRequestAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig options)
-        {
+        protected override (string Key, bool ExtractedSuccessfully) GetRequestAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig options) {
             Assert.Equal(Name, options.Policy);
             // HttpContext.Items is used here to store the request affinity key for simplicity.
             // In real world scenario, a provider will extract it from request (e.g. header, cookie, etc.)
@@ -192,8 +169,7 @@ public class BaseSesstionAffinityPolicyTests
             return Unprotect((string)encryptedKey);
         }
 
-        protected override void SetAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig options, string unencryptedKey)
-        {
+        protected override void SetAffinityKey(HttpContext context, ClusterState cluster, SessionAffinityConfig options, string unencryptedKey) {
             var encryptedKey = Protect(unencryptedKey);
             context.Items[options.AffinityKeyName] = encryptedKey;
             LastSetEncryptedKey = encryptedKey;

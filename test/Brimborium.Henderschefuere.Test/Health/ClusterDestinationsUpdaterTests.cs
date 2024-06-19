@@ -11,11 +11,9 @@ using Brimborium.Henderschefuere.Model;
 
 namespace Brimborium.Henderschefuere.Health.Tests;
 
-public class ClusterDestinationsUpdaterTests
-{
+public class ClusterDestinationsUpdaterTests {
     [Fact]
-    public void UpdateAllDestinations_UseDestinationsCollectionAsSource()
-    {
+    public void UpdateAllDestinations_UseDestinationsCollectionAsSource() {
         var cluster = GetCluster("policy1");
         var destination0 = cluster.Destinations.GetOrAdd("d0", id => new DestinationState(id));
         var destination1 = cluster.Destinations.GetOrAdd("d1", id => new DestinationState(id));
@@ -38,8 +36,7 @@ public class ClusterDestinationsUpdaterTests
     }
 
     [Fact]
-    public void UpdateAvailableDestinations_UseAllDestinationsAsSource()
-    {
+    public void UpdateAvailableDestinations_UseAllDestinationsAsSource() {
         var cluster = GetCluster("policy1");
         var allDestinations = new[] { new DestinationState("d0"), new DestinationState("d1"), new DestinationState("d2") };
         cluster.DestinationsState = new ClusterDestinationsState(allDestinations, new[] { allDestinations[0], allDestinations[1] });
@@ -60,18 +57,14 @@ public class ClusterDestinationsUpdaterTests
         AssertEquals(allDestinations, policy1.TakenDestinations);
     }
 
-    private static void AssertEquals(IEnumerable<DestinationState> actual, IEnumerable<DestinationState> expected)
-    {
+    private static void AssertEquals(IEnumerable<DestinationState> actual, IEnumerable<DestinationState> expected) {
         Assert.Equal(actual.OrderBy(d => d.DestinationId).Select(d => d.DestinationId), expected.OrderBy(d => d.DestinationId).Select(d => d.DestinationId));
     }
 
-    private static ClusterState GetCluster(string policyName)
-    {
-        var cluster = new ClusterState("cluster1")
-        {
+    private static ClusterState GetCluster(string policyName) {
+        var cluster = new ClusterState("cluster1") {
             Model = new ClusterModel(
-                new ClusterConfig
-                {
+                new ClusterConfig {
                     ClusterId = "cluster1",
                     HealthCheck = new HealthCheckConfig { AvailableDestinationsPolicy = policyName }
                 },
@@ -81,24 +74,21 @@ public class ClusterDestinationsUpdaterTests
         return cluster;
     }
 
-    private class StubPolicy : IAvailableDestinationsPolicy
-    {
+    private class StubPolicy : IAvailableDestinationsPolicy {
         private readonly DestinationState _skipDestination;
 
         public bool IsCalled { get; private set; }
 
         public IReadOnlyList<DestinationState> TakenDestinations { get; private set; }
 
-        public StubPolicy(string name, DestinationState skipDestination)
-        {
+        public StubPolicy(string name, DestinationState skipDestination) {
             Name = name;
             _skipDestination = skipDestination;
         }
 
         public string Name { get; }
 
-        public IReadOnlyList<DestinationState> GetAvailalableDestinations(ClusterConfig config, IReadOnlyList<DestinationState> allDestinations)
-        {
+        public IReadOnlyList<DestinationState> GetAvailalableDestinations(ClusterConfig config, IReadOnlyList<DestinationState> allDestinations) {
             IsCalled = true;
             TakenDestinations = allDestinations;
             return allDestinations.Where(p => p != _skipDestination).ToArray();

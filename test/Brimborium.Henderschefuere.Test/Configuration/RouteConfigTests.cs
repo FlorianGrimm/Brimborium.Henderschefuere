@@ -5,17 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class RouteConfigTests
-{
+public class RouteConfigTests {
     [Fact]
-    public void Equals_Positive()
-    {
-        var a = new RouteConfig()
-        {
+    public void Equals_Positive() {
+        var a = new RouteConfig() {
             AuthorizationPolicy = "a",
 #if NET7_0_OR_GREATER
             RateLimiterPolicy = "rl",
@@ -26,8 +24,7 @@ public class RouteConfigTests
 #endif
             ClusterId = "c",
             CorsPolicy = "co",
-            Match = new RouteMatch()
-            {
+            Match = new RouteMatch() {
                 Headers = new[]
                 {
                     new RouteHeader()
@@ -49,8 +46,7 @@ public class RouteConfigTests
             Order = 1,
             RouteId = "R",
         };
-        var b = new RouteConfig()
-        {
+        var b = new RouteConfig() {
             AuthorizationPolicy = "A",
 #if NET7_0_OR_GREATER
             RateLimiterPolicy = "RL",
@@ -61,8 +57,7 @@ public class RouteConfigTests
 #endif
             ClusterId = "C",
             CorsPolicy = "Co",
-            Match = new RouteMatch()
-            {
+            Match = new RouteMatch() {
                 Headers = new[]
                 {
                     new RouteHeader()
@@ -93,10 +88,8 @@ public class RouteConfigTests
     }
 
     [Fact]
-    public void Equals_Negative()
-    {
-        var a = new RouteConfig()
-        {
+    public void Equals_Negative() {
+        var a = new RouteConfig() {
             AuthorizationPolicy = "a",
 #if NET7_0_OR_GREATER
             RateLimiterPolicy = "rl",
@@ -107,8 +100,7 @@ public class RouteConfigTests
 #endif
             ClusterId = "c",
             CorsPolicy = "co",
-            Match = new RouteMatch()
-            {
+            Match = new RouteMatch() {
                 Headers = new[]
                 {
                     new RouteHeader()
@@ -162,24 +154,20 @@ public class RouteConfigTests
     }
 
     [Fact]
-    public void Equals_Null_False()
-    {
+    public void Equals_Null_False() {
         Assert.False(new RouteConfig().Equals(null));
     }
 
     [Fact]
-    public void RouteConfig_CanBeJsonSerialized()
-    {
-        var route1 = new RouteConfig()
-        {
+    public void RouteConfig_CanBeJsonSerialized() {
+        var route1 = new RouteConfig() {
             AuthorizationPolicy = "a",
 #if NET7_0_OR_GREATER
             RateLimiterPolicy = "rl",
 #endif
             ClusterId = "c",
             CorsPolicy = "co",
-            Match = new RouteMatch()
-            {
+            Match = new RouteMatch() {
                 Headers = new[]
                 {
                     new RouteHeader()

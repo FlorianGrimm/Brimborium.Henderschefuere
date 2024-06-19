@@ -15,13 +15,10 @@ using Brimborium.Henderschefuere.Forwarder;
 
 namespace Brimborium.Henderschefuere.Configuration.Tests;
 
-public class ClusterConfigTests
-{
+public class ClusterConfigTests {
     [Fact]
-    public void Equals_Same_Value_Returns_True()
-    {
-        var config1 = new ClusterConfig
-        {
+    public void Equals_Same_Value_Returns_True() {
+        var config1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -44,16 +41,13 @@ public class ClusterConfigTests
                     }
                 }
             },
-            HealthCheck = new HealthCheckConfig
-            {
-                Passive = new PassiveHealthCheckConfig
-                {
+            HealthCheck = new HealthCheckConfig {
+                Passive = new PassiveHealthCheckConfig {
                     Enabled = true,
                     Policy = "FailureRate",
                     ReactivationPeriod = TimeSpan.FromMinutes(5)
                 },
-                Active = new ActiveHealthCheckConfig
-                {
+                Active = new ActiveHealthCheckConfig {
                     Enabled = true,
                     Interval = TimeSpan.FromSeconds(4),
                     Timeout = TimeSpan.FromSeconds(6),
@@ -62,14 +56,12 @@ public class ClusterConfigTests
                 }
             },
             LoadBalancingPolicy = LoadBalancingPolicies.Random,
-            SessionAffinity = new SessionAffinityConfig
-            {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 FailurePolicy = "Return503Error",
                 Policy = "Cookie",
                 AffinityKeyName = "Key1",
-                Cookie = new SessionAffinityCookieConfig
-                {
+                Cookie = new SessionAffinityCookieConfig {
                     Domain = "localhost",
                     Expiration = TimeSpan.FromHours(3),
                     HttpOnly = true,
@@ -80,16 +72,14 @@ public class ClusterConfigTests
                     SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
                 }
             },
-            HttpClient = new HttpClientConfig
-            {
+            HttpClient = new HttpClientConfig {
                 SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 DangerousAcceptAnyServerCertificate = true,
                 RequestHeaderEncoding = Encoding.UTF8.WebName,
                 ResponseHeaderEncoding = Encoding.UTF8.WebName
             },
-            HttpRequest = new ForwarderRequestConfig
-            {
+            HttpRequest = new ForwarderRequestConfig {
                 ActivityTimeout = TimeSpan.FromSeconds(60),
                 Version = Version.Parse("1.0"),
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
@@ -97,8 +87,7 @@ public class ClusterConfigTests
             Metadata = new Dictionary<string, string> { { "cluster1-K1", "cluster1-V1" }, { "cluster1-K2", "cluster1-V2" } }
         };
 
-        var config2 = new ClusterConfig
-        {
+        var config2 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -121,16 +110,13 @@ public class ClusterConfigTests
                     }
                 }
             },
-            HealthCheck = new HealthCheckConfig
-            {
-                Passive = new PassiveHealthCheckConfig
-                {
+            HealthCheck = new HealthCheckConfig {
+                Passive = new PassiveHealthCheckConfig {
                     Enabled = true,
                     Policy = "FailureRate",
                     ReactivationPeriod = TimeSpan.FromMinutes(5)
                 },
-                Active = new ActiveHealthCheckConfig
-                {
+                Active = new ActiveHealthCheckConfig {
                     Enabled = true,
                     Interval = TimeSpan.FromSeconds(4),
                     Timeout = TimeSpan.FromSeconds(6),
@@ -139,14 +125,12 @@ public class ClusterConfigTests
                 }
             },
             LoadBalancingPolicy = LoadBalancingPolicies.Random,
-            SessionAffinity = new SessionAffinityConfig
-            {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 FailurePolicy = "Return503Error",
                 Policy = "Cookie",
                 AffinityKeyName = "Key1",
-                Cookie = new SessionAffinityCookieConfig
-                {
+                Cookie = new SessionAffinityCookieConfig {
                     Domain = "localhost",
                     Expiration = TimeSpan.FromHours(3),
                     HttpOnly = true,
@@ -157,16 +141,14 @@ public class ClusterConfigTests
                     SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
                 }
             },
-            HttpClient = new HttpClientConfig
-            {
+            HttpClient = new HttpClientConfig {
                 SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 DangerousAcceptAnyServerCertificate = true,
                 RequestHeaderEncoding = Encoding.UTF8.WebName,
                 ResponseHeaderEncoding = Encoding.UTF8.WebName
             },
-            HttpRequest = new ForwarderRequestConfig
-            {
+            HttpRequest = new ForwarderRequestConfig {
                 ActivityTimeout = TimeSpan.FromSeconds(60),
                 Version = Version.Parse("1.0"),
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
@@ -183,10 +165,8 @@ public class ClusterConfigTests
     }
 
     [Fact]
-    public void Equals_Different_Value_Returns_False()
-    {
-        var config1 = new ClusterConfig
-        {
+    public void Equals_Different_Value_Returns_False() {
+        var config1 = new ClusterConfig {
             ClusterId = "cluster1",
             Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
             {
@@ -209,16 +189,13 @@ public class ClusterConfigTests
                     }
                 }
             },
-            HealthCheck = new HealthCheckConfig
-            {
-                Passive = new PassiveHealthCheckConfig
-                {
+            HealthCheck = new HealthCheckConfig {
+                Passive = new PassiveHealthCheckConfig {
                     Enabled = true,
                     Policy = "FailureRate",
                     ReactivationPeriod = TimeSpan.FromMinutes(5)
                 },
-                Active = new ActiveHealthCheckConfig
-                {
+                Active = new ActiveHealthCheckConfig {
                     Enabled = true,
                     Interval = TimeSpan.FromSeconds(4),
                     Timeout = TimeSpan.FromSeconds(6),
@@ -227,14 +204,12 @@ public class ClusterConfigTests
                 }
             },
             LoadBalancingPolicy = LoadBalancingPolicies.Random,
-            SessionAffinity = new SessionAffinityConfig
-            {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 FailurePolicy = "Return503Error",
                 Policy = "Cookie",
                 AffinityKeyName = "Key1",
-                Cookie = new SessionAffinityCookieConfig
-                {
+                Cookie = new SessionAffinityCookieConfig {
                     Domain = "localhost",
                     Expiration = TimeSpan.FromHours(3),
                     HttpOnly = true,
@@ -245,14 +220,12 @@ public class ClusterConfigTests
                     SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
                 }
             },
-            HttpClient = new HttpClientConfig
-            {
+            HttpClient = new HttpClientConfig {
                 SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 DangerousAcceptAnyServerCertificate = true,
             },
-            HttpRequest = new ForwarderRequestConfig
-            {
+            HttpRequest = new ForwarderRequestConfig {
                 ActivityTimeout = TimeSpan.FromSeconds(60),
                 Version = Version.Parse("1.0"),
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
@@ -264,16 +237,13 @@ public class ClusterConfigTests
         Assert.False(config1.Equals(config1 with { Destinations = new Dictionary<string, DestinationConfig>() }));
         Assert.False(config1.Equals(config1 with { HealthCheck = new HealthCheckConfig() }));
         Assert.False(config1.Equals(config1 with { LoadBalancingPolicy = "different" }));
-        Assert.False(config1.Equals(config1 with
-        {
-            SessionAffinity = new SessionAffinityConfig
-            {
+        Assert.False(config1.Equals(config1 with {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 FailurePolicy = "Return503Error",
                 Policy = "Cookie",
                 AffinityKeyName = "Key1",
-                Cookie = new SessionAffinityCookieConfig
-                {
+                Cookie = new SessionAffinityCookieConfig {
                     Domain = "localhost",
                     Expiration = TimeSpan.FromHours(3),
                     HttpOnly = true,
@@ -285,10 +255,8 @@ public class ClusterConfigTests
                 }
             }
         }));
-        Assert.False(config1.Equals(config1 with
-        {
-            HttpClient = new HttpClientConfig
-            {
+        Assert.False(config1.Equals(config1 with {
+            HttpClient = new HttpClientConfig {
                 SslProtocols = SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 DangerousAcceptAnyServerCertificate = true,
@@ -299,8 +267,7 @@ public class ClusterConfigTests
     }
 
     [Fact]
-    public void Equals_Second_Null_Returns_False()
-    {
+    public void Equals_Second_Null_Returns_False() {
         var config1 = new ClusterConfig();
 
         var equals = config1.Equals(null);
@@ -309,20 +276,16 @@ public class ClusterConfigTests
     }
 
     [Fact]
-    public void Cluster_CanBeJsonSerialized()
-    {
-        var cluster1 = new ClusterConfig
-        {
+    public void Cluster_CanBeJsonSerialized() {
+        var cluster1 = new ClusterConfig {
             ClusterId = "cluster1",
             LoadBalancingPolicy = LoadBalancingPolicies.Random,
-            SessionAffinity = new SessionAffinityConfig
-            {
+            SessionAffinity = new SessionAffinityConfig {
                 Enabled = true,
                 FailurePolicy = "Return503Error",
                 Policy = "Cookie",
                 AffinityKeyName = "Key1",
-                Cookie = new SessionAffinityCookieConfig
-                {
+                Cookie = new SessionAffinityCookieConfig {
                     Domain = "domain",
                     Expiration = TimeSpan.FromDays(1),
                     HttpOnly = true,
@@ -333,16 +296,13 @@ public class ClusterConfigTests
                     SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.None
                 }
             },
-            HealthCheck = new HealthCheckConfig
-            {
-                Passive = new PassiveHealthCheckConfig
-                {
+            HealthCheck = new HealthCheckConfig {
+                Passive = new PassiveHealthCheckConfig {
                     Enabled = true,
                     Policy = "FailureRate",
                     ReactivationPeriod = TimeSpan.FromMinutes(5)
                 },
-                Active = new ActiveHealthCheckConfig
-                {
+                Active = new ActiveHealthCheckConfig {
                     Enabled = true,
                     Interval = TimeSpan.FromSeconds(4),
                     Timeout = TimeSpan.FromSeconds(6),
@@ -350,21 +310,18 @@ public class ClusterConfigTests
                     Path = "healthCheckPath"
                 }
             },
-            HttpClient = new HttpClientConfig
-            {
+            HttpClient = new HttpClientConfig {
                 EnableMultipleHttp2Connections = true,
                 SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
                 MaxConnectionsPerServer = 10,
                 DangerousAcceptAnyServerCertificate = true,
-                WebProxy = new WebProxyConfig
-                {
+                WebProxy = new WebProxyConfig {
                     Address = new Uri("http://proxy"),
                     BypassOnLocal = false,
                     UseDefaultCredentials = false,
                 }
             },
-            HttpRequest = new ForwarderRequestConfig
-            {
+            HttpRequest = new ForwarderRequestConfig {
                 ActivityTimeout = TimeSpan.FromSeconds(60),
                 Version = Version.Parse("1.0"),
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
@@ -407,29 +364,23 @@ public class ClusterConfigTests
         Assert.Equal(cluster1, cluster2);
     }
 
-    public class TimeSpanConverter : JsonConverter<TimeSpan>
-    {
-        public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
+    public class TimeSpanConverter : JsonConverter<TimeSpan> {
+        public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             return TimeSpan.Parse(reader.GetString(), CultureInfo.InvariantCulture);
         }
 
-        public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options)
-        {
+        public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options) {
             writer.WriteStringValue(value.ToString(format: null, CultureInfo.InvariantCulture));
         }
     }
 
-    public class VersionConverter : JsonConverter<Version>
-    {
-        public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
+    public class VersionConverter : JsonConverter<Version> {
+        public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             var versionString = reader.GetString();
             return Version.Parse(versionString);
         }
 
-        public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options)
-        {
+        public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options) {
             writer.WriteStringValue(value.ToString());
         }
     }

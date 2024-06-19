@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Template;
+
 using Xunit;
 
 namespace Brimborium.Henderschefuere.Transforms.Tests;
 
-public class QueryParameterFromRouteTransformTests
-{
+public class QueryParameterFromRouteTransformTests {
     [Theory]
     [InlineData("/{a}/{b}/{c}", "a", "?z=6")]
     [InlineData("/{a}/{b}/{c}", "c", "?z=8")]
     [InlineData("/{a}/{*remainder}", "remainder", "?z=7%2F8")]
-    public async Task Append_AddsQueryParameterWithRouteValue(string pattern, string routeValueKey, string expected)
-    {
+    public async Task Append_AddsQueryParameterWithRouteValue(string pattern, string routeValueKey, string expected) {
         const string path = "/6/7/8";
 
         var routeValues = new RouteValueDictionary();
@@ -25,8 +25,7 @@ public class QueryParameterFromRouteTransformTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.RouteValues = routeValues;
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Path = path,
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
@@ -37,8 +36,7 @@ public class QueryParameterFromRouteTransformTests
     }
 
     [Fact]
-    public void Append_IgnoresExistingQueryParameter()
-    {
+    public void Append_IgnoresExistingQueryParameter() {
         const string path = "/6/7/8";
 
         var routeValues = new RouteValueDictionary();
@@ -48,8 +46,7 @@ public class QueryParameterFromRouteTransformTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.RouteValues = routeValues;
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Path = path,
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
@@ -60,8 +57,7 @@ public class QueryParameterFromRouteTransformTests
     }
 
     [Fact]
-    public void Set_OverwritesExistingQueryParameter()
-    {
+    public void Set_OverwritesExistingQueryParameter() {
         const string path = "/6/7/8";
 
         var routeValues = new RouteValueDictionary();
@@ -71,8 +67,7 @@ public class QueryParameterFromRouteTransformTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.RouteValues = routeValues;
         httpContext.Request.QueryString = new QueryString("?z=1");
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Path = path,
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
@@ -83,8 +78,7 @@ public class QueryParameterFromRouteTransformTests
     }
 
     [Fact]
-    public void Set_AddsNewQueryParameter()
-    {
+    public void Set_AddsNewQueryParameter() {
         const string path = "/6/7/8";
 
         var routeValues = new RouteValueDictionary();
@@ -93,8 +87,7 @@ public class QueryParameterFromRouteTransformTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.RouteValues = routeValues;
-        var context = new RequestTransformContext()
-        {
+        var context = new RequestTransformContext() {
             Path = path,
             Query = new QueryTransformContext(httpContext.Request),
             HttpContext = httpContext
