@@ -53,7 +53,7 @@ public static class ReverseProxyIEndpointRouteBuilderExtensions {
                 continue;
             }
             if (transport == TransportMode.TunnelWebSocket) {
-                //endpoints.MapWebSocketTunnel
+                endpoints.MapWebSocketTunnel(cluster);
                 continue;
             }
         }

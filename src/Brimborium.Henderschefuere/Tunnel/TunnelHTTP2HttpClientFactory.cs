@@ -210,15 +210,15 @@ internal sealed class TunnelHTTP2Route {
     public IEndpointConventionBuilder Map(IEndpointRouteBuilder routes) {
         var cfg = _clusterState.Model.Config;
         var path = $"_Tunnel/{cfg.ClusterId}";
-
         return routes.MapPost(path, (Delegate)handlePost);
     }
 
     private async Task<IResult> handlePost(HttpContext context) {
-        if (context.Connection.ClientCertificate is null) {
-            //return Results.BadRequest();
-            System.Console.Out.WriteLine("context.Connection.ClientCertificate is null");
-        }
+#warning TODO: authn not here...
+        //if (context.Connection.ClientCertificate is null) {
+        //    //return Results.BadRequest();
+        //    //System.Console.Out.WriteLine("context.Connection.ClientCertificate is null");
+        //}
 
 
         // HTTP/2 duplex stream
