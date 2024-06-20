@@ -31,10 +31,10 @@ internal sealed class TunnelHTTP2HttpClientFactory
             if (!_tunnelHTTP2HttpClientFactoryBoundByClusterId.TryGetValue(key, out var result)) {
                 result = new TunnelHTTP2HttpClientFactoryBound(
                     proxyConfigManager,
-                    this._tunnelConnectionChannelManager,
-                    context,
-                    cluster,
-                    this._logger);
+                    _tunnelConnectionChannelManager,
+                    //context,
+                    //cluster,
+                    _logger);
                 _tunnelHTTP2HttpClientFactoryBoundByClusterId[key] = result;
                 return result;
             } else {
@@ -60,29 +60,31 @@ internal record struct TunnelHTTP2HttpClientFactoryBoundKey(
         => HashCode.Combine(ClusterId, Revision);
 }
 
+#warning TODO: think of without ClusterState _cluster there is no need for TunnelHTTP2HttpClientFactoryBound ??
+
 internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFactory {
-    private readonly ProxyConfigManager _ProxyConfigManager;
+    private readonly ProxyConfigManager _proxyConfigManager;
     private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
-    private ForwarderHttpClientContext _Context;
-    private ClusterState _Cluster;
+    //private ForwarderHttpClientContext _context;
+    //private ClusterState _cluster;
     private readonly ILogger _logger;
 
     public TunnelHTTP2HttpClientFactoryBound(
         ProxyConfigManager proxyConfigManager,
         TunnelConnectionChannelManager tunnelConnectionChannelManager,
-        ForwarderHttpClientContext context,
-        ClusterState cluster,
+        //ForwarderHttpClientContext context,
+        //ClusterState cluster,
         ILogger logger) {
-        this._ProxyConfigManager = proxyConfigManager;
-        this._tunnelConnectionChannelManager = tunnelConnectionChannelManager;
-        this._Context = context;
-        this._Cluster = cluster;
-        this._logger = logger;
+        _proxyConfigManager = proxyConfigManager;
+        _tunnelConnectionChannelManager = tunnelConnectionChannelManager;
+        //_context = context;
+        //_cluster = cluster;
+        _logger = logger;
     }
 
     public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) {
         var clusterId = context.ClusterId;
-        if (!this._ProxyConfigManager.TryGetCluster(clusterId, out var cluster)) {
+        if (!this._proxyConfigManager.TryGetCluster(clusterId, out var cluster)) {
             throw new ArgumentException($"Cluster:'{context.ClusterId}' not found.");
         }
         if (CanReuseOldClient(context)) {
@@ -193,57 +195,5 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
         public static void ClientReused(ILogger logger, string clusterId) {
             _clientReused(logger, clusterId, null);
         }
-    }
-}
-
-internal sealed class TunnelHTTP2Route {
-    private readonly TunnelConnectionChannels _tunnelConnectionChannels;
-    private readonly ClusterState _clusterState;
-    private readonly IHostApplicationLifetime _lifetime;
-
-    public TunnelHTTP2Route(TunnelConnectionChannels tunnelConnectionChannels, ClusterState clusterState, IHostApplicationLifetime lifetime) {
-        this._tunnelConnectionChannels = tunnelConnectionChannels;
-        this._clusterState = clusterState;
-        this._lifetime = lifetime;
-    }
-
-    public IEndpointConventionBuilder Map(IEndpointRouteBuilder routes) {
-        var cfg = _clusterState.Model.Config;
-        var path = $"_Tunnel/{cfg.ClusterId}";
-        return routes.MapPost(path, (Delegate)handlePost);
-    }
-
-    private async Task<IResult> handlePost(HttpContext context) {
-#warning TODO: authn not here...
-        //if (context.Connection.ClientCertificate is null) {
-        //    //return Results.BadRequest();
-        //    //System.Console.Out.WriteLine("context.Connection.ClientCertificate is null");
-        //}
-
-
-        // HTTP/2 duplex stream
-        if (context.Request.Protocol != HttpProtocol.Http2) {
-            return Results.BadRequest();
-        }
-
-        var (requests, responses) = _tunnelConnectionChannels;
-
-        await requests.Reader.ReadAsync(context.RequestAborted);
-
-        var stream = new TunnelDuplexHttpStream(context);
-
-        using var reg = _lifetime.ApplicationStopping.Register(() => stream.Abort());
-
-        // Keep reusing this connection while, it's still open on the backend
-        while (!context.RequestAborted.IsCancellationRequested) {
-            // Make this connection available for requests
-            await responses.Writer.WriteAsync(stream, context.RequestAborted);
-
-            await stream.StreamCompleteTask;
-
-            stream.Reset();
-        }
-
-        return Results.Empty;
     }
 }

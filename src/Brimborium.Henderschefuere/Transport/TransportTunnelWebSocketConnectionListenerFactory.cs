@@ -1,14 +1,21 @@
 namespace Brimborium.Henderschefuere.Transport;
 
 internal sealed class TransportTunnelWebSocketConnectionListenerFactory : IConnectionListenerFactory, IConnectionListenerFactorySelector {
-    private readonly UnShortCitcuitOnceProxyConfigManager _proxyConfigManagerOnce;
     private readonly TransportTunnelWebSocketOptions _options;
+    private readonly UnShortCitcuitOnceProxyConfigManager _proxyConfigManagerOnce;
+    private readonly OptionalCertificateStore _optionalCertificateStore;
+    private readonly ILogger<TransportTunnelWebSocketConnectionListener> _logger;
 
     public TransportTunnelWebSocketConnectionListenerFactory(
+        IOptions<TransportTunnelWebSocketOptions> options,
         UnShortCitcuitOnceProxyConfigManager proxyConfigManagerOnce,
-        IOptions<TransportTunnelWebSocketOptions> options) {
+        OptionalCertificateStore optionalCertificateStore,
+        ILogger<TransportTunnelWebSocketConnectionListener> logger
+        ) {
         _options = options.Value;
         _proxyConfigManagerOnce = proxyConfigManagerOnce;
+        _optionalCertificateStore = optionalCertificateStore;
+        _logger = logger;
     }
 
     public bool CanBind(EndPoint endpoint) {
@@ -26,6 +33,12 @@ internal sealed class TransportTunnelWebSocketConnectionListenerFactory : IConne
             throw new ArgumentException($"Tunnel: '{tunnelId} not found.'", nameof(endpoint));
         }
 
-        return new(new TransportTunnelWebSocketConnectionListener(_options, tunnel, uriEndpointWebSocket));
+        return new(new TransportTunnelWebSocketConnectionListener(
+            uriEndpointWebSocket,
+            tunnel,
+            _options,
+            _optionalCertificateStore,
+            _logger
+            ));
     }
 }

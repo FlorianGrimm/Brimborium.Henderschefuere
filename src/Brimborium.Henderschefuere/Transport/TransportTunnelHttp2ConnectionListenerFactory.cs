@@ -3,14 +3,21 @@ namespace Brimborium.Henderschefuere.Transport;
 internal sealed class TransportTunnelHttp2ConnectionListenerFactory
     : IConnectionListenerFactory
     , IConnectionListenerFactorySelector {
-    private readonly UnShortCitcuitOnceProxyConfigManager _proxyConfigManagerOnce;
     private readonly TransportTunnelHttp2Options _options;
+    private readonly UnShortCitcuitOnceProxyConfigManager _proxyConfigManagerOnce;
+    private readonly OptionalCertificateStore _optionalCertificateStore;
+    private readonly ILogger _logger;
 
     public TransportTunnelHttp2ConnectionListenerFactory(
+        IOptions<TransportTunnelHttp2Options> options,
         UnShortCitcuitOnceProxyConfigManager proxyConfigManagerOnce,
-        IOptions<TransportTunnelHttp2Options> options) {
+        OptionalCertificateStore optionalCertificateStore,
+        ILogger<TransportTunnelHttp2ConnectionListener> logger
+        ) {
         _options = options.Value;
         _proxyConfigManagerOnce = proxyConfigManagerOnce;
+        _optionalCertificateStore = optionalCertificateStore;
+        _logger = logger;
     }
 
     public bool CanBind(EndPoint endpoint) {
@@ -28,6 +35,11 @@ internal sealed class TransportTunnelHttp2ConnectionListenerFactory
             throw new ArgumentException($"Tunnel: '{tunnelId} not found.'", nameof(endpoint));
         }
 
-        return new(new TransportTunnelHttp2ConnectionListener(_options, tunnel, uriEndPointHttp2));
+        return new(new TransportTunnelHttp2ConnectionListener(
+            uriEndPointHttp2,
+            tunnel,
+            _options,
+            _optionalCertificateStore,
+            _logger));
     }
 }
