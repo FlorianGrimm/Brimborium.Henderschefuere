@@ -54,6 +54,7 @@ internal static class IReverseProxyBuilderExtensions {
     public static IReverseProxyBuilder AddConfigManager(this IReverseProxyBuilder builder) {
         builder.Services.TryAddSingleton<ProxyConfigManager>();
         builder.Services.TryAddSingleton<IProxyStateLookup>(sp => sp.GetRequiredService<ProxyConfigManager>());
+        builder.Services.TryAddSingleton<UnShortCitcuitOnceProxyConfigManager>();
         return builder;
     }
 

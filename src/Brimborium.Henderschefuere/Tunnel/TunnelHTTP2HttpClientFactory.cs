@@ -4,8 +4,8 @@ namespace Brimborium.Henderschefuere.Tunnel;
 
 internal sealed class TunnelHTTP2HttpClientFactory
     : ITransportHttpClientFactorySelector {
-    private readonly ConcurrentDictionary<TunnelHTTP2HttpClientFactoryBoundKey, TunnelHTTP2HttpClientFactoryBound> _tunnelHTTP2HttpClientFactoryBoundByClusterId = new();
-    private readonly UnShortCitcuitOnceProxyConfigManager _UnShortCitcuitOnceProxyConfigManager;
+    private readonly ConcurrentDictionary<string, TunnelHTTP2HttpClientFactoryBound> _tunnelHTTP2HttpClientFactoryBoundByClusterId = new();
+    private readonly UnShortCitcuitOnceProxyConfigManager _unShortCitcuitOnceProxyConfigManager;
     private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
     private readonly ILogger _logger;
 
@@ -13,9 +13,9 @@ internal sealed class TunnelHTTP2HttpClientFactory
         UnShortCitcuitOnceProxyConfigManager unShortCitcuitOnceProxyConfigManager,
         TunnelConnectionChannelManager tunnelConnectionChannelManager,
         ILogger<TunnelHTTP2HttpClientFactory> logger) {
-        this._UnShortCitcuitOnceProxyConfigManager = unShortCitcuitOnceProxyConfigManager;
-        this._tunnelConnectionChannelManager = tunnelConnectionChannelManager;
-        this._logger = logger;
+        _unShortCitcuitOnceProxyConfigManager = unShortCitcuitOnceProxyConfigManager;
+        _tunnelConnectionChannelManager = tunnelConnectionChannelManager;
+        _logger = logger;
     }
 
     public TransportMode GetTransportMode() => TransportMode.TunnelHTTP2;
@@ -25,40 +25,35 @@ internal sealed class TunnelHTTP2HttpClientFactory
     public IForwarderHttpClientFactory? GetForwarderHttpClientFactory(
         TransportMode transportMode,
         ForwarderHttpClientContext context) {
-        var proxyConfigManager = this._UnShortCitcuitOnceProxyConfigManager.GetService();
-        if (proxyConfigManager.TryGetCluster(context.ClusterId, out var cluster)) {
-            TunnelHTTP2HttpClientFactoryBoundKey key = new(context.ClusterId, cluster.Revision);
-            if (!_tunnelHTTP2HttpClientFactoryBoundByClusterId.TryGetValue(key, out var result)) {
+        while (true) {
+            if (!_tunnelHTTP2HttpClientFactoryBoundByClusterId.TryGetValue(context.ClusterId, out var result)) {
                 result = new TunnelHTTP2HttpClientFactoryBound(
-                    proxyConfigManager,
+                    _unShortCitcuitOnceProxyConfigManager.GetService(),
                     _tunnelConnectionChannelManager,
-                    //context,
-                    //cluster,
                     _logger);
-                _tunnelHTTP2HttpClientFactoryBoundByClusterId[key] = result;
-                return result;
+                if (_tunnelHTTP2HttpClientFactoryBoundByClusterId.TryAdd(context.ClusterId, result)) {
+                    return result;
+                } else {
+                    continue;
+                }
             } else {
                 return result;
             }
-        } else {
-            return null;
         }
-
     }
 }
 
-internal record struct TunnelHTTP2HttpClientFactoryBoundKey(
-        string ClusterId,
-        int Revision
-        ) : IEquatable<TunnelHTTP2HttpClientFactoryBoundKey> {
-    public bool Equals(TunnelHTTP2HttpClientFactoryBoundKey? other)
-        => (other is { } obj)
-            && (string.Equals(ClusterId, obj.ClusterId)
-                && (Revision == obj.Revision));
-
-    public override int GetHashCode()
-        => HashCode.Combine(ClusterId, Revision);
-}
+//internal record struct TunnelHTTP2HttpClientFactoryBoundKey(
+//        string ClusterId,
+//        int Revision
+//        ) : IEquatable<TunnelHTTP2HttpClientFactoryBoundKey> {
+//    public bool Equals(TunnelHTTP2HttpClientFactoryBoundKey? other)
+//        => (other is { } obj)
+//            && (string.Equals(ClusterId, obj.ClusterId)
+//                && (Revision == obj.Revision));
+//public override int GetHashCode()
+//    => HashCode.Combine(ClusterId, Revision);
+//}
 
 #warning TODO: think of without ClusterState _cluster there is no need for TunnelHTTP2HttpClientFactoryBound ??
 
@@ -84,9 +79,7 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
 
     public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) {
         var clusterId = context.ClusterId;
-        if (!this._proxyConfigManager.TryGetCluster(clusterId, out var cluster)) {
-            throw new ArgumentException($"Cluster:'{context.ClusterId}' not found.");
-        }
+
         if (CanReuseOldClient(context)) {
             Log.ClientReused(_logger, context.ClusterId);
             return context.OldClient!;
@@ -114,20 +107,26 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
                 }
                 var (requests, responses) = tunnelConnectionChannels;
 
-                // Ask for a connection
-                int retry = 0;
-                await requests.Writer.WriteAsync(retry++, cancellationToken);
+                System.Threading.Interlocked.Increment(ref tunnelConnectionChannels.CountSink);
+                try {
 
-                while (true) {
-                    var stream = await responses.Reader.ReadAsync(cancellationToken);
+                    // Ask for a connection
+                    int retry = 0;
+                    await requests.Writer.WriteAsync(retry++, cancellationToken);
 
-                    if (stream is IStreamCloseable c && c.IsClosed) {
-                        // Ask for another connection
-                        await requests.Writer.WriteAsync(retry++, cancellationToken);
-                        continue;
+                    while (true) {
+                        var stream = await responses.Reader.ReadAsync(cancellationToken);
+
+                        if (stream is IStreamCloseable c && c.IsClosed) {
+                            // Ask for another connection
+                            await requests.Writer.WriteAsync(retry++, cancellationToken);
+                            continue;
+                        }
+
+                        return stream;
                     }
-
-                    return stream;
+                } finally {
+                    System.Threading.Interlocked.Decrement(ref tunnelConnectionChannels.CountSink);
                 }
             };
 
@@ -154,6 +153,8 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
     /// </summary>
     private void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler) {
         var newConfig = context.NewConfig;
+        // TODO: the inner connection is always http no s
+#if WEICHEI
         if (newConfig.SslProtocols.HasValue) {
             handler.SslOptions.EnabledSslProtocols = newConfig.SslProtocols.Value;
         }
@@ -163,7 +164,7 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
         if (newConfig.DangerousAcceptAnyServerCertificate ?? false) {
             handler.SslOptions.RemoteCertificateValidationCallback = delegate { return true; };
         }
-
+#endif
         handler.EnableMultipleHttp2Connections = newConfig.EnableMultipleHttp2Connections.GetValueOrDefault(true);
 
         if (newConfig.RequestHeaderEncoding is not null) {

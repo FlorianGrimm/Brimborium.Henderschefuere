@@ -46,18 +46,7 @@ public static class ReverseProxyIEndpointRouteBuilderExtensions {
         var proxyConfigManager = GetOrCreateDataSource(endpoints);
 
         var tunnelClusters = proxyConfigManager.GetTransportTunnelClusters();
-        foreach (var cluster in tunnelClusters) {
-            var transport = cluster.Model.Config.Transport;
-            if (transport == TransportMode.TunnelHTTP2) {
-                endpoints.MapHttp2Tunnel(cluster);
-                continue;
-            }
-            if (transport == TransportMode.TunnelWebSocket) {
-                endpoints.MapWebSocketTunnel(cluster);
-                continue;
-            }
-        }
-
+        endpoints.MapTunnels(tunnelClusters);
 
         return proxyConfigManager.DefaultBuilder;
     }

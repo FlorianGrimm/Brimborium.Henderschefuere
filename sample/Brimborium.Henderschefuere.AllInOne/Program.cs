@@ -12,9 +12,9 @@ public class Program {
         List<ServerBase> listServer = new();
 
         listServer.Add(new ServerFrontend("appsettings.server1FE.json"));
-        listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
+        //listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
         listServer.Add(new ServerBackend("appsettings.server3BE.json"));
-        listServer.Add(new ServerBackend("appsettings.server4BE.json"));
+        //listServer.Add(new ServerBackend("appsettings.server4BE.json"));
         listServer.Add(new ServerAPI("appsettings.server5API.json"));
         listServer.Add(new ServerAPI("appsettings.server6API.json"));
 
@@ -106,7 +106,7 @@ public sealed class ServerFrontend : ServerBase {
         builder.Services.AddReverseProxy()
             .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
             .AddTunnelServices()
-            .UseTunnelTransport(builder)
+            //.UseTunnelTransport(builder)
             ;
     }
 
@@ -136,7 +136,7 @@ public sealed class ServerBackend : ServerBase {
         builder.Services.AddSwaggerGen();
         builder.Services.AddReverseProxy()
             .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
-            .AddTunnelServices()
+            //.AddTunnelServices()
             .UseTunnelTransport(builder)
             ;
 

@@ -594,9 +594,6 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
 
             var transport = incomingCluster.Transport;
 
-            if (transport == TransportMode.TunnelHTTP2 || transport == TransportMode.TunnelWebSocket) {
-            }
-
             if (_clusters.TryGetValue(incomingCluster.ClusterId, out var currentCluster)) {
                 var destinationsChanged = UpdateRuntimeDestinations(incomingCluster.Destinations, currentCluster.Destinations);
 
