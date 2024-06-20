@@ -1,8 +1,23 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-#warning WEICHEI??
 
 public static class WebHostBuilderExtensions {
+    public static IServiceCollection AddTunnelServices(this IServiceCollection services) {
+        services.TryAddSingleton<TunnelConnectionChannelManager>();
+        services.TryAddSingleton<TransportHttpClientFactorySelector>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelHTTP2HttpClientFactory>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelWebSocketHttpClientFactory>());
+        return services;
+    }
+
+    // frontend
+    public static IReverseProxyBuilder AddTunnelServices(
+        this IReverseProxyBuilder builder) {
+        builder.Services.AddTunnelServices();
+        return builder;
+    }
+
+#if WEICHEI
     public static IWebHostBuilder UseTunnelTransportHttp2(this IWebHostBuilder hostBuilder, UriEndPointHttp2 endPoint, Action<TransportTunnelHttp2Options>? configure = null) {
         ArgumentNullException.ThrowIfNull(endPoint);
 
@@ -34,4 +49,5 @@ public static class WebHostBuilderExtensions {
             }
         });
     }
+#endif
 }

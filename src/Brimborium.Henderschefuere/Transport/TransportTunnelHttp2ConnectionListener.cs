@@ -4,23 +4,31 @@ namespace Brimborium.Henderschefuere.Transport;
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
 internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListener {
+    private readonly SemaphoreSlim _createHttpMessageInvokerLock;
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
-    private readonly TransportTunnelHttp2Options _options;
-    private readonly CancellationTokenSource _closedCts = new();
-    private readonly UriEndPointHttp2 _endPoint;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
+    private readonly CancellationTokenSource _closedCts = new();
+    private readonly TransportTunnelHttp2Options _options;
+    private readonly TunnelState _tunnel;
+    private readonly UriEndPointHttp2 _endPoint;
+    private readonly IncrementalDelay _delay = new();
 
     private HttpMessageInvoker? _httpMessageInvoker;
 
-    public TransportTunnelHttp2ConnectionListener(TransportTunnelHttp2Options options, UriEndPointHttp2 endpoint) {
+    public TransportTunnelHttp2ConnectionListener(
+        TransportTunnelHttp2Options options,
+        TunnelState tunnel,
+        UriEndPointHttp2 endpoint) {
         if (string.IsNullOrEmpty(endpoint.Uri?.ToString())) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
-        _options = options;
-        _endPoint = endpoint;
+        _createHttpMessageInvokerLock = new(1, 1);
         _connectionLock = new(options.MaxConnectionCount);
         _connectionCollection = new TrackLifetimeConnectionContextCollection(_connections, _connectionLock);
+        _options = options;
+        _tunnel = tunnel;
+        _endPoint = endpoint;
     }
 
     public EndPoint EndPoint => _endPoint;
@@ -31,47 +39,35 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
 
             // Kestrel will keep an active accept call open as long as the transport is active
             await _connectionLock.WaitAsync(cancellationToken);
+
+
             if (_httpMessageInvoker is null) {
-                lock (this) {
-                    _httpMessageInvoker ??= CreateHttpMessageInvoker();
-                }
+                await _createHttpMessageInvokerLock.WaitAsync(cancellationToken);
+                _httpMessageInvoker ??= await CreateHttpMessageInvoker();
+                _createHttpMessageInvokerLock.Release();
             }
+
 
             while (true) {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                int delay = 0;
+                HttpRequestMessage requestMessage = new HttpRequestMessage(
+                    HttpMethod.Post, _endPoint.Uri!) {
+                    Version = new Version(2, 0)
+                };
+                if (_options.ConfigureHttpRequestMessageAsync is { } configure) {
+                    requestMessage = await configure(_endPoint.Uri!, this._tunnel.Model.Config, requestMessage);
+                }
+
                 try {
                     var innerConnection = await TransportTunnelHttp2ConnectionContext.ConnectAsync(
-                        _httpMessageInvoker, _endPoint.Uri!, cancellationToken);
-                    delay = 0;
+                        requestMessage, _httpMessageInvoker, cancellationToken);
+                    _delay.Reset();
                     return _connectionCollection.AddInnerConnection(innerConnection);
-#if WEICHEI
-                    var connection = new TrackLifetimeConnectionContext(innerConnection);
-
-                    // Track this connection lifetime
-                    _connections.TryAdd(connection, connection);
-
-                    _ = Task.Run(async () =>
-                    {
-                        // When the connection is disposed, release it
-                        await connection.ExecutionTask;
-
-                        _connections.TryRemove(connection, out _);
-
-                        // Allow more connections in
-                        _connectionLock.Release();
-                    },
-                    cancellationToken);
-                    return connection;
-#endif
-
                 } catch (Exception ex) when (ex is not OperationCanceledException) {
+                    requestMessage?.Dispose();
                     // TODO: More sophisticated backoff and retry
-                    if (delay < 60000) {
-                        delay += 5000;
-                    }
-                    await Task.Delay(delay, cancellationToken);
+                    await _delay.Delay(cancellationToken);
                 }
             }
         } catch (OperationCanceledException) {
@@ -79,18 +75,23 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
         }
     }
 
-    private HttpMessageInvoker CreateHttpMessageInvoker() {
+    private async Task<HttpMessageInvoker> CreateHttpMessageInvoker() {
         var socketsHttpHandler = new SocketsHttpHandler {
             EnableMultipleHttp2Connections = true,
             PooledConnectionLifetime = Timeout.InfiniteTimeSpan,
             PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
         };
-#warning hack
-        socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-        if (_options.ConfigureSocketsHttpHandler is { } configure) {
-            configure(_endPoint.Uri!, socketsHttpHandler);
+
+        //socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+#warning TODO HERE cert x(socketsHttpHandler, _tunnel.Model.Config.Authentication);
+
+        if (_options.ConfigureSocketsHttpHandlerAsync is { } configure) {
+            var httpMessageHandler = await configure(_endPoint.Uri!, _tunnel.Model.Config, socketsHttpHandler);
+            return new HttpMessageInvoker(httpMessageHandler);
+        } else {
+            return new HttpMessageInvoker(socketsHttpHandler);
         }
-        return _httpMessageInvoker = new HttpMessageInvoker(socketsHttpHandler);
     }
 
     public async ValueTask DisposeAsync() {

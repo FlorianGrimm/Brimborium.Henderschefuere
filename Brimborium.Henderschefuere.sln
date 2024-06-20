@@ -26,6 +26,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Henderschefuere.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brimborium.Tests.Common", "test\Tests.Common\Brimborium.Tests.Common.csproj", "{27427DD9-FD58-48FA-B133-A63F3C672B74}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestCertificates", "TestCertificates", "{261C9E13-1E11-47C6-8E2C-93F98D04EEFF}"
+	ProjectSection(SolutionItems) = preProject
+		test\TestCertificates\testCert.pfx = test\TestCertificates\testCert.pfx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +67,7 @@ Global
 		{BE55A2BD-4A83-4107-ADD1-8910F043EEA3} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
 		{D4484ED6-BDC8-4A92-A9CC-962B4EF16F73} = {56E64DD9-DE41-4D3F-A565-2D256AAB1093}
 		{27427DD9-FD58-48FA-B133-A63F3C672B74} = {E264A3ED-005A-4B39-8F32-9718F6F00723}
+		{261C9E13-1E11-47C6-8E2C-93F98D04EEFF} = {E264A3ED-005A-4B39-8F32-9718F6F00723}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B2CA76EB-7425-490D-87A6-50419A9454E0}

@@ -9,6 +9,11 @@ public sealed class TunnelState {
         this.TunnelId = tunnelId;
     }
 
+    public TunnelState(string tunnelId, TunnelModel model) {
+        this.TunnelId = tunnelId;
+        this.Model = model;
+    }
+
     public string TunnelId { get; }
 
     public TunnelModel Model { get => _Model; internal set => _Model = value; }

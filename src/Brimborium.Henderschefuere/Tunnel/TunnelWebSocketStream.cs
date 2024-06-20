@@ -1,6 +1,9 @@
 namespace Brimborium.Henderschefuere.Tunnel;
 
-internal class TunnelWebSocketStream : Stream, IValueTaskSource<object?>, ICloseable {
+internal sealed class TunnelWebSocketStream
+    : Stream
+    , IValueTaskSource<object?>
+    , IStreamCloseable {
     private readonly WebSocket _ws;
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();

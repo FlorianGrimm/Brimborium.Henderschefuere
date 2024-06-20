@@ -1,15 +1,11 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-public sealed class UriWebSocketEndPoint : IPEndPoint {
-    public Uri? Uri { get; }
-    public string? TunnelId { get; }
+public sealed class UriWebSocketEndPoint(
+        Uri uri,
+        string tunnelId
+    ) : IPEndPoint(0, 0) {
+    public Uri Uri { get; } = uri;
+    public string TunnelId { get; } = tunnelId;
 
-    public UriWebSocketEndPoint(Uri uri, string tunnelId)
-        : this(0, 0) {
-        Uri = uri;
-        this.TunnelId = tunnelId;
-    }
-
-    public UriWebSocketEndPoint(long address, int port) : base(address, port) {
-    }
+    public override string ToString() => $"{Uri}#{TunnelId}";
 }

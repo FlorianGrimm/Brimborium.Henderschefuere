@@ -3,7 +3,7 @@ namespace Brimborium.Henderschefuere.Transport;
 /// <summary>
 /// This exists solely to track the lifetime of the connection
 /// </summary>
-internal class TrackLifetimeConnectionContext : ConnectionContext {
+internal sealed class TrackLifetimeConnectionContext : ConnectionContext {
     private readonly ConnectionContext _connection;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
 

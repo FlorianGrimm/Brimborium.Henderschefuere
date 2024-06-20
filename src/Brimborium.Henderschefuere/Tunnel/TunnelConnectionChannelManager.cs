@@ -1,8 +1,6 @@
-﻿using System.Threading.Channels;
+﻿namespace Brimborium.Henderschefuere.Tunnel;
 
-namespace Brimborium.Henderschefuere.Tunnel;
-
-internal class TunnelConnectionChannelManager {
+public sealed class TunnelConnectionChannelManager {
     private readonly ConcurrentDictionary<string, TunnelConnectionChannels> _clusterConnections = new();
 
     public TunnelConnectionChannelManager() {
@@ -22,7 +20,7 @@ internal class TunnelConnectionChannelManager {
     }
 }
 
-internal record TunnelConnectionChannels(
+public sealed record TunnelConnectionChannels(
     Channel<int> Trigger,
     Channel<Stream> Streams
     );

@@ -9,6 +9,7 @@ public sealed record TunnelConfig {
     public TransportMode Transport { get; init; } = default!;
     public TunnelAuthenticationConfig Authentication { get; init; } = new TunnelAuthenticationConfig();
 
+    public bool IsTunnelTransport => Transport == TransportMode.TunnelHTTP2 || Transport == TransportMode.TunnelWebSocket;
     public string GetRemoteTunnelId() => this.RemoteTunnelId is { Length: > 0 } value ? value : this.TunnelId;
 
     public bool Equals(TunnelConfig? other) {
@@ -32,7 +33,4 @@ public sealed record TunnelConfig {
         //Authentication
         return hash.ToHashCode();
     }
-}
-
-public sealed record TunnelAuthenticationConfig {
 }

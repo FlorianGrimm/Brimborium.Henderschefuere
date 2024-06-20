@@ -3,7 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Utilities;
 
-internal class NullRandomFactory : IRandomFactory {
+internal sealed class NullRandomFactory : IRandomFactory {
     public Random CreateRandomInstance() {
         throw new NotImplementedException();
     }

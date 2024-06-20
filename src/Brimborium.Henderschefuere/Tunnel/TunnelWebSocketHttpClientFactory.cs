@@ -3,7 +3,7 @@
 namespace Brimborium.Henderschefuere.Tunnel;
 
 #warning TODO
-internal class TunnelWebSocketHttpClientFactory
+internal sealed class TunnelWebSocketHttpClientFactory
     : ITransportHttpClientFactorySelector
     , IForwarderHttpClientFactory {
     private readonly ILogger _logger;
@@ -41,18 +41,16 @@ internal class TunnelWebSocketHttpClientFactory
 
         ConfigureHandler(context, handler);
 
-        var middleware = WrapHandler(context, handler);
-
         Log.ClientCreated(_logger, context.ClusterId);
 
-        return new HttpMessageInvoker(middleware, disposeHandler: true);
+        return new HttpMessageInvoker(handler, disposeHandler: true);
     }
 
     /// <summary>
     /// Checks if the options have changed since the old client was created. If not then the
     /// old client will be re-used. Re-use can avoid the latency of creating new connections.
     /// </summary>
-    protected virtual bool CanReuseOldClient(ForwarderHttpClientContext context) {
+    private bool CanReuseOldClient(ForwarderHttpClientContext context) {
         return context.OldClient is not null && context.NewConfig == context.OldConfig;
     }
 
@@ -63,7 +61,7 @@ internal class TunnelWebSocketHttpClientFactory
     /// <see cref="SocketsHttpHandler.AutomaticDecompression"/>, and <see cref="SocketsHttpHandler.UseCookies"/>
     /// are disabled prior to this call.
     /// </summary>
-    protected virtual void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler) {
+    private void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler) {
         var newConfig = context.NewConfig;
         if (newConfig.SslProtocols.HasValue) {
             handler.SslOptions.EnabledSslProtocols = newConfig.SslProtocols.Value;
@@ -86,32 +84,6 @@ internal class TunnelWebSocketHttpClientFactory
             var encoding = Encoding.GetEncoding(newConfig.ResponseHeaderEncoding);
             handler.ResponseHeaderEncodingSelector = (_, _) => encoding;
         }
-
-        var webProxy = TryCreateWebProxy(newConfig.WebProxy);
-        if (webProxy is not null) {
-            handler.Proxy = webProxy;
-            handler.UseProxy = true;
-        }
-    }
-
-    private static IWebProxy? TryCreateWebProxy(WebProxyConfig? webProxyConfig) {
-        if (webProxyConfig is null || webProxyConfig.Address is null) {
-            return null;
-        }
-
-        var webProxy = new WebProxy(webProxyConfig.Address);
-
-        webProxy.UseDefaultCredentials = webProxyConfig.UseDefaultCredentials.GetValueOrDefault(false);
-        webProxy.BypassProxyOnLocal = webProxyConfig.BypassOnLocal.GetValueOrDefault(false);
-
-        return webProxy;
-    }
-
-    /// <summary>
-    /// Adds any wrapping middleware around the <see cref="HttpMessageHandler"/>.
-    /// </summary>
-    protected virtual HttpMessageHandler WrapHandler(ForwarderHttpClientContext context, HttpMessageHandler handler) {
-        return handler;
     }
 
     private static class Log {

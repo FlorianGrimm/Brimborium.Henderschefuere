@@ -1,5 +1,9 @@
 namespace Brimborium.Henderschefuere.Tunnel;
-internal class TunnelDuplexHttpStream : Stream, IValueTaskSource<object?>, ICloseable {
+
+internal sealed class TunnelDuplexHttpStream
+    : Stream,
+    IValueTaskSource<object?>,
+    IStreamCloseable {
     private ManualResetValueTaskSourceCore<object?> _tcs = new() { RunContinuationsAsynchronously = true };
     private readonly object _sync = new();
 

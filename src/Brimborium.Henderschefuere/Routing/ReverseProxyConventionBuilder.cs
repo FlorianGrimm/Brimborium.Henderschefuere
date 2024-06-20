@@ -3,7 +3,7 @@
 
 namespace Microsoft.AspNetCore.Builder;
 
-public class ReverseProxyConventionBuilder : IEndpointConventionBuilder {
+public sealed class ReverseProxyConventionBuilder : IEndpointConventionBuilder {
     private readonly List<Action<EndpointBuilder>> _conventions;
 
     internal ReverseProxyConventionBuilder(List<Action<EndpointBuilder>> conventions) {

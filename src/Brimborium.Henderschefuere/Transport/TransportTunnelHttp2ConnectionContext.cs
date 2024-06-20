@@ -1,12 +1,13 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-internal class TransportTunnelHttp2ConnectionContext : ConnectionContext,
-                IConnectionLifetimeFeature,
-                IConnectionEndPointFeature,
-                IConnectionItemsFeature,
-                IConnectionIdFeature,
-                IConnectionTransportFeature,
-                IDuplexPipe {
+internal sealed class TransportTunnelHttp2ConnectionContext
+    : ConnectionContext,
+    IConnectionLifetimeFeature,
+    IConnectionEndPointFeature,
+    IConnectionItemsFeature,
+    IConnectionIdFeature,
+    IConnectionTransportFeature,
+    IDuplexPipe {
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private TransportTunnelHttp2ConnectionContext() {
@@ -59,13 +60,15 @@ internal class TransportTunnelHttp2ConnectionContext : ConnectionContext,
         return base.DisposeAsync();
     }
 
-    public static async ValueTask<ConnectionContext> ConnectAsync(HttpMessageInvoker invoker, Uri uri, CancellationToken cancellationToken) {
-        var request = new HttpRequestMessage(HttpMethod.Post, uri) {
-            Version = new Version(2, 0)
-        };
+    public static async ValueTask<ConnectionContext> ConnectAsync(
+        HttpRequestMessage requestMessage,
+        //Uri uri,
+        HttpMessageInvoker invoker,
+        CancellationToken cancellationToken) {
+
         var connection = new TransportTunnelHttp2ConnectionContext();
-        request.Content = new HttpClientConnectionContextContent(connection);
-        var response = await invoker.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        requestMessage.Content = new HttpClientConnectionContextContent(connection);
+        var response = await invoker.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
         connection.HttpResponseMessage = response;
         var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         connection.Input = PipeReader.Create(responseStream);

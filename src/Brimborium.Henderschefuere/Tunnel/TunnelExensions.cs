@@ -1,15 +1,9 @@
 namespace Brimborium.Henderschefuere.Tunnel;
 public static class TunnelExensions {
-    public static IServiceCollection AddTunnelServices(this IServiceCollection services) {
-        //var tunnelFactory = new TunnelClientFactory();
-        //services.AddSingleton(tunnelFactory);
-        //services.AddSingleton<IForwarderHttpClientFactory>(tunnelFactory);
-        services.TryAddSingleton<TunnelConnectionChannelManager>();
-        services.TryAddSingleton<TransportHttpClientFactorySelector>();
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelHTTP2HttpClientFactory>());
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelWebSocketHttpClientFactory>());
-        return services;
-    }
+
+
+
+
 
     public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
         var cfg = clusterState.Model.Config;
@@ -32,6 +26,47 @@ public static class TunnelExensions {
         var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
         var route = new TunnelWebSocketRoute(tunnelConnectionChannels, clusterState, lifetime);
         return route.Map(routes);
+    }
+
+    // backend
+    public static IReverseProxyBuilder UseTunnelTransport(
+        this IReverseProxyBuilder builder,
+        WebApplicationBuilder webApplicationBuilder,
+        Action<TransportTunnelHttp2Options>? configureTunnelHttp2 = null,
+        Action<TransportTunnelWebSocketOptions>? configureTunnelWebSocket = null
+        ) {
+        builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelHttp2ConnectionListenerFactory>();
+        builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelWebSocketConnectionListenerFactory>();
+
+        if (configureTunnelHttp2 is not null) {
+            builder.Services.Configure(configureTunnelHttp2);
+        }
+
+        if (configureTunnelWebSocket is not null) {
+            builder.Services.Configure(configureTunnelWebSocket);
+        }
+
+        webApplicationBuilder.WebHost.ConfigureKestrel(options => {
+            var proxyConfigManager = options.ApplicationServices.GetRequiredService<ProxyConfigManager>();
+            var tunnels = proxyConfigManager.GetTransportTunnels();
+            foreach (var tunnel in tunnels) {
+                var cfg = tunnel.Model.Config;
+                var remoteTunnelId = cfg.GetRemoteTunnelId();
+                var host = cfg.Url.TrimEnd('/');
+
+                var uriTunnel = new Uri($"{host}/_Tunnel/{remoteTunnelId}");
+                var transport = cfg.Transport;
+                if (transport == TransportMode.TunnelHTTP2) {
+                    options.Listen(new UriEndPointHttp2(uriTunnel, tunnel.TunnelId));
+                    continue;
+                }
+                if (transport == TransportMode.TunnelWebSocket) {
+                    options.Listen(new UriWebSocketEndPoint(uriTunnel, tunnel.TunnelId));
+                    continue;
+                }
+            }
+        });
+        return builder;
     }
 #if weichei
     [RequiresUnreferencedCode("i dont know how")]

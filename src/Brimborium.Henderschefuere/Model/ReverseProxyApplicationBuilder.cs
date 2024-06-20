@@ -3,7 +3,7 @@
 
 namespace Brimborium.Henderschefuere.Model;
 
-public class ReverseProxyApplicationBuilder : IReverseProxyApplicationBuilder {
+public sealed class ReverseProxyApplicationBuilder : IReverseProxyApplicationBuilder {
     private readonly IApplicationBuilder _applicationBuilder;
 
     public ReverseProxyApplicationBuilder(IApplicationBuilder applicationBuilder) {

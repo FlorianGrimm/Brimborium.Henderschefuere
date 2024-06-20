@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
 namespace Brimborium.Henderschefuere.Management;
 
 /// <summary>
@@ -813,9 +814,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
 
         List<TunnelState> result = new();
         foreach (var (_, tunnel) in _tunnels) {
-            var transport = tunnel.Model.Config.Transport;
-            if ((transport == TransportMode.TunnelHTTP2)
-                || (transport == TransportMode.TunnelWebSocket)) {
+            if (tunnel.Model.Config.IsTunnelTransport) {
                 result.Add(tunnel);
             }
         }
@@ -961,4 +960,8 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
             _errorApplyingConfig(logger, ex);
         }
     }
+}
+
+internal sealed class UnShortCitcuitOnceProxyConfigManager(IServiceProvider serviceProvider)
+        : UnShortCitcuitOnceFunc<ProxyConfigManager>(serviceProvider) {
 }

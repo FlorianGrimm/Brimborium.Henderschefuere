@@ -1,6 +1,6 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-internal class TrackLifetimeConnectionContextCollection {
+internal sealed class TrackLifetimeConnectionContextCollection {
     // is owned by the owner TunnelXyzConnectionListener
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections;

@@ -1,16 +1,19 @@
 ﻿// Licensed under the MIT License.
+
 namespace Brimborium.Henderschefuere.Tunnel;
 
-#warning TODO
 internal sealed class TunnelHTTP2HttpClientFactory
-    : ITransportHttpClientFactorySelector
-    , IForwarderHttpClientFactory {
+    : ITransportHttpClientFactorySelector {
+    private readonly ConcurrentDictionary<TunnelHTTP2HttpClientFactoryBoundKey, TunnelHTTP2HttpClientFactoryBound> _tunnelHTTP2HttpClientFactoryBoundByClusterId = new();
+    private readonly UnShortCitcuitOnceProxyConfigManager _UnShortCitcuitOnceProxyConfigManager;
     private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
     private readonly ILogger _logger;
 
     public TunnelHTTP2HttpClientFactory(
+        UnShortCitcuitOnceProxyConfigManager unShortCitcuitOnceProxyConfigManager,
         TunnelConnectionChannelManager tunnelConnectionChannelManager,
         ILogger<TunnelHTTP2HttpClientFactory> logger) {
+        this._UnShortCitcuitOnceProxyConfigManager = unShortCitcuitOnceProxyConfigManager;
         this._tunnelConnectionChannelManager = tunnelConnectionChannelManager;
         this._logger = logger;
     }
@@ -19,57 +22,117 @@ internal sealed class TunnelHTTP2HttpClientFactory
 
     public int GetOrder() => 0;
 
-    public IForwarderHttpClientFactory? GetForwarderHttpClientFactory(TransportMode transportMode, ForwarderHttpClientContext context)
-        => this;
+    public IForwarderHttpClientFactory? GetForwarderHttpClientFactory(
+        TransportMode transportMode,
+        ForwarderHttpClientContext context) {
+        var proxyConfigManager = this._UnShortCitcuitOnceProxyConfigManager.GetService();
+        if (proxyConfigManager.TryGetCluster(context.ClusterId, out var cluster)) {
+            TunnelHTTP2HttpClientFactoryBoundKey key = new(context.ClusterId, cluster.Revision);
+            if (!_tunnelHTTP2HttpClientFactoryBoundByClusterId.TryGetValue(key, out var result)) {
+                result = new TunnelHTTP2HttpClientFactoryBound(
+                    proxyConfigManager,
+                    this._tunnelConnectionChannelManager,
+                    context,
+                    cluster,
+                    this._logger);
+                _tunnelHTTP2HttpClientFactoryBoundByClusterId[key] = result;
+                return result;
+            } else {
+                return result;
+            }
+        } else {
+            return null;
+        }
+
+    }
+}
+
+internal record struct TunnelHTTP2HttpClientFactoryBoundKey(
+        string ClusterId,
+        int Revision
+        ) : IEquatable<TunnelHTTP2HttpClientFactoryBoundKey> {
+    public bool Equals(TunnelHTTP2HttpClientFactoryBoundKey? other)
+        => (other is { } obj)
+            && (string.Equals(ClusterId, obj.ClusterId)
+                && (Revision == obj.Revision));
+
+    public override int GetHashCode()
+        => HashCode.Combine(ClusterId, Revision);
+}
+
+internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFactory {
+    private readonly ProxyConfigManager _ProxyConfigManager;
+    private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
+    private ForwarderHttpClientContext _Context;
+    private ClusterState _Cluster;
+    private readonly ILogger _logger;
+
+    public TunnelHTTP2HttpClientFactoryBound(
+        ProxyConfigManager proxyConfigManager,
+        TunnelConnectionChannelManager tunnelConnectionChannelManager,
+        ForwarderHttpClientContext context,
+        ClusterState cluster,
+        ILogger logger) {
+        this._ProxyConfigManager = proxyConfigManager;
+        this._tunnelConnectionChannelManager = tunnelConnectionChannelManager;
+        this._Context = context;
+        this._Cluster = cluster;
+        this._logger = logger;
+    }
 
     public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) {
+        var clusterId = context.ClusterId;
+        if (!this._ProxyConfigManager.TryGetCluster(clusterId, out var cluster)) {
+            throw new ArgumentException($"Cluster:'{context.ClusterId}' not found.");
+        }
         if (CanReuseOldClient(context)) {
             Log.ClientReused(_logger, context.ClusterId);
             return context.OldClient!;
         }
 
-        var handler = new SocketsHttpHandler {
-            UseProxy = false,
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.None,
-            UseCookies = false,
-            EnableMultipleHttp2Connections = true,
-            ActivityHeadersPropagator = new ReverseProxyPropagator(DistributedContextPropagator.Current),
-            ConnectTimeout = TimeSpan.FromSeconds(15),
+        {
+            var handler = new SocketsHttpHandler {
+                UseProxy = false,
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.None,
+                UseCookies = false,
+                EnableMultipleHttp2Connections = true,
+                ActivityHeadersPropagator = new ReverseProxyPropagator(DistributedContextPropagator.Current),
+                ConnectTimeout = TimeSpan.FromSeconds(15),
 
-            // NOTE: MaxResponseHeadersLength = 64, which means up to 64 KB of headers are allowed by default as of .NET Core 3.1.
-        };
+                // NOTE: MaxResponseHeadersLength = 64, which means up to 64 KB of headers are allowed by default as of .NET Core 3.1.
+            };
 
-        ConfigureHandler(context, handler);
+            ConfigureHandler(context, handler);
 
-        handler.ConnectCallback = async (context, cancellationToken) => {
-            await Task.CompletedTask;
-            var channelId = context.DnsEndPoint.Host;
-            if (_tunnelConnectionChannelManager.TryGetConnectionChannel(channelId, out var tunnelConnectionChannels)) {
+            handler.ConnectCallback = async (context, cancellationToken) => {
+                //var channelId = context.DnsEndPoint.Host;
+                if (!_tunnelConnectionChannelManager.TryGetConnectionChannel(clusterId, out var tunnelConnectionChannels)) {
+                    throw new InvalidOperationException("tunnelConnectionChannels not found");
+                }
                 var (requests, responses) = tunnelConnectionChannels;
 
                 // Ask for a connection
-                await requests.Writer.WriteAsync(0, cancellationToken);
+                int retry = 0;
+                await requests.Writer.WriteAsync(retry++, cancellationToken);
 
                 while (true) {
                     var stream = await responses.Reader.ReadAsync(cancellationToken);
 
-                    if (stream is ICloseable c && c.IsClosed) {
+                    if (stream is IStreamCloseable c && c.IsClosed) {
                         // Ask for another connection
-                        await requests.Writer.WriteAsync(0, cancellationToken);
-
+                        await requests.Writer.WriteAsync(retry++, cancellationToken);
                         continue;
                     }
 
                     return stream;
                 }
-            }
-            throw new Exception("Not implemented");
-        };
+            };
 
-        Log.ClientCreated(_logger, context.ClusterId);
+            Log.ClientCreated(_logger, context.ClusterId);
 
-        return new HttpMessageInvoker(handler, disposeHandler: true);
+            return new HttpMessageInvoker(handler, disposeHandler: true);
+        }
     }
 
     /// <summary>
@@ -110,25 +173,6 @@ internal sealed class TunnelHTTP2HttpClientFactory
             var encoding = Encoding.GetEncoding(newConfig.ResponseHeaderEncoding);
             handler.ResponseHeaderEncodingSelector = (_, _) => encoding;
         }
-
-        var webProxy = TryCreateWebProxy(newConfig.WebProxy);
-        if (webProxy is not null) {
-            handler.Proxy = webProxy;
-            handler.UseProxy = true;
-        }
-    }
-
-    private static IWebProxy? TryCreateWebProxy(WebProxyConfig? webProxyConfig) {
-        if (webProxyConfig is null || webProxyConfig.Address is null) {
-            return null;
-        }
-
-        var webProxy = new WebProxy(webProxyConfig.Address);
-
-        webProxy.UseDefaultCredentials = webProxyConfig.UseDefaultCredentials.GetValueOrDefault(false);
-        webProxy.BypassProxyOnLocal = webProxyConfig.BypassOnLocal.GetValueOrDefault(false);
-
-        return webProxy;
     }
 
     private static class Log {

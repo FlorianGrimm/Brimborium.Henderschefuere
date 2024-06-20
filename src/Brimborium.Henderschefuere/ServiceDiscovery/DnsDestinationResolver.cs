@@ -6,7 +6,7 @@ namespace Brimborium.Henderschefuere.ServiceDiscovery;
 /// <summary>
 /// Implementation of <see cref="IDestinationResolver"/> which resolves host names to IP addresses using DNS.
 /// </summary>
-internal class DnsDestinationResolver : IDestinationResolver {
+internal sealed class DnsDestinationResolver : IDestinationResolver {
     private readonly IOptionsMonitor<DnsDestinationResolverOptions> _options;
 
     /// <summary>

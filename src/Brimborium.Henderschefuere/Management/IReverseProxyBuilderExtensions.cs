@@ -118,10 +118,10 @@ internal static class IReverseProxyBuilderExtensions {
     }
 
     public static IReverseProxyBuilder AddHttpSysDelegation(this IReverseProxyBuilder builder) {
+        builder.Services.AddSingleton<UnShortCitcuitOnceIServerDelegationFeature>();
         builder.Services.AddSingleton<HttpSysDelegator>();
         builder.Services.TryAddSingleton<IHttpSysDelegator>(p => p.GetRequiredService<HttpSysDelegator>());
         builder.Services.AddSingleton<IClusterChangeListener>(p => p.GetRequiredService<HttpSysDelegator>());
-
         return builder;
     }
 

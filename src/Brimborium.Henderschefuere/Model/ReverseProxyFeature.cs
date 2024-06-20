@@ -6,7 +6,7 @@ namespace Brimborium.Henderschefuere.Model;
 /// <summary>
 /// Stores the current proxy configuration used when processing the request.
 /// </summary>
-public class ReverseProxyFeature : IReverseProxyFeature {
+public sealed class ReverseProxyFeature : IReverseProxyFeature {
     private IReadOnlyList<DestinationState> _availableDestinations = default!;
 
     /// <inheritdoc/>

@@ -8,7 +8,7 @@ namespace Brimborium.Henderschefuere.ServiceDiscovery;
 /// <summary>
 /// Options for <see cref="DnsDestinationResolver"/>.
 /// </summary>
-public class DnsDestinationResolverOptions {
+public sealed class DnsDestinationResolverOptions {
     /// <summary>
     /// The period between requesting a refresh of a resolved name.
     /// </summary>
