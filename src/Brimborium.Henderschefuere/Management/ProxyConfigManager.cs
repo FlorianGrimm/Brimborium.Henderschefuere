@@ -534,13 +534,53 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     }
 
     private void UpdateRuntimeTunnels(IEnumerable<TunnelConfig> incomingTunnels) {
+        var desiredTunnels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var incomingTunnel in incomingTunnels) {
+            var added = desiredTunnels.Add(incomingTunnel.TunnelId);
+            Debug.Assert(added);
+
             if (_tunnels.TryGetValue(incomingTunnel.TunnelId, out var currentTunnel)) {
-#warning TODO
+                var newTunnelModel = new TunnelModel(incomingTunnel);
+                var currentTunnelModel = currentTunnel.Model;
+                var configChanged = currentTunnelModel.HasConfigChanged(newTunnelModel);
+                if (configChanged) {
+                    currentTunnel.Revision++;
+                    Log.ClusterChanged(_logger, incomingTunnel.TunnelId);
+
+                    currentTunnel.Model = newTunnelModel;
+#if SOON
+                    foreach (var listener in _tunnelChangeListeners) {
+                        listener.OnTunnelChanged(currentTunnel);
+                    }
+#endif
+                }
             } else {
                 currentTunnel = new TunnelState(incomingTunnel.TunnelId);
                 currentTunnel.Model = new TunnelModel(incomingTunnel);
                 _tunnels.TryAdd(currentTunnel.TunnelId, currentTunnel);
+
+                // how to create a new endpoint?
+            }
+        }
+
+        // Directly enumerate the ConcurrentDictionary to limit locking and copying.
+        foreach (var existingTunnelPair in _tunnels) {
+            var existingTunnel = existingTunnelPair.Value;
+            if (!desiredTunnels.Contains(existingTunnel.TunnelId)) {
+                // NOTE 1: Remove is safe to do within the `foreach` loop on ConcurrentDictionary
+                //
+
+                // TODO: remove the tunnel - how to remove the endpoint?
+                Log.TunnelRemoved(_logger, existingTunnel.TunnelId);
+                var removed = _tunnels.TryRemove(existingTunnel.TunnelId, out var _);
+                Debug.Assert(removed);
+
+#if SOON
+                foreach (var listener in _tunnelChangeListeners) {
+                    listener.OnTunnelRemoved(existingTunnel);
+                }
+#endif
             }
         }
     }
@@ -572,6 +612,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                 };
                 var httpClient = _TransportHttpClientFactorySelector.GetForwarderHttpClientFactory(transport, forwarderHttpClientContext)?.CreateClient(forwarderHttpClientContext);
                 if (httpClient is null) {
+                    // TODO: is really needed - it's it better to be breave and throw an error?
                     httpClient = _httpClientFactory.CreateClient(forwarderHttpClientContext);
                 }
 
@@ -606,6 +647,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                 };
                 var httpClient = _TransportHttpClientFactorySelector.GetForwarderHttpClientFactory(transport, forwarderHttpClientContext)?.CreateClient(forwarderHttpClientContext);
                 if (httpClient is null) {
+                    // TODO: is really needed - it's it better to be breave and throw an error?
                     httpClient = _httpClientFactory.CreateClient(forwarderHttpClientContext);
                 }
 
@@ -807,7 +849,7 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         return _tunnels.TryGetValue(id, out tunnel);
     }
 
-    public IEnumerable<TunnelState> GetTransportTunnels() {
+    public List<TunnelState> GetTransportTunnels() {
         if (_preloadOnce is { Loaded: false }) {
             InitialPreloadAsync().GetAwaiter().GetResult();
         }
@@ -861,6 +903,22 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     }
 
     private static class Log {
+
+        private static readonly Action<ILogger, string, Exception?> _tunnelAdded = LoggerMessage.Define<string>(
+            LogLevel.Debug,
+            EventIds.TunnelAdded,
+            "Tunnel '{tunnelId}' has been added.");
+
+        private static readonly Action<ILogger, string, Exception?> _tunnelChanged = LoggerMessage.Define<string>(
+            LogLevel.Debug,
+            EventIds.TunnelChanged,
+            "Tunnel '{tunnelId}' has changed.");
+
+        private static readonly Action<ILogger, string, Exception?> _tunnelRemoved = LoggerMessage.Define<string>(
+            LogLevel.Debug,
+            EventIds.TunnelRemoved,
+            "Tunnel '{tunnelId}' has been removed.");
+
         private static readonly Action<ILogger, string, Exception?> _clusterAdded = LoggerMessage.Define<string>(
             LogLevel.Debug,
             EventIds.ClusterAdded,
@@ -915,6 +973,18 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
             LogLevel.Error,
             EventIds.ErrorApplyingConfig,
             "Failed to apply the new config.");
+
+        public static void TunnelAdded(ILogger logger, string tunnelId) {
+            _tunnelAdded(logger, tunnelId, null);
+        }
+
+        public static void TunnelChanged(ILogger logger, string tunnelId) {
+            _tunnelChanged(logger, tunnelId, null);
+        }
+
+        public static void TunnelRemoved(ILogger logger, string tunnelId) {
+            _tunnelRemoved(logger, tunnelId, null);
+        }
 
         public static void ClusterAdded(ILogger logger, string clusterId) {
             _clusterAdded(logger, clusterId, null);

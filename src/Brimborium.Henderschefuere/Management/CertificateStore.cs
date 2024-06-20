@@ -47,3 +47,5 @@ public class CertificateStore : ICertificateStore {
     }
     */
 }
+public sealed class OptionalCertificateStore(IServiceProvider serviceProvider) : UnShortCitcuitOnceFuncQ<CertificateStore>(serviceProvider) {
+}

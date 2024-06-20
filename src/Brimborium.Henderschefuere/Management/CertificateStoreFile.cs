@@ -2,23 +2,23 @@
 
 namespace Brimborium.Henderschefuere.Management;
 
-public class CertificateStoreFolderFactory : ICertificateStoreFactory {
+public class CertificateStoreFileFactory : ICertificateStoreFactory {
     private readonly ILogger _logger;
 
-    public CertificateStoreFolderFactory(
-        ILogger<CertificateStoreFolder> logger
+    public CertificateStoreFileFactory(
+        ILogger<CertificateStoreFile> logger
         ) {
         this._logger = logger;
     }
 
     public ICertificateStore? CreateCertificateStore(CertificateStoreOptions options) {
-        if (!string.Equals("Folder", options.Kind, StringComparison.OrdinalIgnoreCase)) { return null; }
+        if (!string.Equals("File", options.Kind, StringComparison.OrdinalIgnoreCase)) { return null; }
 
-        return new CertificateStoreFolder(options, _logger);
+        return new CertificateStoreFile(options, _logger);
     }
 }
 
-public sealed class CertificateStoreFolder : ICertificateStore {
+public sealed class CertificateStoreFile : ICertificateStore {
     private readonly string? _location;
     private readonly string? _password;
     private readonly ILogger _logger;
@@ -26,7 +26,7 @@ public sealed class CertificateStoreFolder : ICertificateStore {
     // TODO: think about FileSystemWatcher and chache
     // private readonly FileSystemWatcher _watcher;
 
-    public CertificateStoreFolder(
+    public CertificateStoreFile(
         CertificateStoreOptions options,
         ILogger logger
         ) {
@@ -39,18 +39,12 @@ public sealed class CertificateStoreFolder : ICertificateStore {
         if (string.IsNullOrEmpty(_location)) { return null; }
 
         var certificateCollection = new X509Certificate2Collection();
-        System.IO.DirectoryInfo directoryInfo = new DirectoryInfo(_location);
-        var listFiles = directoryInfo.EnumerateFiles("*.*");
-        foreach (var file in listFiles) {
-            X509Certificate2 certificate;
-            try {
-                certificate = new X509Certificate2(file.FullName, _password, X509KeyStorageFlags.PersistKeySet);
-                certificateCollection.Add(certificate);
-            } catch {
-                continue;
-            }
+        try {
+            var certificate = new X509Certificate2(_location, _password, X509KeyStorageFlags.PersistKeySet);
+            certificateCollection.Add(certificate);
+        } catch {
+            return null;
         }
-
         {
             var result = certificateCollection.Find(X509FindType.FindBySerialNumber, name, true);
             if (result is { Count: > 0 }) {
@@ -63,7 +57,6 @@ public sealed class CertificateStoreFolder : ICertificateStore {
                 return result[0];
             }
         }
-
         return null;
     }
 }

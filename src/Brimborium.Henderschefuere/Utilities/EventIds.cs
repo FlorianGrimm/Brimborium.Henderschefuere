@@ -67,4 +67,7 @@ internal static class EventIds {
     public static readonly EventId TimeoutNotApplied = new(64, nameof(TimeoutNotApplied));
     public static readonly EventId DelegationQueueNoLongerExists = new(65, nameof(DelegationQueueNoLongerExists));
     public static readonly EventId ForwardingRequestCancelled = new(66, nameof(ForwardingRequestCancelled));
+    public static readonly EventId TunnelAdded = new EventId(67, "TunnelAdded");
+    public static readonly EventId TunnelChanged = new EventId(68, "TunnelChanged");
+    public static readonly EventId TunnelRemoved = new EventId(69, "TunnelRemoved");
 }

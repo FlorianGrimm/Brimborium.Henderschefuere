@@ -1,40 +1,15 @@
 namespace Brimborium.Henderschefuere.Tunnel;
+
 public static class TunnelExensions {
 
-
-
-
-
-    public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
-        var cfg = clusterState.Model.Config;
-        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
-        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
-            throw new Exception("ClusterId already exists.");
-        }
-        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
-        var route = new TunnelHTTP2Route(tunnelConnectionChannels, clusterState, lifetime);
-        var result = route.Map(routes);
-        return result;
-    }
-
-    public static IEndpointConventionBuilder MapWebSocketTunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
-        var cfg = clusterState.Model.Config;
-        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
-        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
-            throw new Exception("ClusterId already exists.");
-        }
-        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
-        var route = new TunnelWebSocketRoute(tunnelConnectionChannels, clusterState, lifetime);
-        return route.Map(routes);
-    }
-
-    // backend
     public static IReverseProxyBuilder UseTunnelTransport(
         this IReverseProxyBuilder builder,
         WebApplicationBuilder webApplicationBuilder,
         Action<TransportTunnelHttp2Options>? configureTunnelHttp2 = null,
         Action<TransportTunnelWebSocketOptions>? configureTunnelWebSocket = null
         ) {
+        builder.Services.TryAddSingleton<OptionalCertificateStoreFactory>();
+        builder.Services.TryAddSingleton<OptionalCertificateStore>();
         builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelHttp2ConnectionListenerFactory>();
         builder.Services.AddSingleton<IConnectionListenerFactory, TransportTunnelWebSocketConnectionListenerFactory>();
 
@@ -68,6 +43,29 @@ public static class TunnelExensions {
         });
         return builder;
     }
+    public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
+        var cfg = clusterState.Model.Config;
+        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
+        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
+            throw new Exception("ClusterId already exists.");
+        }
+        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
+        var route = new TunnelHTTP2Route(tunnelConnectionChannels, clusterState, lifetime);
+        var result = route.Map(routes);
+        return result;
+    }
+
+    public static IEndpointConventionBuilder MapWebSocketTunnel(this IEndpointRouteBuilder routes, ClusterState clusterState) {
+        var cfg = clusterState.Model.Config;
+        var tunnelClientFactory = routes.ServiceProvider.GetRequiredService<TunnelConnectionChannelManager>();
+        if (!(tunnelClientFactory.RegisterConnectionChannel(cfg.ClusterId) is { } tunnelConnectionChannels)) {
+            throw new Exception("ClusterId already exists.");
+        }
+        var lifetime = routes.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
+        var route = new TunnelWebSocketRoute(tunnelConnectionChannels, clusterState, lifetime);
+        return route.Map(routes);
+    }
+
 #if weichei
     [RequiresUnreferencedCode("i dont know how")]
     public static IEndpointConventionBuilder MapHttp2Tunnel(this IEndpointRouteBuilder routes, string path) {

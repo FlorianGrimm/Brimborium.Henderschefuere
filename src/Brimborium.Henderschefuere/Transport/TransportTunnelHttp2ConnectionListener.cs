@@ -9,6 +9,8 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
     private readonly CancellationTokenSource _closedCts = new();
+    private readonly OptionalCertificateStore _optionalCertificateStore;
+    private readonly ILogger _logger;
     private readonly TransportTunnelHttp2Options _options;
     private readonly TunnelState _tunnel;
     private readonly UriEndPointHttp2 _endPoint;
@@ -17,15 +19,20 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
     private HttpMessageInvoker? _httpMessageInvoker;
 
     public TransportTunnelHttp2ConnectionListener(
-        TransportTunnelHttp2Options options,
+        UriEndPointHttp2 endpoint,
         TunnelState tunnel,
-        UriEndPointHttp2 endpoint) {
+        TransportTunnelHttp2Options options,
+        OptionalCertificateStore optionalCertificateStore,
+        ILogger logger
+        ) {
         if (string.IsNullOrEmpty(endpoint.Uri?.ToString())) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
         _createHttpMessageInvokerLock = new(1, 1);
         _connectionLock = new(options.MaxConnectionCount);
         _connectionCollection = new TrackLifetimeConnectionContextCollection(_connections, _connectionLock);
+        _optionalCertificateStore = optionalCertificateStore;
+        _logger = logger;
         _options = options;
         _tunnel = tunnel;
         _endPoint = endpoint;
@@ -40,13 +47,11 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
             // Kestrel will keep an active accept call open as long as the transport is active
             await _connectionLock.WaitAsync(cancellationToken);
 
-
             if (_httpMessageInvoker is null) {
                 await _createHttpMessageInvokerLock.WaitAsync(cancellationToken);
                 _httpMessageInvoker ??= await CreateHttpMessageInvoker();
                 _createHttpMessageInvokerLock.Release();
             }
-
 
             while (true) {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -56,7 +61,7 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
                     Version = new Version(2, 0)
                 };
                 if (_options.ConfigureHttpRequestMessageAsync is { } configure) {
-                    requestMessage = await configure(_endPoint.Uri!, this._tunnel.Model.Config, requestMessage);
+                    await configure(this._tunnel.Model.Config, requestMessage);
                 }
 
                 try {
@@ -82,16 +87,33 @@ internal sealed class TransportTunnelHttp2ConnectionListener : IConnectionListen
             PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
         };
 
-        //socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+#warning TODO: TEST
 
-#warning TODO HERE cert x(socketsHttpHandler, _tunnel.Model.Config.Authentication);
-
-        if (_options.ConfigureSocketsHttpHandlerAsync is { } configure) {
-            var httpMessageHandler = await configure(_endPoint.Uri!, _tunnel.Model.Config, socketsHttpHandler);
-            return new HttpMessageInvoker(httpMessageHandler);
-        } else {
-            return new HttpMessageInvoker(socketsHttpHandler);
+        // set the socketsHttpHandler.SslOptions based on the tunnel configuration authentication
+        var config = _tunnel.Model.Config;
+        if (config.Authentication.ClientCertificate is { Length: > 0 } certificateName) {
+            if (!(_optionalCertificateStore.GetService() is { } certificateStore)) {
+                throw new InvalidOperationException("No CertificateStore");
+            }
+            var certificate = certificateStore.GetCertificate(certificateName);
+            if (certificate is null) {
+                throw new InvalidOperationException("No Certificate");
+            }
+            var clientCertificates = socketsHttpHandler.SslOptions.ClientCertificates ??= new();
+            clientCertificates.Add(certificate);
         }
+
+        if (config.Authentication.ClientCertifiacteCollection is { } certificates) {
+            var clientCertificates = socketsHttpHandler.SslOptions.ClientCertificates ??= new();
+            clientCertificates.AddRange(certificates);
+        }
+
+        // allow the user to configure the handler
+        if (_options.ConfigureSocketsHttpHandlerAsync is { } configure) {
+            await configure(config, socketsHttpHandler);
+        }
+
+        return new HttpMessageInvoker(socketsHttpHandler);
     }
 
     public async ValueTask DisposeAsync() {

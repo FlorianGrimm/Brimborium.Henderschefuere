@@ -148,12 +148,17 @@ public static class ReverseProxyServiceCollectionExtensions {
         return builder;
     }
 
-
     public static IServiceCollection AddCertificationServices(this IServiceCollection services) {
-        services.TryAddSingleton<CertificateStore>();
+        services.TryAddSingleton<OptionalCertificateStoreFactory>();
+        services.TryAddSingleton<OptionalCertificateStore>();
         services.TryAddSingleton<CertificateStoreFactory>();
+        services.TryAddSingleton<CertificateStore>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICertificateStoreFactory, CertificateStoreSystemFactory>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICertificateStoreFactory, CertificateStoreFolderFactory>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICertificateStoreFactory, CertificateStoreFileFactory>());
+
+        // TODO: add config to allow users to add their own certificates
+
         return services;
     }
 }

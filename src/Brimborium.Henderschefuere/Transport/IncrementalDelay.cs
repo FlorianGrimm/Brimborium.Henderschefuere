@@ -1,19 +1,24 @@
 ﻿namespace Brimborium.Henderschefuere.Transport;
 
 internal sealed class IncrementalDelay(int increment = 500, int maximum = 15 * 60 * 1000) {
-    private readonly int _increment = increment;
-    private readonly int _maximum = maximum;
-    private int _current = 0;
-
+    internal int Increment = increment;
+    internal int Maximum = maximum;
+    internal int Current = 0;
+    private int _CountWait = 0;
     public void Reset() {
-        _current = 0;
+        Current = 0;
     }
 
     public async Task Delay(CancellationToken cancellationToken) {
-        if (_current < _maximum) {
-            _current += _increment;
-            if (_maximum < _current) { _current = _maximum; }
+        if (Current < Maximum) {
+            Current += (Increment / (_CountWait + 1));
+            if (Maximum < Current) { Current = Maximum; }
         }
-        await Task.Delay(_current, cancellationToken);
+        System.Threading.Interlocked.Increment(ref _CountWait);
+        try {
+            await Task.Delay(Current, cancellationToken);
+        } finally {
+            System.Threading.Interlocked.Decrement(ref _CountWait);
+        }
     }
 }

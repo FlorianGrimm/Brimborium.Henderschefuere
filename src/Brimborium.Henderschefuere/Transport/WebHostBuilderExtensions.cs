@@ -7,10 +7,11 @@ public static class WebHostBuilderExtensions {
         services.TryAddSingleton<TransportHttpClientFactorySelector>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelHTTP2HttpClientFactory>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelWebSocketHttpClientFactory>());
+        services.TryAddSingleton<OptionalCertificateStoreFactory>();
+        services.TryAddSingleton<OptionalCertificateStore>();
         return services;
     }
 
-    // frontend
     public static IReverseProxyBuilder AddTunnelServices(
         this IReverseProxyBuilder builder) {
         builder.Services.AddTunnelServices();

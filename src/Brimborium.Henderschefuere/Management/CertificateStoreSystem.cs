@@ -11,10 +11,10 @@ public class CertificateStoreSystemFactory : ICertificateStoreFactory {
         this._logger = logger;
     }
 
-    public ICertificateStore? CreateCertificateStore(CertificateStoreOptions factoryOptions) {
-        if (!string.Equals("Folder", factoryOptions.Kind, StringComparison.OrdinalIgnoreCase)) { return null; }
+    public ICertificateStore? CreateCertificateStore(CertificateStoreOptions options) {
+        if (!string.Equals("System", options.Kind, StringComparison.OrdinalIgnoreCase)) { return null; }
 
-        return new CertificateStoreSystem(factoryOptions, _logger);
+        return new CertificateStoreSystem(options, _logger);
     }
 }
 
@@ -23,7 +23,7 @@ public class CertificateStoreSystem : ICertificateStore {
     private readonly X509Store _store;
 
     public CertificateStoreSystem(
-        CertificateStoreOptions factoryOptions,
+        CertificateStoreOptions options,
         ILogger logger
         ) {
         _logger = logger;

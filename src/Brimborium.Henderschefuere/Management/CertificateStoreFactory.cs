@@ -13,24 +13,21 @@ public interface ICertificateStoreFactory {
 public class CertificateStoreFactory : ICertificateStoreFactory {
     private readonly CertificateStore _certificateStore;
     private readonly IEnumerable<ICertificateStoreFactory> _listCertificateServiceFactory;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger _logger;
 
     public CertificateStoreFactory(
         CertificateStore certificateStore,
         IEnumerable<ICertificateStoreFactory> listCertificateServiceFactory,
-        ILoggerFactory loggerFactory,
         ILogger<CertificateStoreFactory> logger
         ) {
         _certificateStore = certificateStore;
         _listCertificateServiceFactory = listCertificateServiceFactory.ToList();
-        _loggerFactory = loggerFactory;
         _logger = logger;
     }
 
-    public ICertificateStore? CreateCertificateStore(CertificateStoreOptions factoryOptions) {
+    public ICertificateStore? CreateCertificateStore(CertificateStoreOptions options) {
         foreach (var factory in this._listCertificateServiceFactory) {
-            var certificateService = factory.CreateCertificateStore(factoryOptions);
+            var certificateService = factory.CreateCertificateStore(options);
             if (certificateService != null) {
                 _certificateStore.CertificateServices.Add(certificateService);
                 return certificateService;
@@ -38,4 +35,7 @@ public class CertificateStoreFactory : ICertificateStoreFactory {
         }
         return null;
     }
+}
+
+public sealed class OptionalCertificateStoreFactory(IServiceProvider serviceProvider) : UnShortCitcuitOnceFuncQ<CertificateStoreFactory>(serviceProvider) {
 }

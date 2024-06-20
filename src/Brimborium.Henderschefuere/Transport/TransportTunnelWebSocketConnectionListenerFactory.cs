@@ -1,10 +1,14 @@
 namespace Brimborium.Henderschefuere.Transport;
 
-public class TransportTunnelWebSocketConnectionListenerFactory : IConnectionListenerFactory, IConnectionListenerFactorySelector {
+internal sealed class TransportTunnelWebSocketConnectionListenerFactory : IConnectionListenerFactory, IConnectionListenerFactorySelector {
+    private readonly UnShortCitcuitOnceProxyConfigManager _proxyConfigManagerOnce;
     private readonly TransportTunnelWebSocketOptions _options;
 
-    public TransportTunnelWebSocketConnectionListenerFactory(IOptions<TransportTunnelWebSocketOptions> options) {
+    public TransportTunnelWebSocketConnectionListenerFactory(
+        UnShortCitcuitOnceProxyConfigManager proxyConfigManagerOnce,
+        IOptions<TransportTunnelWebSocketOptions> options) {
         _options = options.Value;
+        _proxyConfigManagerOnce = proxyConfigManagerOnce;
     }
 
     public bool CanBind(EndPoint endpoint) {
@@ -14,8 +18,14 @@ public class TransportTunnelWebSocketConnectionListenerFactory : IConnectionList
     public ValueTask<IConnectionListener> BindAsync(EndPoint endpoint, CancellationToken cancellationToken = default) {
         if (endpoint is not UriWebSocketEndPoint uriEndpointWebSocket) {
             throw new ArgumentException("Invalid endpoint type", nameof(endpoint));
-        } else {
-            return new(new TransportTunnelWebSocketConnectionListener(_options, uriEndpointWebSocket));
         }
+
+        var proxyConfigManager = _proxyConfigManagerOnce.GetService();
+        var tunnelId = uriEndpointWebSocket.TunnelId;
+        if (!proxyConfigManager.TryGetTunnel(tunnelId, out var tunnel)) {
+            throw new ArgumentException($"Tunnel: '{tunnelId} not found.'", nameof(endpoint));
+        }
+
+        return new(new TransportTunnelWebSocketConnectionListener(_options, tunnel, uriEndpointWebSocket));
     }
 }

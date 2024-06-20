@@ -34,7 +34,7 @@ internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection
 
     internal static async ValueTask<TransportTunnelWebSocketConnectionContext> ConnectAsync(
         Uri uri,
-        TransportTunnelWebSocketOptions tunnelWebSocketOptions,
+        Action<ClientWebSocket> configureClientWebSocket,
         CancellationToken cancellationToken) {
         ClientWebSocket? underlyingWebSocket = null;
         var options = new HttpConnectionOptions {
@@ -45,8 +45,10 @@ internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection
                 underlyingWebSocket = new ClientWebSocket();
                 underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
 
-                if (tunnelWebSocketOptions.ConfigureClientWebSocket is { } configureClientWebSocket) {
-                    configureClientWebSocket(uri, underlyingWebSocket);
+                // underlyingWebSocket.Options.ClientCertificates
+
+                if (configureClientWebSocket is not null) {
+                    configureClientWebSocket(underlyingWebSocket);
                 }
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);
                 return underlyingWebSocket;

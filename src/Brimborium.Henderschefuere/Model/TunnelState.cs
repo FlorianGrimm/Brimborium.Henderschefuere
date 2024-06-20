@@ -17,4 +17,6 @@ public sealed class TunnelState {
     public string TunnelId { get; }
 
     public TunnelModel Model { get => _Model; internal set => _Model = value; }
+
+    public int Revision { get; internal set; }
 }

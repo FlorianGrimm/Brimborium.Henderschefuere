@@ -7,23 +7,34 @@ internal sealed class TransportTunnelWebSocketConnectionListener : IConnectionLi
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TransportTunnelWebSocketOptions _options;
+    private readonly OptionalCertificateStore _optionalCertificateStore;
+    private readonly ILogger _logger;
+    private readonly TunnelState _tunnel;
     private readonly CancellationTokenSource _closedCts = new();
     private readonly UriWebSocketEndPoint _endPoint;
     private readonly TrackLifetimeConnectionContextCollection _connectionCollection;
+    private readonly IncrementalDelay _delay = new();
 
-    public TransportTunnelWebSocketConnectionListener(TransportTunnelWebSocketOptions options, UriWebSocketEndPoint endpoint) {
+    public TransportTunnelWebSocketConnectionListener(
+        UriWebSocketEndPoint endpoint,
+        TunnelState tunnel,
+        TransportTunnelWebSocketOptions options,
+        OptionalCertificateStore optionalCertificateStore,
+        ILogger logger
+        ) {
         if (endpoint.Uri is null) {
             throw new ArgumentException("UriEndPoint.Uri is required", nameof(endpoint));
         }
-        _options = options;
         _endPoint = endpoint;
+        _tunnel = tunnel;
+        _options = options;
+        _optionalCertificateStore = optionalCertificateStore;
+        _logger = logger;
         _connectionLock = new(options.MaxConnectionCount);
         _connectionCollection = new TrackLifetimeConnectionContextCollection(_connections, _connectionLock);
     }
 
     public EndPoint EndPoint => _endPoint;
-
-    private Uri Uri => _endPoint.Uri!;
 
     public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default) {
         try {
@@ -35,12 +46,10 @@ internal sealed class TransportTunnelWebSocketConnectionListener : IConnectionLi
             while (true) {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                int delay = 0;
-
                 try {
                     var innerConnection = await TransportTunnelWebSocketConnectionContext.ConnectAsync(
-                        Uri, _options, cancellationToken);
-                    delay = 0;
+                        _endPoint.Uri!, onConfigureClientWebSocket, cancellationToken);
+                    _delay.Reset();
                     return _connectionCollection.AddInnerConnection(innerConnection);
 #if WEICHEI
                     var connection = new TrackLifetimeConnectionContext(innerConnection);
@@ -63,14 +72,42 @@ internal sealed class TransportTunnelWebSocketConnectionListener : IConnectionLi
 #endif
                 } catch (Exception ex) when (ex is not OperationCanceledException) {
                     // TODO: More sophisticated backoff and retry
-                    if (delay < 60000) {
-                        delay += 5000;
-                    }
-                    await Task.Delay(delay, cancellationToken);
+                    await _delay.Delay(cancellationToken);
                 }
             }
         } catch (OperationCanceledException) {
             return null;
+        }
+    }
+
+    private void onConfigureClientWebSocket(ClientWebSocket socket) {
+
+#warning TODO: add caching of the certificate
+#warning TODO: TEST
+
+        // set the socketsHttpHandler.SslOptions based on the tunnel configuration authentication
+        var config = _tunnel.Model.Config;
+        if (config.Authentication.ClientCertificate is { Length: > 0 } certificateName) {
+            if (!(_optionalCertificateStore.GetService() is { } certificateStore)) {
+                throw new InvalidOperationException("No CertificateStore");
+            }
+
+            var certificate = certificateStore.GetCertificate(certificateName);
+            if (certificate is null) {
+                throw new InvalidOperationException("No Certificate");
+            }
+
+            var clientCertificates = socket.Options.ClientCertificates ??= new();
+            clientCertificates.Add(certificate);
+        }
+
+        if (config.Authentication.ClientCertifiacteCollection is { } certificates) {
+            var clientCertificates = socket.Options.ClientCertificates ??= new();
+            clientCertificates.AddRange(certificates);
+        }
+
+        if (_options.ConfigureClientWebSocket is { } configureClientWebSocket) {
+            configureClientWebSocket(_tunnel.Model.Config, socket);
         }
     }
 
