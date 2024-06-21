@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Http.Connections;
 
 namespace Brimborium.Henderschefuere.Transport;
 
-internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection {
+internal sealed class TransportTunnelWebSocketConnectionContext
+    : HttpConnection
+    , ITrackLifetimeConnectionContext {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
+    private TrackLifetimeConnectionContextCollection? _trackLifetimeConnectionContextCollection;
 
     private TransportTunnelWebSocketConnectionContext(HttpConnectionOptions options)
         : base(options, null) {
@@ -15,14 +18,21 @@ internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection
         set { }
     }
 
+
+    public void SetTracklifetime(TrackLifetimeConnectionContextCollection trackLifetimeConnectionContextCollection) {
+        _trackLifetimeConnectionContextCollection = trackLifetimeConnectionContextCollection;
+    }
+
     public override void Abort() {
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
+        _trackLifetimeConnectionContextCollection?.Remove(this);
     }
 
     public override void Abort(ConnectionAbortedException abortReason) {
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
+        _trackLifetimeConnectionContextCollection?.Remove(this);
     }
 
     public override ValueTask DisposeAsync() {
@@ -60,4 +70,5 @@ internal sealed class TransportTunnelWebSocketConnectionContext : HttpConnection
         connection._underlyingWebSocket = underlyingWebSocket;
         return connection;
     }
+
 }

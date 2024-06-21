@@ -17,13 +17,13 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     private readonly ILogger<ProxyConfigManager> _logger;
     private readonly IProxyConfigProvider[] _providers;
     private readonly ConfigState[] _configs;
+    private readonly ITunnelChangeListener[] _tunnelChangeListeners;
     private readonly ConcurrentDictionary<string, TunnelState> _tunnels = new(StringComparer.OrdinalIgnoreCase);
     private readonly IClusterChangeListener[] _clusterChangeListeners;
     private readonly ConcurrentDictionary<string, ClusterState> _clusters = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, RouteState> _routes = new(StringComparer.OrdinalIgnoreCase);
     private readonly IProxyConfigFilter[] _filters;
     private readonly IConfigValidator _configValidator;
-    private readonly IForwarderHttpClientFactory _httpClientFactory;
     private readonly TransportHttpClientFactorySelector _TransportHttpClientFactorySelector;
     private readonly ProxyEndpointFactory _proxyEndpointFactory;
     private readonly ITransformBuilder _transformBuilder;
@@ -43,12 +43,12 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
     public ProxyConfigManager(
         ILogger<ProxyConfigManager> logger,
         IEnumerable<IProxyConfigProvider> providers,
+        IEnumerable<ITunnelChangeListener> tunnelChangeListeners,
         IEnumerable<IClusterChangeListener> clusterChangeListeners,
         IEnumerable<IProxyConfigFilter> filters,
         IConfigValidator configValidator,
         ProxyEndpointFactory proxyEndpointFactory,
         ITransformBuilder transformBuilder,
-        IForwarderHttpClientFactory httpClientFactory,
         TransportHttpClientFactorySelector transportHttpClientFactorySelector,
         IActiveHealthCheckMonitor activeHealthCheckMonitor,
         IClusterDestinationsUpdater clusterDestinationsUpdater,
@@ -56,13 +56,13 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
         IDestinationResolver destinationResolver) {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _providers = providers?.ToArray() ?? throw new ArgumentNullException(nameof(providers));
+        _tunnelChangeListeners = (tunnelChangeListeners as ITunnelChangeListener[]) ?? tunnelChangeListeners?.ToArray() ?? throw new ArgumentNullException(nameof(tunnelChangeListeners));
         _clusterChangeListeners = (clusterChangeListeners as IClusterChangeListener[])
             ?? clusterChangeListeners?.ToArray() ?? throw new ArgumentNullException(nameof(clusterChangeListeners));
         _filters = (filters as IProxyConfigFilter[]) ?? filters?.ToArray() ?? throw new ArgumentNullException(nameof(filters));
         _configValidator = configValidator ?? throw new ArgumentNullException(nameof(configValidator));
         _proxyEndpointFactory = proxyEndpointFactory ?? throw new ArgumentNullException(nameof(proxyEndpointFactory));
         _transformBuilder = transformBuilder ?? throw new ArgumentNullException(nameof(transformBuilder));
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _TransportHttpClientFactorySelector = transportHttpClientFactorySelector ?? throw new ArgumentNullException(nameof(transportHttpClientFactorySelector));
         _activeHealthCheckMonitor = activeHealthCheckMonitor ?? throw new ArgumentNullException(nameof(activeHealthCheckMonitor));
         _clusterDestinationsUpdater = clusterDestinationsUpdater ?? throw new ArgumentNullException(nameof(clusterDestinationsUpdater));
@@ -549,11 +549,9 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                     Log.ClusterChanged(_logger, incomingTunnel.TunnelId);
 
                     currentTunnel.Model = newTunnelModel;
-#if SOON
                     foreach (var listener in _tunnelChangeListeners) {
                         listener.OnTunnelChanged(currentTunnel);
                     }
-#endif
                 }
             } else {
                 currentTunnel = new TunnelState(incomingTunnel.TunnelId);
@@ -576,11 +574,9 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                 var removed = _tunnels.TryRemove(existingTunnel.TunnelId, out var _);
                 Debug.Assert(removed);
 
-#if SOON
                 foreach (var listener in _tunnelChangeListeners) {
                     listener.OnTunnelRemoved(existingTunnel);
                 }
-#endif
             }
         }
     }
@@ -609,8 +605,8 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                 };
                 var httpClient = _TransportHttpClientFactorySelector.GetForwarderHttpClientFactory(transport, forwarderHttpClientContext)?.CreateClient(forwarderHttpClientContext);
                 if (httpClient is null) {
-                    // TODO: is really needed - it's it better to be breave and throw an error?
-                    httpClient = _httpClientFactory.CreateClient(forwarderHttpClientContext);
+                    // TODO: log error or throw an exception?
+                    throw new InvalidOperationException();
                 }
 
                 var newClusterModel = new ClusterModel(incomingCluster, httpClient);
@@ -644,8 +640,8 @@ internal sealed class ProxyConfigManager : EndpointDataSource, IProxyStateLookup
                 };
                 var httpClient = _TransportHttpClientFactorySelector.GetForwarderHttpClientFactory(transport, forwarderHttpClientContext)?.CreateClient(forwarderHttpClientContext);
                 if (httpClient is null) {
-                    // TODO: is really needed - it's it better to be breave and throw an error?
-                    httpClient = _httpClientFactory.CreateClient(forwarderHttpClientContext);
+                    // TODO: log error or throw an exception?
+                    throw new InvalidOperationException();
                 }
 
                 newClusterState.Model = new ClusterModel(incomingCluster, httpClient);

@@ -1,14 +1,17 @@
 namespace Brimborium.Henderschefuere.Transport;
 
 internal sealed class TransportTunnelHttp2ConnectionContext
-    : ConnectionContext,
-    IConnectionLifetimeFeature,
-    IConnectionEndPointFeature,
-    IConnectionItemsFeature,
-    IConnectionIdFeature,
-    IConnectionTransportFeature,
-    IDuplexPipe {
+    : ConnectionContext
+    , IConnectionLifetimeFeature
+    , IConnectionEndPointFeature
+    , IConnectionItemsFeature
+    , IConnectionIdFeature
+    , IConnectionTransportFeature
+    , IDuplexPipe
+    , ITrackLifetimeConnectionContext {
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    private TrackLifetimeConnectionContextCollection? _trackLifetimeConnectionContextCollection;
 
     private TransportTunnelHttp2ConnectionContext() {
         Transport = this;
@@ -41,9 +44,14 @@ internal sealed class TransportTunnelHttp2ConnectionContext
 
     public HttpResponseMessage HttpResponseMessage { get; set; } = default!;
 
+    public void SetTracklifetime(TrackLifetimeConnectionContextCollection trackLifetimeConnectionContextCollection) {
+        _trackLifetimeConnectionContextCollection = trackLifetimeConnectionContextCollection;
+    }
+
     public override void Abort() {
         HttpResponseMessage.Dispose();
 
+        _trackLifetimeConnectionContextCollection?.Remove(this);
         _executionTcs.TrySetCanceled();
 
         Input.CancelPendingRead();

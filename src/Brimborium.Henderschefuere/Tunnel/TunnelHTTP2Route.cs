@@ -131,7 +131,7 @@ internal sealed class TunnelHTTP2Route {
                     // Keep reusing this connection while, it's still open on the backend
                     while (!ctsRequestAborted.IsCancellationRequested) {
                         // Make this connection available for requests
-                        await responses.Writer.WriteAsync(stream, ctsRequestAborted);
+                        await responses.Writer.WriteAsync(stream, ctsRequestAborted.Token);
 
                         await stream.StreamCompleteTask;
 
