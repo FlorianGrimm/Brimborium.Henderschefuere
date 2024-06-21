@@ -1,66 +1,12 @@
 ﻿// Licensed under the MIT License.
 
-
 namespace Brimborium.Henderschefuere.Tunnel;
 
-#if false
-internal sealed class TunnelHTTP2Route {
-    private readonly TunnelConnectionChannels _tunnelConnectionChannels;
-    private readonly ClusterState _clusterState;
-    private readonly IHostApplicationLifetime _lifetime;
-
-    public TunnelHTTP2Route(TunnelConnectionChannels tunnelConnectionChannels, ClusterState clusterState, IHostApplicationLifetime lifetime) {
-        this._tunnelConnectionChannels = tunnelConnectionChannels;
-        this._clusterState = clusterState;
-        this._lifetime = lifetime;
-    }
-
-    public IEndpointConventionBuilder Map(IEndpointRouteBuilder routes) {
-        var cfg = _clusterState.Model.Config;
-        var path = $"_Tunnel/{cfg.ClusterId}";
-        return routes.MapPost(path, (Delegate)handlePost);
-    }
-
-    private async Task<IResult> handlePost(HttpContext context) {
-#warning TODO: authn not here...
-        //if (context.Connection.ClientCertificate is null) {
-        //    //return Results.BadRequest();
-        //    //System.Console.Out.WriteLine("context.Connection.ClientCertificate is null");
-        //}
-
-
-        // HTTP/2 duplex stream
-        if (context.Request.Protocol != HttpProtocol.Http2) {
-            return Results.BadRequest();
-        }
-
-        var (requests, responses) = _tunnelConnectionChannels;
-
-        await requests.Reader.ReadAsync(context.RequestAborted);
-
-        var stream = new TunnelDuplexHttpStream(context);
-
-        using var reg = _lifetime.ApplicationStopping.Register(() => stream.Abort());
-
-        // Keep reusing this connection while, it's still open on the backend
-        while (!context.RequestAborted.IsCancellationRequested) {
-            // Make this connection available for requests
-            await responses.Writer.WriteAsync(stream, context.RequestAborted);
-
-            await stream.StreamCompleteTask;
-
-            stream.Reset();
-        }
-
-        return Results.Empty;
-    }
-}
-#else
 internal sealed class TunnelHTTP2Route {
     private readonly UnShortCitcuitOnceProxyConfigManager _unShortCitcuitOnceProxyConfigManager;
     private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
     private readonly IHostApplicationLifetime _lifetime;
-    private readonly ILogger<TunnelHTTP2Route> _logger;
+    private readonly ILogger _logger;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public TunnelHTTP2Route(
@@ -82,14 +28,6 @@ internal sealed class TunnelHTTP2Route {
 #pragma warning restore ASP0018 // Unused route parameter
 #warning TODO: conventionBuilder.RequireAuthorization
         return conventionBuilder;
-    }
-
-    internal void Register(IEnumerable<ClusterState> tunnelClusters) {
-        foreach (var cluster in tunnelClusters) {
-            if (cluster.Model.Config.Transport == TransportMode.TunnelHTTP2) {
-                _tunnelConnectionChannelManager.RegisterConnectionChannel(cluster.ClusterId);
-            }
-        }
     }
 
     private async Task<IResult> TunnelHTTP2RoutePost(HttpContext context) {
@@ -121,8 +59,10 @@ internal sealed class TunnelHTTP2Route {
             var (requests, responses) = tunnelConnectionChannels;
 
             System.Threading.Interlocked.Increment(ref tunnelConnectionChannels.CountSource);
+            var requestsReader = requests.Reader;
+            var responsesWriter = responses.Writer;
             try {
-                await requests.Reader.ReadAsync(ctsRequestAborted.Token);
+                await requestsReader.ReadAsync(ctsRequestAborted.Token);
 
                 using (var stream = new TunnelDuplexHttpStream(context)) {
 
@@ -131,11 +71,13 @@ internal sealed class TunnelHTTP2Route {
                     // Keep reusing this connection while, it's still open on the backend
                     while (!ctsRequestAborted.IsCancellationRequested) {
                         // Make this connection available for requests
-                        await responses.Writer.WriteAsync(stream, ctsRequestAborted.Token);
+                        await responsesWriter.WriteAsync(stream, ctsRequestAborted.Token);
 
                         await stream.StreamCompleteTask;
 
                         stream.Reset();
+
+                        break;
                     }
                 }
             } finally {
@@ -185,4 +127,6 @@ internal sealed class TunnelHTTP2Route {
         */
     }
 }
-#endif
+
+public sealed class TunnelHTTP2RouteOptions {
+}

@@ -3,7 +3,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class TunnelExensions {
     public static IServiceCollection AddTunnelServices(this IServiceCollection services) {
         services.TryAddSingleton<TunnelConnectionChannelManager>();
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IClusterChangeListener>(sp => sp.GetRequiredService<TunnelConnectionChannelManager>()));
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IClusterChangeListener, TunnelConnectionChannelManager.ClusterChangeListener>());
         services.TryAddSingleton<TransportHttpClientFactorySelector>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelHTTP2HttpClientFactory>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransportHttpClientFactorySelector, TunnelWebSocketHttpClientFactory>());
@@ -64,11 +64,11 @@ public static class TunnelExensions {
 
         var tunnelHTTP2Route = endpoints.ServiceProvider.GetRequiredService<TunnelHTTP2Route>();
         tunnelHTTP2Route.Map(endpoints);
-        tunnelHTTP2Route.Register(tunnelClusters);
+        //tunnelHTTP2Route.Register(tunnelClusters);
 
         var tunnelWebSocketRoute = endpoints.ServiceProvider.GetRequiredService<TunnelWebSocketRoute>();
         tunnelWebSocketRoute.Map(endpoints);
-        tunnelWebSocketRoute.Register(tunnelClusters);
+        //tunnelWebSocketRoute.Register(tunnelClusters);
     }
 #endif
 }

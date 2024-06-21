@@ -1,5 +1,7 @@
 using Brimborium.Henderschefuere.Transport;
 
+using System.Diagnostics;
+
 namespace Brimborium.Henderschefuere.AllInOne;
 
 public class Program {
@@ -12,9 +14,9 @@ public class Program {
         List<ServerBase> listServer = new();
 
         listServer.Add(new ServerFrontend("appsettings.server1FE.json"));
-        //listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
+        listServer.Add(new ServerFrontend("appsettings.server2FE.json"));
         listServer.Add(new ServerBackend("appsettings.server3BE.json"));
-        //listServer.Add(new ServerBackend("appsettings.server4BE.json"));
+        listServer.Add(new ServerBackend("appsettings.server4BE.json"));
         listServer.Add(new ServerAPI("appsettings.server5API.json"));
         listServer.Add(new ServerAPI("appsettings.server6API.json"));
 
@@ -24,7 +26,8 @@ public class Program {
         foreach (var server in listServer) {
             await server.Run(() => { cts.Cancel(); }, cts.Token);
         }
-        var listRunTask = listServer.Select(server => server.RunTask!).ToArray();
+        var listRunTask = listServer.Select(server => server.RunTask!).ToList();
+        listRunTask.Add(runTests());
         await Task.WhenAll(listRunTask);
 
 #if false
@@ -50,6 +53,53 @@ public class Program {
         app.Run();
 #endif
     }
+
+    private static async Task runTests() {
+
+        (string url, long duration)[] listUrl = [
+            ("https://localhost:5001/Frontend", 0),
+            ("https://localhost:5002/Frontend", 0),
+            ("https://localhost:5001/Backend", 0),
+            ("https://localhost:5002/Backend", 0),
+            ("https://localhost:5001/alpha/API", 0),
+            ("https://localhost:5002/beta/API", 0),
+            ];
+        Dictionary<string, int> dict = new();
+        var cntloop = 2;
+        for (var loop = 1; loop <= cntloop; loop++) {
+            System.Console.Out.WriteLine($"{loop} / {cntloop}");
+
+            for (int index = 0; index < listUrl.Length; index++) {
+                Stopwatch sw = Stopwatch.StartNew();
+                List<(HttpClient httpClient, Task<string> taskGetString)> listTask = new();
+
+                for (int innerloop = 0; innerloop < 20; innerloop++) {
+                    HttpClient client = new HttpClient(new SocketsHttpHandler());
+                    var taskGetString = client.GetStringAsync(listUrl[index].url);
+                    listTask.Add((client, taskGetString));
+                }
+
+                foreach (var (client, taskGetString) in listTask) {
+                    var text = await taskGetString;
+                    if (dict.TryGetValue(text, out var count)) {
+                        dict[text] = count + 1;
+                    } else {
+                        dict[text] = 1;
+                    }
+                    client.Dispose();
+                }
+                listUrl[index].duration += sw.ElapsedMilliseconds;
+            }
+        }
+
+        foreach (var (url, duration) in listUrl) {
+            System.Console.WriteLine($"{url} - {duration}");
+        }
+
+        foreach (var (text, count) in dict) {
+            System.Console.WriteLine($"{count} - {text}");
+        }
+    }
 }
 
 public abstract class ServerBase {
@@ -59,7 +109,8 @@ public abstract class ServerBase {
     protected ServerBase(string appsettingsJsonFile) {
         var builder = this._Builder = WebApplication.CreateBuilder();
         builder.Configuration.AddJsonFile(this._AppsettingsJsonFile = appsettingsJsonFile, false, true);
-        builder.Logging.AddConsole();
+        //builder.Logging.AddConsole();
+        builder.Logging.ClearProviders();
     }
 
     public WebApplication? App { get; private set; }
@@ -113,14 +164,9 @@ public sealed class ServerFrontend : ServerBase {
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
         app.MapReverseProxy();
 
-        //app.MapGet("/", (HfConfigurationManager hfConfigurationManager) => {
-        //    return string.Join(
-        //        ",",
-        //        hfConfigurationManager.GetSnapshot().Clusters.Values.Select(cluster => cluster.Id)
-        //        );
-        //});
-        app.MapGet("/", () => {
-            return "Hello";
+        app.MapGet("/Frontend", (HttpContext context) => {
+            var urls = context.RequestServices.GetRequiredService<IConfiguration>().GetValue<string>("Urls");
+            return $"Backend {urls} - {context.Request.Host} - {context.Connection.LocalIpAddress}:{context.Connection.LocalPort}";
         });
     }
 }
@@ -146,6 +192,10 @@ public sealed class ServerBackend : ServerBase {
         app.UseWebSockets();
         app.MapControllers();
         app.MapReverseProxy();
+        app.MapGet("/Backend", (HttpContext context) => {
+            var urls = context.RequestServices.GetRequiredService<IConfiguration>().GetValue<string>("Urls");
+            return $"Backend {urls} - {context.Request.Host} - {context.Connection.LocalIpAddress}:{context.Connection.LocalPort}";
+        });
     }
 }
 
@@ -158,13 +208,22 @@ public sealed class ServerAPI : ServerBase {
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        //builder.Services.AddReverseProxy()
-        //    .LoadFromConfig(builder.Configuration.GetRequiredSection("ReverseProxy"))
-        //    ;
     }
 
     public override void ConfigureApp(WebApplicationBuilder builder, WebApplication app) {
         app.UseWebSockets();
         app.MapControllers();
+        app.MapGet("/API", (HttpContext context) => {
+            var urls = context.RequestServices.GetRequiredService<IConfiguration>().GetValue<string>("Urls");
+            return $"API {urls} - {context.Request.Host} - {context.Connection.LocalIpAddress}:{context.Connection.LocalPort}";
+        });
+        app.MapGet("/alpha/API", (HttpContext context) => {
+            var urls = context.RequestServices.GetRequiredService<IConfiguration>().GetValue<string>("Urls");
+            return $"API {urls} - {context.Request.Host} - {context.Connection.LocalIpAddress}:{context.Connection.LocalPort}";
+        });
+        app.MapGet("/beta/API", (HttpContext context) => {
+            var urls = context.RequestServices.GetRequiredService<IConfiguration>().GetValue<string>("Urls");
+            return $"API {urls} - {context.Request.Host} - {context.Connection.LocalIpAddress}:{context.Connection.LocalPort}";
+        });
     }
 }

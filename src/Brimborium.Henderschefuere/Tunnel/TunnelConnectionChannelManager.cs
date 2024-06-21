@@ -1,7 +1,18 @@
 ﻿namespace Brimborium.Henderschefuere.Tunnel;
 
-public sealed class TunnelConnectionChannelManager
-    : IClusterChangeListener {
+public sealed class TunnelConnectionChannelManager {
+    internal sealed class ClusterChangeListener(TunnelConnectionChannelManager manager) : IClusterChangeListener {
+        public void OnClusterAdded(ClusterState cluster) {
+            manager.RegisterConnectionChannel(cluster.ClusterId);
+        }
+
+        public void OnClusterChanged(ClusterState cluster) {
+        }
+
+        public void OnClusterRemoved(ClusterState cluster) {
+            manager._clusterConnections.TryRemove(cluster.ClusterId, out _);
+        }
+    }
     private readonly ConcurrentDictionary<string, TunnelConnectionChannels> _clusterConnections = new(StringComparer.OrdinalIgnoreCase);
 
     public bool TryGetConnectionChannel(string clusterId, [MaybeNullWhen(false)] out TunnelConnectionChannels channels) {
@@ -13,17 +24,6 @@ public sealed class TunnelConnectionChannelManager
 
         var result = new TunnelConnectionChannels(Channel.CreateUnbounded<int>(), Channel.CreateUnbounded<Stream>());
         _clusterConnections.TryAdd(clusterId, result);
-    }
-
-    void IClusterChangeListener.OnClusterAdded(ClusterState cluster) {
-        RegisterConnectionChannel(cluster.ClusterId);
-    }
-
-    void IClusterChangeListener.OnClusterChanged(ClusterState cluster) {
-    }
-
-    void IClusterChangeListener.OnClusterRemoved(ClusterState cluster) {
-        _clusterConnections.TryRemove(cluster.ClusterId, out _);
     }
 }
 

@@ -2,81 +2,24 @@
 
 namespace Brimborium.Henderschefuere.Tunnel;
 
-#if false
-internal sealed class TunnelWebSocketRoute {
-    private readonly TunnelConnectionChannels _tunnelConnectionChannels;
-    private readonly ClusterState _clusterState;
-    private readonly IHostApplicationLifetime _lifetime;
-
-    public TunnelWebSocketRoute(TunnelConnectionChannels tunnelConnectionChannels, ClusterState clusterState, IHostApplicationLifetime lifetime) {
-        this._tunnelConnectionChannels = tunnelConnectionChannels;
-        this._clusterState = clusterState;
-        this._lifetime = lifetime;
-    }
-
-    public IEndpointConventionBuilder Map(IEndpointRouteBuilder routes) {
-        var cfg = _clusterState.Model.Config;
-        var path = $"_Tunnel/{cfg.ClusterId}";
-
-        var conventionBuilder = routes.MapGet(path, (Delegate)handleGet);
-
-        // Make this endpoint do websockets automagically as middleware for this specific route
-        conventionBuilder.Add(e => {
-            var sub = routes.CreateApplicationBuilder();
-            sub.UseWebSockets().Run(e.RequestDelegate!);
-            e.RequestDelegate = sub.Build();
-        });
-
-        return conventionBuilder;
-    }
-
-    private async Task<IResult> handleGet(HttpContext context) {
-        if (context.Connection.ClientCertificate is null) {
-            //return Results.BadRequest();
-            System.Console.Out.WriteLine("context.Connection.ClientCertificate is null");
-        }
-
-        if (!context.WebSockets.IsWebSocketRequest) {
-            return Results.BadRequest();
-        }
-
-        var (requests, responses) = _tunnelConnectionChannels;
-
-        await requests.Reader.ReadAsync(context.RequestAborted);
-
-        var ws = await context.WebSockets.AcceptWebSocketAsync();
-
-        var stream = new TunnelWebSocketStream(ws);
-
-        // We should make this more graceful
-        using var reg = _lifetime.ApplicationStopping.Register(() => stream.Abort());
-
-        // Keep reusing this connection while, it's still open on the backend
-        while (ws.State == WebSocketState.Open) {
-            // Make this connection available for requests
-            await responses.Writer.WriteAsync(stream, context.RequestAborted);
-
-            await stream.StreamCompleteTask;
-
-            stream.Reset();
-        }
-
-        return Results.Empty;
-    }
-}
-#else
 internal sealed class TunnelWebSocketRoute {
     private readonly UnShortCitcuitOnceProxyConfigManager _unShortCitcuitOnceProxyConfigManager;
     private readonly TunnelConnectionChannelManager _tunnelConnectionChannelManager;
     private readonly IHostApplicationLifetime _lifetime;
+    private readonly ILogger _logger;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public TunnelWebSocketRoute(
         UnShortCitcuitOnceProxyConfigManager unShortCitcuitOnceProxyConfigManager,
         TunnelConnectionChannelManager tunnelConnectionChannelManager,
-        IHostApplicationLifetime lifetime) {
+        IHostApplicationLifetime lifetime,
+        ILogger<TunnelWebSocketRoute> logger) {
         _unShortCitcuitOnceProxyConfigManager = unShortCitcuitOnceProxyConfigManager;
         _tunnelConnectionChannelManager = tunnelConnectionChannelManager;
         _lifetime = lifetime;
+        _logger = logger;
+
+        _lifetime.ApplicationStopping.Register(() => _cancellationTokenSource.Cancel());
     }
     internal IEndpointConventionBuilder Map(IEndpointRouteBuilder endpoints) {
 #pragma warning disable ASP0018 // Unused route parameter
@@ -117,35 +60,68 @@ internal sealed class TunnelWebSocketRoute {
 
 
         var (requests, responses) = tunnelConnectionChannels;
+        using (var ctsRequestAborted = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, _cancellationTokenSource.Token)) {
+            var responsesWriter = responses.Writer;
+            await requests.Reader.ReadAsync(ctsRequestAborted.Token);
 
-        await requests.Reader.ReadAsync(context.RequestAborted);
+            var ws = await context.WebSockets.AcceptWebSocketAsync();
 
-        var ws = await context.WebSockets.AcceptWebSocketAsync();
+            var stream = new TunnelWebSocketStream(ws);
 
-        var stream = new TunnelWebSocketStream(ws);
+            // We should make this more graceful
+            //using var reg = _lifetime.ApplicationStopping.Register(() => stream.Abort());
 
-        // We should make this more graceful
-        using var reg = _lifetime.ApplicationStopping.Register(() => stream.Abort());
+            // Keep reusing this connection while, it's still open on the backend
+            while (ws.State == WebSocketState.Open) {
+                // Make this connection available for requests
+                await responsesWriter.WriteAsync(stream, ctsRequestAborted.Token);
 
-        // Keep reusing this connection while, it's still open on the backend
-        while (ws.State == WebSocketState.Open) {
-            // Make this connection available for requests
-            await responses.Writer.WriteAsync(stream, context.RequestAborted);
+                await stream.StreamCompleteTask;
 
-            await stream.StreamCompleteTask;
-
-            stream.Reset();
+                stream.Reset();
+            }
         }
 
         return Results.Empty;
     }
-    internal void Register(IEnumerable<ClusterState> tunnelClusters) {
-        foreach (var cluster in tunnelClusters) {
-            if (cluster.Model.Config.Transport == TransportMode.TunnelHTTP2) {
-                _tunnelConnectionChannelManager.RegisterConnectionChannel(cluster.ClusterId);
-            }
-        }
-    }
 
+    private static class Log {
+        private static readonly Action<ILogger, string, Exception?> _parameterNotValid = LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            EventIds.ParameterNotValid,
+            "Requiered Parameter {name} - value is not valid.");
+
+        public static void ParameterNotValid(ILogger logger, string parameterName) {
+            _parameterNotValid(logger, parameterName, null);
+        }
+
+        private static readonly Action<ILogger, string, Exception?> _clusterNotFound = LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            EventIds.ClusterNotFound,
+            "Cluster {name} not found.");
+
+        public static void ClusterNotFound(ILogger logger, string parameterName) {
+            _clusterNotFound(logger, parameterName, null);
+        }
+
+        private static readonly Action<ILogger, string, Exception?> _tunnelConnectionChannelNotFound = LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            EventIds.TunnelConnectionChannelNotFound,
+            "TunnelConnectionChannel {name} not found.");
+
+        public static void TunnelConnectionChannelNotFound(ILogger logger, string parameterName) {
+            _tunnelConnectionChannelNotFound(logger, parameterName, null);
+        }
+
+        /*
+        private static readonly Action<ILogger, string, Exception?> _hugo = LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            EventIds.ParameterNotValid,
+            " {name} is not valid.");
+
+        public static void Hugo(ILogger logger, string parameterName) {
+            _hugo(logger, parameterName, null);
+        }
+        */
+    }
 }
-#endif

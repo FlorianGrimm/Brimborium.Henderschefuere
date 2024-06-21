@@ -108,18 +108,20 @@ internal sealed class TunnelHTTP2HttpClientFactoryBound : IForwarderHttpClientFa
                 var (requests, responses) = tunnelConnectionChannels;
 
                 System.Threading.Interlocked.Increment(ref tunnelConnectionChannels.CountSink);
+                var requestsWriter = requests.Writer;
+                var responsesReader = responses.Reader;
                 try {
 
                     // Ask for a connection
                     int retry = 0;
-                    await requests.Writer.WriteAsync(retry++, cancellationToken);
+                    await requestsWriter.WriteAsync(retry++, cancellationToken);
 
                     while (true) {
-                        var stream = await responses.Reader.ReadAsync(cancellationToken);
+                        var stream = await responsesReader.ReadAsync(cancellationToken);
 
                         if (stream is IStreamCloseable c && c.IsClosed) {
                             // Ask for another connection
-                            await requests.Writer.WriteAsync(retry++, cancellationToken);
+                            await requestsWriter.WriteAsync(retry++, cancellationToken);
                             continue;
                         }
 
